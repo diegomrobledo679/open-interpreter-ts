@@ -100,5 +100,7 @@ The interpreter reads various settings from environment variables if correspondi
 - `MAX_OUTPUT` – Maximum number of characters to display from tool or code output.
 - `CONVERSATION_HISTORY_PATH` – Directory where conversation logs are stored.
 - `CONVERSATION_FILENAME` – Name of the JSON file used to save conversations.
+- `SKILLS_PATH` – Directory containing custom skill modules.
+- `IMPORT_SKILLS` – Set to `true` to automatically load skills on startup.
 
 Create a `.env` file with these values to avoid passing them as flags.

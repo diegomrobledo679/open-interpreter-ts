@@ -82,6 +82,8 @@ export async function main() {
     llmMaxTokens: argv.llmMaxTokens !== undefined ? parseInt(argv.llmMaxTokens, 10) : envNumber(process.env.LLM_MAX_TOKENS, config.defaultMaxOutput),
     conversationHistoryPath: envString(argv.conversationHistoryPath, process.env.CONVERSATION_HISTORY_PATH),
     conversationFilename: envString(argv.conversationFilename, process.env.CONVERSATION_FILENAME ?? config.conversationFilename),
+    skillsPath: envString(argv.skillsPath, process.env.SKILLS_PATH ?? null),
+    importSkills: argv.importSkills !== undefined ? argv.importSkills : envBool(process.env.IMPORT_SKILLS, false),
     // ... other options from original file
   };
 

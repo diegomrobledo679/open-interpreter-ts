@@ -58,6 +58,11 @@ export class Interpreter {
         if (skillsPath)
             this.computer.skills.path = skillsPath;
         this.importSkills = importSkills;
+        if (this.importSkills) {
+            this.computer.loadSkills(skillsPath !== null && skillsPath !== void 0 ? skillsPath : "./skills").catch((err) => {
+                logger.error(`Failed to load skills: ${err}`);
+            });
+        }
         this.llm = llm == null ? new Llm(this, options) : llm;
         this.customerInstructions = customerInstructions;
         this.userMessageTemplate = userMessageTemplate;

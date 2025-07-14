@@ -11,6 +11,7 @@ import { spawn, exec } from "child_process";
 import { logger } from "../utils/logger.js";
 import * as fs from "fs";
 import * as path from "path";
+import { pathToFileURL } from "url";
 import * as os from "os";
 import { Role, MessageType } from "../core/types.js";
 export class Computer {
@@ -28,10 +29,12 @@ export class Computer {
             logger.info(`Loading skills from ${fullSkillsPath}...`);
             const skillFiles = fs.readdirSync(fullSkillsPath);
             for (const file of skillFiles) {
-                if (file.endsWith(".ts")) {
-                    const skillName = path.basename(file, ".ts");
+                if (file.endsWith(".ts") || file.endsWith(".js")) {
+                    const ext = path.extname(file);
+                    const skillName = path.basename(file, ext);
                     try {
-                        const skillModule = yield import(path.join(fullSkillsPath, file));
+                        const modulePath = path.join(fullSkillsPath, file);
+                        const skillModule = yield import(pathToFileURL(modulePath).href);
                         if (skillModule.default && typeof skillModule.default === 'function') {
                             this.skills[skillName] = skillModule.default;
                             logger.info(`Loaded skill: ${skillName}`);
