@@ -217,7 +217,7 @@ export async function executeValidateConfigFileTool(args: { filePath: string; fi
     if (args.schemaPath) {
       const schemaContent = fs.readFileSync(args.schemaPath, "utf-8");
       const schema = JSON.parse(schemaContent);
-      const ajv = new Ajv({ allErrors: true });
+      const ajv = new Ajv.default({ allErrors: true });
       const validate = ajv.compile(schema);
       const valid = validate(data);
       if (!valid) {

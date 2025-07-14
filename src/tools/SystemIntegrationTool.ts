@@ -27,7 +27,8 @@ export const launchUITool: Tool = {
 };
 
 export async function executeLaunchUITool(args: { uiName: string; url?: string }): Promise<string> {
-  const url = args.url || `http://localhost:3000/${args.uiName}`;
+  const baseUrl = process.env.UI_BASE_URL || 'http://localhost:3000';
+  const url = args.url || `${baseUrl}/${args.uiName}`;
   const openCmd = os.platform() === 'win32'
     ? `start "" "${url}"`
     : os.platform() === 'darwin'
@@ -71,7 +72,7 @@ export const launchVirtualTerminalTool: Tool = {
 export async function executeLaunchVirtualTerminalTool(args: { terminalName: string; initialCommand?: string }): Promise<string> {
   const shell = os.platform() === 'win32' ? 'cmd.exe' : process.env.SHELL || 'bash';
   const child = spawn(shell, [], { stdio: 'inherit' });
-  if (args.initialCommand) {
+  if (args.initialCommand && child.stdin) {
     child.stdin.write(args.initialCommand + '\n');
   }
   return `Launched virtual terminal "${args.terminalName}" using ${shell}. Type 'exit' to close.`;

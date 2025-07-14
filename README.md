@@ -111,5 +111,6 @@ The interpreter reads various settings from environment variables if correspondi
 - `CONVERSATION_FILENAME` – Name of the JSON file used to save conversations.
 - `SKILLS_PATH` – Directory containing custom skill modules.
 - `IMPORT_SKILLS` – Set to `true` to automatically load skills on startup.
+- `UI_BASE_URL` – Base URL used by the `launchUI` tool if no URL is provided.
 
 Create a `.env` file with these values to avoid passing them as flags.

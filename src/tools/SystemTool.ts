@@ -178,8 +178,11 @@ export const getInstalledSoftwareTool: Tool = {
   function: {
     name: "getInstalledSoftware",
     description: "Lists installed software packages on the system. This is a conceptual tool as the method varies greatly by operating system.",
-    parameters: {},
-    required: [],
+    parameters: {
+      type: "object",
+      properties: {},
+      required: [],
+    },
   },
 };
 

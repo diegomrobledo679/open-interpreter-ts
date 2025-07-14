@@ -46,7 +46,7 @@ import { scanOpenPortsTool, executeScanOpenPortsTool, checkFileIntegrityTool, ex
 import { listCloudResourcesTool, executeListCloudResourcesTool, manageVirtualMachineTool, executeManageVirtualMachineTool, manageStorageBucketTool, executeManageStorageBucketTool } from "./tools/CloudTool.js";
 import { listVirtualMachinesTool, executeListVirtualMachinesTool, manageVirtualMachineLifecycleTool, executeManageVirtualMachineLifecycleTool } from "./tools/VirtualizationTool.js";
 import { checkNetworkConnectivityTool, executeCheckNetworkConnectivityTool, performNetworkSpeedTestTool, executePerformNetworkSpeedTestTool } from "./tools/NetworkDiagnosticsTool.js";
-import { createScriptFileTool, executeCreateScriptFileTool, executeScriptFileTool, scheduleScriptTool, executeScheduleScriptTool } from "./tools/AutomationTool.js";
+import { createScriptFileTool, executeCreateScriptFileTool, executeScriptFileTool, executeExecuteScriptFileTool, scheduleScriptTool, executeScheduleScriptTool } from "./tools/AutomationTool.js";
 
 export async function main() {
   logger.info("Starting Open Interpreter CLI...");
