@@ -3,6 +3,7 @@ import { exec } from "child_process";
 import * as os from "os";
 import * as fs from "fs";
 import * as crypto from "crypto";
+import * as path from "path";
 
 // Helper to execute shell commands
 const executeShellCommand = (command: string): Promise<string> => {
@@ -158,8 +159,34 @@ export const scanForMalwareTool: Tool = {
 };
 
 export async function executeScanForMalwareTool(args: { path?: string }): Promise<string> {
-  const target = args.path || 'the entire system';
-  return `Conceptual malware scan of ${target}. To make this functional, you would need to integrate with an external antivirus solution (e.g., by executing its command-line interface).`;
+  const os = await import('os');
+  const target = args.path || (os.platform() === 'win32' ? 'C:\\' : '/');
+  return new Promise((resolve) => {
+    if (os.platform() === 'win32') {
+      const psCmd = `Start-MpScan -ScanType CustomScan -ScanPath '${target}'`;
+      exec(`powershell -Command "${psCmd}"`, (error, stdout, stderr) => {
+        if (error) {
+          resolve(`Malware scan failed: ${stderr || error.message}`);
+        } else {
+          resolve(stdout || 'Scan completed.');
+        }
+      });
+    } else {
+      exec('which clamscan', (err) => {
+        if (err) {
+          resolve('ClamAV (clamscan) not found. Install clamav to enable malware scanning.');
+        } else {
+          exec(`clamscan -r ${target}`, (error, stdout, stderr) => {
+            if (error) {
+              resolve(`Malware scan failed: ${stderr || error.message}`);
+            } else {
+              resolve(stdout || 'Scan completed.');
+            }
+          });
+        }
+      });
+    }
+  });
 }
 
 export const analyzeSecurityLogsTool: Tool = {
@@ -186,8 +213,17 @@ export const analyzeSecurityLogsTool: Tool = {
 };
 
 export async function executeAnalyzeSecurityLogsTool(args: { logType: string; keywords?: string }): Promise<string> {
-  const keywords = args.keywords ? ` with keywords: ${args.keywords}` : '';
-  return `Conceptual analysis of ${args.logType} security logs${keywords}. A real implementation would involve reading, parsing, and analyzing log files for security events.`;
+  const logPath = args.logType;
+  if (!fs.existsSync(logPath)) {
+    return `Log file ${logPath} not found.`;
+  }
+  const content = fs.readFileSync(logPath, 'utf-8');
+  if (args.keywords) {
+    const regex = new RegExp(args.keywords, 'gi');
+    const matches = content.split(/\r?\n/).filter(line => regex.test(line));
+    return matches.length > 0 ? matches.join('\n') : 'No matching log entries found.';
+  }
+  return content.split(/\r?\n/).slice(-50).join('\n');
 }
 
 export const manageCryptographicKeysTool: Tool = {
@@ -219,6 +255,34 @@ export const manageCryptographicKeysTool: Tool = {
 };
 
 export async function executeManageCryptographicKeysTool(args: { operation: "generate" | "store" | "retrieve" | "delete"; keyName: string; keyType?: string }): Promise<string> {
-  const keyType = args.keyType ? ` of type ${args.keyType}` : '';
-  return `Conceptual operation: ${args.operation} cryptographic key '${args.keyName}'${keyType}. A real implementation would involve secure key management practices and libraries.`;
+  const keyDir = path.resolve(process.cwd(), 'keys');
+  if (!fs.existsSync(keyDir)) fs.mkdirSync(keyDir);
+  const baseName = path.join(keyDir, args.keyName);
+  switch (args.operation) {
+    case 'generate': {
+      const { generateKeyPair } = await import('crypto');
+      return new Promise((resolve, reject) => {
+        generateKeyPair('rsa', { modulusLength: 2048 }, (err, publicKey, privateKey) => {
+          if (err) {
+            resolve(`Failed to generate key: ${err.message}`);
+          } else {
+            fs.writeFileSync(`${baseName}.pem`, privateKey.export({ type: 'pkcs1', format: 'pem' }));
+            fs.writeFileSync(`${baseName}.pub`, publicKey.export({ type: 'pkcs1', format: 'pem' }));
+            resolve(`Generated RSA key pair at ${baseName}.pem and ${baseName}.pub`);
+          }
+        });
+      });
+    }
+    case 'delete': {
+      try {
+        fs.unlinkSync(`${baseName}.pem`);
+        fs.unlinkSync(`${baseName}.pub`);
+        return `Deleted keys for ${args.keyName}.`;
+      } catch (e: any) {
+        return `Failed to delete keys: ${e.message}`;
+      }
+    }
+    default:
+      return 'Only generate and delete operations are supported in this implementation.';
+  }
 }
