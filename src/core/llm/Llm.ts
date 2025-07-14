@@ -9,14 +9,14 @@ import { InterpreterOptions } from "../InterpreterOptions.js";
 
 export class Llm {
   private readonly interpreter: Interpreter;
-  private model: string;
+  private model!: string;
   private temperature: number = 0;
   private contextWindow: number | null;
   private maxTokens: number | null;
-  private openai: OpenAI;
-  private llmProvider: string;
-  private llmApiKey: string | undefined;
-  private llmBaseUrl: string | undefined;
+  private openai!: OpenAI;
+  private llmProvider!: string;
+  private llmApiKey?: string;
+  private llmBaseUrl?: string;
 
   constructor(interpreter: Interpreter, options: InterpreterOptions) {
     this.interpreter = interpreter;

@@ -296,9 +296,10 @@ export async function executeExecuteLinterFormatterTool(args: { code: string; la
         try {
           const modifiedContent = fs.readFileSync(fullFilePath, "utf-8");
           resolve(`Linter/Formatter output:\n${stdout}\nModified code:\n\`\`\`${args.language}\n${modifiedContent}\n\`\`\``);
-        } catch (readError) {
-          resolve(`Linter/Formatter output:\n${stdout}\nError reading modified file: ${readError.message}`);
-        }
+          } catch (readError) {
+            const msg = (readError as any).message || readError;
+            resolve(`Linter/Formatter output:\n${stdout}\nError reading modified file: ${msg}`);
+          }
       }
     });
   });

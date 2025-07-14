@@ -20,7 +20,7 @@ import { gitStatusTool, executeGitStatusTool, gitDiffTool, executeGitDiffTool, g
 import { createBranchTool, executeCreateBranchTool, mergeBranchTool, executeMergeBranchTool, triggerCIBuildTool, executeTriggerCIBuildTool, deployProjectTool, executeDeployProjectTool, runStaticAnalysisTool, executeRunStaticAnalysisTool } from "./tools/SDLCtool.js";
 import { resizeImageTool, executeResizeImageTool, cropImageTool, executeCropImageTool, greyscaleImageTool, executeGreyscaleImageTool, rotateImageTool, executeRotateImageTool, generateImageTool, executeGenerateImageTool } from "./tools/ImageTool.js";
 import { countLinesInFileTool, executeCountLinesInFileTool, findTextInFileTool, executeFindTextInFileTool, getDirectoryStructureTool, executeGetDirectoryStructureTool, listFileTypesTool, executeListFileTypesTool, deepSearchTool, executeDeepSearchTool, getFileContentTypeTool, executeGetFileContentTypeTool } from "./tools/AnalysisTool.js";
-import { minecraftPingTool, executeMinecraftPingTool } from "./tools/MinecraftTool.js";
+import { minecraftPingTool, executeMinecraftPingTool, sendMinecraftRconCommandTool, executeSendMinecraftRconCommandTool } from "./tools/MinecraftTool.js";
 import { launchUITool, executeLaunchUITool, launchVirtualTerminalTool, executeLaunchVirtualTerminalTool } from "./tools/SystemIntegrationTool.js";
 import { terminateProcessTool, executeTerminateProcessTool, startProcessTool, executeStartProcessTool, getProcessInfoTool, executeGetProcessInfoTool } from "./tools/ProcessManagementTool.js";
 import { npmInstallTool, executeNpmInstallTool, pipInstallTool, executePipInstallTool, aptInstallTool, executeAptInstallTool, brewInstallTool, executeBrewInstallTool, chocoInstallTool, executeChocoInstallTool, checkMissingDependenciesTool, executeCheckMissingDependenciesTool, listInstalledPackagesTool, executeListInstalledPackagesTool, npmUninstallTool, executeNpmUninstallTool, pipUninstallTool, executePipUninstallTool, aptRemoveTool, executeAptRemoveTool, brewUninstallTool, executeBrewUninstallTool, chocoUninstallTool, executeChocoUninstallTool, npmUpdateTool, executeNpmUpdateTool, pipUpdateTool, executePipUpdateTool, aptUpdateTool, executeAptUpdateTool, brewUpdateTool, executeBrewUpdateTool, chocoUpdateTool, executeChocoUpdateTool } from "./tools/PackageManagerTool.js";
@@ -41,7 +41,7 @@ import { startServiceTool, executeStartServiceTool, stopServiceTool, executeStop
 import { createUserTool, executeCreateUserTool, deleteUserTool, executeDeleteUserTool, createGroupTool, executeCreateGroupTool, deleteGroupTool, executeDeleteGroupTool, addUserToGroupTool, executeAddUserToGroupTool, removeUserFromGroupTool, executeRemoveUserFromGroupTool } from "./tools/UserManagementTool.js";
 import { readLogFileTool, executeReadLogFileTool, filterLogFileTool, executeFilterLogFileTool, clearLogFileTool, executeClearLogFileTool } from "./tools/LogManagementTool.js";
 import { readConfigFileTool, executeReadConfigFileTool, modifyConfigFileTool, executeModifyConfigFileTool, validateConfigFileTool, executeValidateConfigFileTool } from "./tools/SystemConfigTool.js";
-import { connectDatabaseTool, executeConnectDatabaseTool, executeDatabaseQueryTool, listDatabaseTablesTool, getTableSchemaTool, executeDatabaseQueryTool as executeExecuteDatabaseQueryTool, executeListDatabaseTablesTool, executeGetTableSchemaTool } from "./tools/DatabaseTool.js";
+import { connectDatabaseTool, executeConnectDatabaseTool, databaseQueryTool, executeDatabaseQueryTool, listDatabaseTablesTool, getTableSchemaTool, executeListDatabaseTablesTool, executeGetTableSchemaTool } from "./tools/DatabaseTool.js";
 import { scanOpenPortsTool, executeScanOpenPortsTool, checkFileIntegrityTool, executeCheckFileIntegrityTool, listActiveConnectionsTool, executeListActiveConnectionsTool, scanForMalwareTool, executeScanForMalwareTool, analyzeSecurityLogsTool, executeAnalyzeSecurityLogsTool, manageCryptographicKeysTool, executeManageCryptographicKeysTool } from "./tools/SecurityTool.js";
 import { listCloudResourcesTool, executeListCloudResourcesTool, manageVirtualMachineTool, executeManageVirtualMachineTool, manageStorageBucketTool, executeManageStorageBucketTool } from "./tools/CloudTool.js";
 import { listVirtualMachinesTool, executeListVirtualMachinesTool, manageVirtualMachineLifecycleTool, executeManageVirtualMachineLifecycleTool } from "./tools/VirtualizationTool.js";
@@ -85,7 +85,7 @@ export async function main() {
     llmMaxTokens: argv.llmMaxTokens !== undefined ? parseInt(argv.llmMaxTokens, 10) : envNumber(process.env.LLM_MAX_TOKENS, config.defaultMaxOutput),
     conversationHistoryPath: envString(argv.conversationHistoryPath, process.env.CONVERSATION_HISTORY_PATH),
     conversationFilename: envString(argv.conversationFilename, process.env.CONVERSATION_FILENAME ?? config.conversationFilename),
-    skillsPath: envString(argv.skillsPath, process.env.SKILLS_PATH ?? null),
+    skillsPath: envString(argv.skillsPath, process.env.SKILLS_PATH),
     importSkills: argv.importSkills !== undefined ? argv.importSkills : envBool(process.env.IMPORT_SKILLS, false),
     // ... other options from original file
   };
@@ -218,7 +218,7 @@ export async function main() {
   interpreter.registerTool(modifyConfigFileTool, executeModifyConfigFileTool);
   interpreter.registerTool(validateConfigFileTool, executeValidateConfigFileTool);
   interpreter.registerTool(connectDatabaseTool, executeConnectDatabaseTool);
-  interpreter.registerTool(executeDatabaseQueryTool, executeExecuteDatabaseQueryTool);
+  interpreter.registerTool(databaseQueryTool, executeDatabaseQueryTool);
   interpreter.registerTool(listDatabaseTablesTool, executeListDatabaseTablesTool);
   interpreter.registerTool(getTableSchemaTool, executeGetTableSchemaTool);
   interpreter.registerTool(scanOpenPortsTool, executeScanOpenPortsTool);

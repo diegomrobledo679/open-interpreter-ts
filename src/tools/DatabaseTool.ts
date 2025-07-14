@@ -34,7 +34,7 @@ export async function executeConnectDatabaseTool(args: { dbType: string; connect
   return `Conceptually connected to ${args.dbType} database. Actual connection requires proper drivers and credentials.`;
 }
 
-export const executeDatabaseQueryTool: Tool = {
+export const databaseQueryTool: Tool = {
   type: "function",
   function: {
     name: "executeDatabaseQuery",

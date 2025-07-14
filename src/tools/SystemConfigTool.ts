@@ -5,7 +5,7 @@ import * as path from "path";
 import * as yaml from "js-yaml";
 import { parseStringPromise } from "xml2js";
 import Ajv from "ajv";
-import os from "os";
+import * as os from "os";
 
 // Helper to execute shell commands (if needed for some config types)
 const executeShellCommand = (command: string): Promise<string> => {

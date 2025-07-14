@@ -80,6 +80,12 @@ This CLI agent now supports a wide range of functionalities, including:
    node dist/index.js
    ```
 
+After installation you can also launch the UI directly via the bundled command:
+
+```bash
+npx cyrah
+```
+
 ## Configuration via Environment Variables
 
 The interpreter reads various settings from environment variables if corresponding CLI options are omitted. Useful variables include:
