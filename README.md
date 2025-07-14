@@ -56,4 +56,26 @@ This CLI agent now supports a wide range of functionalities, including:
 
 ## Installation and Usage:
 
-(Instructions to be added here for building and running the project)
+1. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+2. Build the TypeScript source:
+
+   ```bash
+   npm run build
+   ```
+
+3. Run the automated test suite:
+
+   ```bash
+   npm test
+   ```
+
+4. Start the interpreter:
+
+   ```bash
+   node dist/index.js
+   ```

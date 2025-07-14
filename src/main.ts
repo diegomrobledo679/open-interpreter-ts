@@ -47,7 +47,6 @@ import { listCloudResourcesTool, executeListCloudResourcesTool, manageVirtualMac
 import { listVirtualMachinesTool, executeListVirtualMachinesTool, manageVirtualMachineLifecycleTool, executeManageVirtualMachineLifecycleTool } from "./tools/VirtualizationTool.js";
 import { checkNetworkConnectivityTool, executeCheckNetworkConnectivityTool, performNetworkSpeedTestTool, executePerformNetworkSpeedTestTool } from "./tools/NetworkDiagnosticsTool.js";
 import { createScriptFileTool, executeCreateScriptFileTool, executeScriptFileTool, scheduleScriptTool, executeScheduleScriptTool } from "./tools/AutomationTool.js";
-import { getInstalledSoftwareTool, executeGetInstalledSoftwareTool, getSystemLogsTool, executeGetSystemLogsTool } from "./tools/SystemTool.js";
 
 export async function main() {
   logger.info("Starting Open Interpreter CLI...");
@@ -59,10 +58,10 @@ export async function main() {
     autoRun: argv.autoRun !== undefined ? argv.autoRun : true, // Default autoRun to true
     loop: argv.loop || config.defaultLoop,
     safeMode: argv.safeMode || config.defaultSafeMode,
-    llmProvider: argv.llmProvider as string,
-    llmModel: argv.llmModel as string,
-    llmApiKey: argv.llmApiKey as string,
-    llmBaseUrl: argv.llmBaseUrl as string,
+    llmProvider: argv.llmProvider || process.env.LLM_PROVIDER,
+    llmModel: argv.llmModel || process.env.LLM_MODEL,
+    llmApiKey: argv.llmApiKey || process.env.LLM_API_KEY || process.env.OPENAI_API_KEY,
+    llmBaseUrl: argv.llmBaseUrl || process.env.LLM_BASE_URL,
     // ... other options from original file
   };
 
@@ -213,10 +212,6 @@ export async function main() {
   interpreter.registerTool(createScriptFileTool, executeCreateScriptFileTool);
   interpreter.registerTool(executeScriptFileTool, executeExecuteScriptFileTool);
   interpreter.registerTool(scheduleScriptTool, executeScheduleScriptTool);
-  interpreter.registerTool(getInstalledSoftwareTool, executeGetInstalledSoftwareTool);
-  interpreter.registerTool(getSystemLogsTool, executeGetSystemLogsTool);
-  interpreter.registerTool(getInstalledSoftwareTool, executeGetInstalledSoftwareTool);
-  interpreter.registerTool(getSystemLogsTool, executeGetSystemLogsTool);
 
 
   const rl = readline.createInterface({
@@ -248,7 +243,8 @@ export async function main() {
     }
 
     if (userInput.toLowerCase() === 'cyrah') {
-      console.log("Launching conceptual Cyrah UI. A real UI would open in a separate window or browser. This is a placeholder.");
+      const msg = await executeLaunchUITool({ uiName: 'cyrah' });
+      console.log(msg);
       chat();
       return;
     }

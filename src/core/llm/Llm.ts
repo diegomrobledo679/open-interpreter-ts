@@ -26,10 +26,10 @@ export class Llm {
   }
 
   public setLlmSettings(options: InterpreterOptions) {
-    this.llmProvider = options.llmProvider || 'openai';
-    this.model = options.llmModel || Models.GPT_4O;
-    this.llmApiKey = options.llmApiKey || process.env.OPENAI_API_KEY;
-    this.llmBaseUrl = options.llmBaseUrl;
+    this.llmProvider = options.llmProvider || process.env.LLM_PROVIDER || 'openai';
+    this.model = options.llmModel || process.env.LLM_MODEL || Models.GPT_4O;
+    this.llmApiKey = options.llmApiKey || process.env.LLM_API_KEY || process.env.OPENAI_API_KEY;
+    this.llmBaseUrl = options.llmBaseUrl || process.env.LLM_BASE_URL;
 
     if (this.llmProvider === 'ollama') {
       this.llmBaseUrl = this.llmBaseUrl || 'http://localhost:11434/v1';
