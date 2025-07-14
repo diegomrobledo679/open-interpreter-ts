@@ -9,6 +9,9 @@
     "start": "node dist/index.js",
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest"
   },
+  "bin": {
+    "cyrah": "./dist/bin/cyrah.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

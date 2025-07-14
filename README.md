@@ -79,3 +79,14 @@ This CLI agent now supports a wide range of functionalities, including:
    ```bash
    node dist/index.js
    ```
+
+## Configuration via Environment Variables
+
+The interpreter reads LLM settings from environment variables if corresponding CLI options are omitted. Useful variables include:
+
+- `LLM_PROVIDER` – Provider name like `openai` or `ollama`.
+- `LLM_MODEL` – Model identifier to use.
+- `LLM_API_KEY` – API key for the provider.
+- `LLM_BASE_URL` – Base URL for API requests.
+
+Create a `.env` file with these values to avoid passing them as flags.
