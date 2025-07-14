@@ -98,5 +98,7 @@ The interpreter reads various settings from environment variables if correspondi
 - `LOOP` – Set to `true` to keep the interpreter running in a loop.
 - `SAFE_MODE` – Specify the default safe mode level.
 - `MAX_OUTPUT` – Maximum number of characters to display from tool or code output.
+- `CONVERSATION_HISTORY_PATH` – Directory where conversation logs are stored.
+- `CONVERSATION_FILENAME` – Name of the JSON file used to save conversations.
 
 Create a `.env` file with these values to avoid passing them as flags.

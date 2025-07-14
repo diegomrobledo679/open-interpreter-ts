@@ -64,6 +64,10 @@ export async function main() {
     return isNaN(num) ? fallback : num;
   };
 
+  const envString = (value: string | undefined, fallback?: string) => {
+    return value !== undefined ? value : fallback;
+  };
+
   const options: InterpreterOptions = {
     ...argv, // Pass all command-line arguments to options
     autoRun: argv.autoRun !== undefined ? argv.autoRun : envBool(process.env.AUTO_RUN, true),
@@ -76,6 +80,8 @@ export async function main() {
     llmBaseUrl: argv.llmBaseUrl || process.env.LLM_BASE_URL || (process.env.LLM_PROVIDER === 'openai' ? process.env.OPENAI_BASE_URL : process.env.OLLAMA_BASE_URL),
     llmTemperature: argv.llmTemperature !== undefined ? parseFloat(argv.llmTemperature) : envNumber(process.env.LLM_TEMPERATURE, 0),
     llmMaxTokens: argv.llmMaxTokens !== undefined ? parseInt(argv.llmMaxTokens, 10) : envNumber(process.env.LLM_MAX_TOKENS, config.defaultMaxOutput),
+    conversationHistoryPath: envString(argv.conversationHistoryPath, process.env.CONVERSATION_HISTORY_PATH),
+    conversationFilename: envString(argv.conversationFilename, process.env.CONVERSATION_FILENAME ?? config.conversationFilename),
     // ... other options from original file
   };
 
