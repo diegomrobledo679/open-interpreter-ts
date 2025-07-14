@@ -193,7 +193,7 @@ export const fixCodeTool: Tool = {
 };
 
 export async function executeFixCodeTool(args: { code: string; language: string; errorDetails?: string }): Promise<string> {
-  const codeBlock = ````${args.language}\n${args.code}\n`````;
+  const codeBlock = `\`\`\`${args.language}\n${args.code}\n\`\`\``;
   const errorInfo = args.errorDetails ? `\n\nError details: ${args.errorDetails}` : '';
   return `Conceptual code fix for ${args.language} code. Original code: ${codeBlock}${errorInfo}\n\nNote: A real implementation would involve calling an external linter/formatter or an AI model. You would need to configure and integrate these tools (e.g., by executing shell commands for linters like 'eslint --fix' or 'black', or by making API calls to an AI service).`;
 }
@@ -221,9 +221,7 @@ export const formatCodeTool: Tool = {
 };
 
 export async function executeFormatCodeTool(args: { code: string; language: string }): Promise<string> {
-  const codeBlock = ````${args.language}
-${args.code}
-`````;
+  const codeBlock = `\`\`\`${args.language}\n${args.code}\n\`\`\``;
   return `Conceptual code formatting for ${args.language} code. Original code: ${codeBlock}\n\nNote: A real implementation would involve calling an external formatter tool for the specified language (e.g., by executing shell commands like 'prettier --write' or 'black').`;
 }
 
@@ -297,7 +295,7 @@ export async function executeExecuteLinterFormatterTool(args: { code: string; la
         // Read the potentially modified file content if the tool modifies in place
         try {
           const modifiedContent = fs.readFileSync(fullFilePath, "utf-8");
-          resolve(`Linter/Formatter output:\n${stdout}\nModified code:\n```${args.language}\n${modifiedContent}\n````);
+          resolve(`Linter/Formatter output:\n${stdout}\nModified code:\n\`\`\`${args.language}\n${modifiedContent}\n\`\`\``);
         } catch (readError) {
           resolve(`Linter/Formatter output:\n${stdout}\nError reading modified file: ${readError.message}`);
         }

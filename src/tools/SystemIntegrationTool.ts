@@ -1,5 +1,7 @@
 
 import { Tool } from "../core/types.js";
+import { exec, spawn } from "child_process";
+import os from "os";
 
 export const launchUITool: Tool = {
   type: "function",
@@ -25,12 +27,22 @@ export const launchUITool: Tool = {
 };
 
 export async function executeLaunchUITool(args: { uiName: string; url?: string }): Promise<string> {
-  let message = `Conceptual UI launch for "${args.uiName}".`;
-  if (args.url) {
-    message += ` It would attempt to open the URL: ${args.url}.`;
-  }
-  message += `\nTo make this functional, you would need to implement the actual UI application and integrate its launch mechanism here (e.g., using 'open' command for URLs, or spawning a UI process).`;
-  return message;
+  const url = args.url || `http://localhost:3000/${args.uiName}`;
+  const openCmd = os.platform() === 'win32'
+    ? `start "" "${url}"`
+    : os.platform() === 'darwin'
+    ? `open "${url}"`
+    : `xdg-open "${url}"`;
+
+  return new Promise<string>((resolve) => {
+    exec(openCmd, (error) => {
+      if (error) {
+        resolve(`Failed to launch UI ${args.uiName}: ${error.message}`);
+      } else {
+        resolve(`Launched UI ${args.uiName} at ${url}`);
+      }
+    });
+  });
 }
 
 export const launchVirtualTerminalTool: Tool = {
@@ -57,10 +69,10 @@ export const launchVirtualTerminalTool: Tool = {
 };
 
 export async function executeLaunchVirtualTerminalTool(args: { terminalName: string; initialCommand?: string }): Promise<string> {
-  let message = `Conceptual launch of ultra-fast virtual terminal "${args.terminalName}".`;
+  const shell = os.platform() === 'win32' ? 'cmd.exe' : process.env.SHELL || 'bash';
+  const child = spawn(shell, [], { stdio: 'inherit' });
   if (args.initialCommand) {
-    message += ` It would attempt to execute the initial command: "${args.initialCommand}".`;
+    child.stdin.write(args.initialCommand + '\n');
   }
-  message += `\nTo make this functional, you would need to integrate a highly optimized terminal emulator library and potentially a backend process for efficient command execution and output streaming. This would allow for real-time interaction within the terminal.`;
-  return message;
+  return `Launched virtual terminal "${args.terminalName}" using ${shell}. Type 'exit' to close.`;
 }
