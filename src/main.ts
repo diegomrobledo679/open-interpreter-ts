@@ -58,11 +58,18 @@ export async function main() {
     return value.toLowerCase() === 'true';
   };
 
+  const envNumber = (value: string | undefined, fallback: number) => {
+    if (value === undefined) return fallback;
+    const num = parseInt(value, 10);
+    return isNaN(num) ? fallback : num;
+  };
+
   const options: InterpreterOptions = {
     ...argv, // Pass all command-line arguments to options
     autoRun: argv.autoRun !== undefined ? argv.autoRun : envBool(process.env.AUTO_RUN, true),
     loop: argv.loop !== undefined ? argv.loop : envBool(process.env.LOOP, config.defaultLoop),
     safeMode: argv.safeMode || process.env.SAFE_MODE || config.defaultSafeMode,
+    maxOutput: argv.maxOutput !== undefined ? parseInt(argv.maxOutput, 10) : envNumber(process.env.MAX_OUTPUT, config.defaultMaxOutput),
     llmProvider: argv.llmProvider || process.env.LLM_PROVIDER,
     llmModel: argv.llmModel || process.env.LLM_MODEL,
     llmApiKey: argv.llmApiKey || process.env.LLM_API_KEY || process.env.OPENAI_API_KEY,

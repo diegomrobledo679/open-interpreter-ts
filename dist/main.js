@@ -51,7 +51,13 @@ export function main() {
                 return fallback;
             return value.toLowerCase() === "true";
         };
-        const options = Object.assign(Object.assign({}, argv), { autoRun: argv.autoRun !== undefined ? argv.autoRun : envBool(process.env.AUTO_RUN, true), loop: argv.loop !== undefined ? argv.loop : envBool(process.env.LOOP, config.defaultLoop), safeMode: argv.safeMode || process.env.SAFE_MODE || config.defaultSafeMode, llmProvider: argv.llmProvider || process.env.LLM_PROVIDER, llmModel: argv.llmModel || process.env.LLM_MODEL, llmApiKey: argv.llmApiKey || process.env.LLM_API_KEY || process.env.OPENAI_API_KEY, llmBaseUrl: argv.llmBaseUrl || process.env.LLM_BASE_URL });
+        const envNumber = (value, fallback) => {
+            if (value === void 0)
+                return fallback;
+            const num = parseInt(value, 10);
+            return isNaN(num) ? fallback : num;
+        };
+        const options = Object.assign(Object.assign({}, argv), { autoRun: argv.autoRun !== undefined ? argv.autoRun : envBool(process.env.AUTO_RUN, true), loop: argv.loop !== undefined ? argv.loop : envBool(process.env.LOOP, config.defaultLoop), safeMode: argv.safeMode || process.env.SAFE_MODE || config.defaultSafeMode, maxOutput: argv.maxOutput !== undefined ? parseInt(argv.maxOutput, 10) : envNumber(process.env.MAX_OUTPUT, config.defaultMaxOutput), llmProvider: argv.llmProvider || process.env.LLM_PROVIDER, llmModel: argv.llmModel || process.env.LLM_MODEL, llmApiKey: argv.llmApiKey || process.env.LLM_API_KEY || process.env.OPENAI_API_KEY, llmBaseUrl: argv.llmBaseUrl || process.env.LLM_BASE_URL });
         const interpreter = new Interpreter(options);
         // Register all tools
         interpreter.registerTool(calculatorTool, executeCalculatorTool);

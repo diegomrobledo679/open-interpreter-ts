@@ -91,5 +91,6 @@ The interpreter reads various settings from environment variables if correspondi
 - `AUTO_RUN` – Set to `true` or `false` to control automatic execution of code blocks.
 - `LOOP` – Set to `true` to keep the interpreter running in a loop.
 - `SAFE_MODE` – Specify the default safe mode level.
+- `MAX_OUTPUT` – Maximum number of characters to display from tool or code output.
 
 Create a `.env` file with these values to avoid passing them as flags.
