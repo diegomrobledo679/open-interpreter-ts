@@ -88,6 +88,8 @@ The interpreter reads various settings from environment variables if correspondi
 - `LLM_MODEL` – Model identifier to use.
 - `LLM_API_KEY` – API key for the provider.
 - `LLM_BASE_URL` – Base URL for API requests.
+- `LLM_TEMPERATURE` – Sampling temperature for responses.
+- `LLM_MAX_TOKENS` – Maximum tokens to request from the model.
 - `AUTO_RUN` – Set to `true` or `false` to control automatic execution of code blocks.
 - `LOOP` – Set to `true` to keep the interpreter running in a loop.
 - `SAFE_MODE` – Specify the default safe mode level.

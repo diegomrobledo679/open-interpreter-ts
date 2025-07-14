@@ -43,6 +43,8 @@ interface InterpreterOptions {
   llmModel?: string;
   llmApiKey?: string;
   llmBaseUrl?: string;
+  llmTemperature?: number;
+  llmMaxTokens?: number;
 }
 
 export type { InterpreterOptions };

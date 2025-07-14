@@ -18,20 +18,25 @@ export class Llm {
         this.interpreter = interpreter;
         this.contextWindow = interpreter.maxOutput;
         this.maxTokens = interpreter.maxOutput;
-        // Determine LLM provider and configuration
-        const llmProvider = options.llmProvider || 'openai';
-        this.model = options.llmModel || Models.GPT_4O;
-        const llmApiKey = options.llmApiKey || process.env.OPENAI_API_KEY;
-        let llmBaseUrl = options.llmBaseUrl;
-        if (llmProvider === 'ollama') {
-            llmBaseUrl = llmBaseUrl || 'http://localhost:11434/v1';
+        this.setLlmSettings(options);
+    }
+    setLlmSettings(options) {
+        var _a, _b;
+        this.llmProvider = options.llmProvider || process.env.LLM_PROVIDER || 'openai';
+        this.model = options.llmModel || process.env.LLM_MODEL || Models.GPT_4O;
+        this.llmApiKey = options.llmApiKey || process.env.LLM_API_KEY || process.env.OPENAI_API_KEY;
+        this.llmBaseUrl = options.llmBaseUrl || process.env.LLM_BASE_URL;
+        this.temperature = (_a = options.llmTemperature) !== null && _a !== void 0 ? _a : (process.env.LLM_TEMPERATURE ? parseFloat(process.env.LLM_TEMPERATURE) : this.temperature);
+        this.maxTokens = (_b = options.llmMaxTokens) !== null && _b !== void 0 ? _b : (process.env.LLM_MAX_TOKENS ? parseInt(process.env.LLM_MAX_TOKENS, 10) : this.maxTokens);
+        if (this.llmProvider === 'ollama') {
+            this.llmBaseUrl = this.llmBaseUrl || 'http://localhost:11434/v1';
         }
-        else if (llmProvider === 'openai') {
-            llmBaseUrl = llmBaseUrl || 'https://api.openai.com/v1';
+        else if (this.llmProvider === 'openai') {
+            this.llmBaseUrl = this.llmBaseUrl || 'https://api.openai.com/v1';
         }
         this.openai = new OpenAI({
-            apiKey: llmApiKey,
-            baseURL: llmBaseUrl,
+            apiKey: this.llmApiKey,
+            baseURL: this.llmBaseUrl,
         });
     }
     run(messages, tools) {

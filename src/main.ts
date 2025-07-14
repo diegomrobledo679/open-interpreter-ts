@@ -60,7 +60,7 @@ export async function main() {
 
   const envNumber = (value: string | undefined, fallback: number) => {
     if (value === undefined) return fallback;
-    const num = parseInt(value, 10);
+    const num = parseFloat(value);
     return isNaN(num) ? fallback : num;
   };
 
@@ -74,6 +74,8 @@ export async function main() {
     llmModel: argv.llmModel || process.env.LLM_MODEL,
     llmApiKey: argv.llmApiKey || process.env.LLM_API_KEY || process.env.OPENAI_API_KEY,
     llmBaseUrl: argv.llmBaseUrl || process.env.LLM_BASE_URL,
+    llmTemperature: argv.llmTemperature !== undefined ? parseFloat(argv.llmTemperature) : envNumber(process.env.LLM_TEMPERATURE, 0),
+    llmMaxTokens: argv.llmMaxTokens !== undefined ? parseInt(argv.llmMaxTokens, 10) : envNumber(process.env.LLM_MAX_TOKENS, config.defaultMaxOutput),
     // ... other options from original file
   };
 
