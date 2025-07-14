@@ -231,3 +231,180 @@ export function executeDeleteFromFileTool(args) {
         }
     });
 }
+export const replaceInFileTool = {
+    type: "function",
+    function: {
+        name: "replaceInFile",
+        description: "Replaces all occurrences of a specified pattern with new content within a file.",
+        parameters: {
+            type: "object",
+            properties: {
+                filePath: {
+                    type: "string",
+                    description: "The path to the file.",
+                },
+                pattern: {
+                    type: "string",
+                    description: "The regex pattern to search for.",
+                },
+                replacement: {
+                    type: "string",
+                    description: "The content to replace the matched pattern with.",
+                },
+            },
+            required: ["filePath", "pattern", "replacement"],
+        },
+    },
+};
+export function executeReplaceInFileTool(args) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            let content = fs.readFileSync(args.filePath, "utf-8");
+            const regex = new RegExp(args.pattern, 'g');
+            const newContent = content.replace(regex, args.replacement);
+            if (content === newContent) {
+                return `No matches found for pattern "${args.pattern}" in ${args.filePath}. No changes made.`;
+            }
+            fs.writeFileSync(args.filePath, newContent, "utf-8");
+            return `Successfully replaced content in ${args.filePath}.`;
+        }
+        catch (error) {
+            return `Error replacing content in file: ${error.message}`;
+        }
+    });
+}
+export const createDirectoryTool = {
+    type: "function",
+    function: {
+        name: "createDirectory",
+        description: "Creates a new directory at the specified path.",
+        parameters: {
+            type: "object",
+            properties: {
+                directoryPath: {
+                    type: "string",
+                    description: "The path where the new directory will be created.",
+                },
+                recursive: {
+                    type: "boolean",
+                    description: "Optional: If true, creates parent directories recursively. Defaults to false.",
+                    nullable: true,
+                },
+            },
+            required: ["directoryPath"],
+        },
+    },
+};
+export function executeCreateDirectoryTool(args) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            fs.mkdirSync(args.directoryPath, { recursive: args.recursive });
+            return `Directory ${args.directoryPath} created successfully.`;
+        }
+        catch (error) {
+            return `Error creating directory: ${error.message}`;
+        }
+    });
+}
+export const deletePathTool = {
+    type: "function",
+    function: {
+        name: "deletePath",
+        description: "Deletes a file or an empty directory. For non-empty directories, use recursive option.",
+        parameters: {
+            type: "object",
+            properties: {
+                path: {
+                    type: "string",
+                    description: "The path to the file or directory to delete.",
+                },
+                recursive: {
+                    type: "boolean",
+                    description: "Optional: If true, performs a recursive delete for directories. Use with caution. Defaults to false.",
+                    nullable: true,
+                },
+            },
+            required: ["path"],
+        },
+    },
+};
+export function executeDeletePathTool(args) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            fs.rmSync(args.path, { recursive: args.recursive, force: true });
+            return `Path ${args.path} deleted successfully.`;
+        }
+        catch (error) {
+            return `Error deleting path: ${error.message}`;
+        }
+    });
+}
+export const copyPathTool = {
+    type: "function",
+    function: {
+        name: "copyPath",
+        description: "Copies a file or directory from a source path to a destination path.",
+        parameters: {
+            type: "object",
+            properties: {
+                sourcePath: {
+                    type: "string",
+                    description: "The path to the source file or directory.",
+                },
+                destinationPath: {
+                    type: "string",
+                    description: "The path to the destination.",
+                },
+                recursive: {
+                    type: "boolean",
+                    description: "Optional: If true, copies directories recursively. Defaults to false.",
+                    nullable: true,
+                },
+            },
+            required: ["sourcePath", "destinationPath"],
+        },
+    },
+};
+export function executeCopyPathTool(args) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            fs.cpSync(args.sourcePath, args.destinationPath, { recursive: args.recursive });
+            return `Path ${args.sourcePath} copied to ${args.destinationPath} successfully.`;
+        }
+        catch (error) {
+            return `Error copying path: ${error.message}`;
+        }
+    });
+}
+export const movePathTool = {
+    type: "function",
+    function: {
+        name: "movePath",
+        description: "Moves a file or directory from a source path to a destination path.",
+        parameters: {
+            type: "object",
+            properties: {
+                sourcePath: {
+                    type: "string",
+                    description: "The path to the source file or directory.",
+                },
+                destinationPath: {
+                    type: "string",
+                    description: "The path to the destination.",
+                },
+            },
+            required: ["sourcePath", "destinationPath"],
+        },
+    },
+};
+export function executeMovePathTool(args) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            fs.renameSync(args.sourcePath, args.destinationPath);
+            return `Path ${args.sourcePath} moved to ${args.destinationPath} successfully.`;
+        }
+        catch (error) {
+            return `Error moving path: ${error.message}`;
+        }
+    });
+}

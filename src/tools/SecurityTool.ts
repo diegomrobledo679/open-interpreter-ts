@@ -113,7 +113,9 @@ export const listActiveConnectionsTool: Tool = {
   function: {
     name: "listActiveConnections",
     description: "Lists all active network connections on the system. Requires appropriate permissions.",
-    parameters: {},
+    parameters: {
+      type: "object",
+      properties: {},
       required: [],
     },
   },

@@ -11,6 +11,11 @@ import * as path from "path";
 import { logger } from "../utils/logger.js";
 import { config } from "../config.js";
 
+const envBool = (value: string | undefined, fallback: boolean): boolean => {
+  if (value === undefined) return fallback;
+  return value.toLowerCase() === "true";
+};
+
 export class Interpreter {
   public messages: Message[] = [];
   public responding = false;
@@ -66,10 +71,10 @@ export class Interpreter {
   constructor(options: InterpreterOptions = {}) {
     const {
       messages = [],
-      offline = false,
+      offline = envBool(process.env.OFFLINE, false),
       autoRun = true,
-      verbose = false,
-      debug = false,
+      verbose = envBool(process.env.VERBOSE, false),
+      debug = envBool(process.env.DEBUG, false),
       maxOutput = config.defaultMaxOutput,
       safeMode = config.defaultSafeMode,
       shrinkImages = config.defaultShrinkImages,
@@ -138,6 +143,11 @@ export class Interpreter {
 
     if (skillsPath) this.computer.skills.path = skillsPath;
     this.importSkills = importSkills;
+    if (this.importSkills) {
+      this.computer.loadSkills(skillsPath ?? "./skills").catch((err) => {
+        logger.error(`Failed to load skills: ${err}`);
+      });
+    }
 
     this.llm = llm == null ? new Llm(this, options) : llm;
 

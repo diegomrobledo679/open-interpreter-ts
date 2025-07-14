@@ -56,4 +56,61 @@ This CLI agent now supports a wide range of functionalities, including:
 
 ## Installation and Usage:
 
-(Instructions to be added here for building and running the project)
+1. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+2. Build the TypeScript source:
+
+   ```bash
+   npm run build
+   ```
+
+3. Run the automated test suite:
+
+   ```bash
+   npm test
+   ```
+
+4. Start the interpreter:
+
+   ```bash
+   node dist/index.js
+   ```
+
+After installation you can also launch the UI directly via the bundled command:
+
+```bash
+npx cyrah
+```
+
+## Configuration via Environment Variables
+
+The interpreter reads various settings from environment variables if corresponding CLI options are omitted. Useful variables include:
+
+- `LLM_PROVIDER` – Provider name like `openai` or `ollama`.
+- `LLM_MODEL` – Model identifier to use.
+- `LLM_API_KEY` – API key for the provider.
+- `LLM_BASE_URL` – Base URL for API requests.
+- `OPENAI_BASE_URL` – Override the default OpenAI API URL when using the `openai` provider.
+- `OLLAMA_BASE_URL` – Override the default Ollama API URL when using the `ollama` provider.
+- `OPENAI_API_KEY` – API key specifically for OpenAI.
+- `OLLAMA_API_KEY` – API key specifically for Ollama if required.
+- `LLM_TEMPERATURE` – Sampling temperature for responses.
+- `LLM_MAX_TOKENS` – Maximum tokens to request from the model.
+- `AUTO_RUN` – Set to `true` or `false` to control automatic execution of code blocks.
+- `LOOP` – Set to `true` to keep the interpreter running in a loop.
+- `OFFLINE` – Set to `true` to disable network access by default.
+- `VERBOSE` – Set to `true` for verbose logging output.
+- `DEBUG` – Set to `true` to enable debug logging.
+- `SAFE_MODE` – Specify the default safe mode level.
+- `MAX_OUTPUT` – Maximum number of characters to display from tool or code output.
+- `CONVERSATION_HISTORY_PATH` – Directory where conversation logs are stored.
+- `CONVERSATION_FILENAME` – Name of the JSON file used to save conversations.
+- `SKILLS_PATH` – Directory containing custom skill modules.
+- `IMPORT_SKILLS` – Set to `true` to automatically load skills on startup.
+- `UI_BASE_URL` – Base URL used by the `launchUI` tool if no URL is provided.
+
+Create a `.env` file with these values to avoid passing them as flags.

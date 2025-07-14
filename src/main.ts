@@ -20,7 +20,7 @@ import { gitStatusTool, executeGitStatusTool, gitDiffTool, executeGitDiffTool, g
 import { createBranchTool, executeCreateBranchTool, mergeBranchTool, executeMergeBranchTool, triggerCIBuildTool, executeTriggerCIBuildTool, deployProjectTool, executeDeployProjectTool, runStaticAnalysisTool, executeRunStaticAnalysisTool } from "./tools/SDLCtool.js";
 import { resizeImageTool, executeResizeImageTool, cropImageTool, executeCropImageTool, greyscaleImageTool, executeGreyscaleImageTool, rotateImageTool, executeRotateImageTool, generateImageTool, executeGenerateImageTool } from "./tools/ImageTool.js";
 import { countLinesInFileTool, executeCountLinesInFileTool, findTextInFileTool, executeFindTextInFileTool, getDirectoryStructureTool, executeGetDirectoryStructureTool, listFileTypesTool, executeListFileTypesTool, deepSearchTool, executeDeepSearchTool, getFileContentTypeTool, executeGetFileContentTypeTool } from "./tools/AnalysisTool.js";
-import { minecraftPingTool, executeMinecraftPingTool } from "./tools/MinecraftTool.js";
+import { minecraftPingTool, executeMinecraftPingTool, sendMinecraftRconCommandTool, executeSendMinecraftRconCommandTool } from "./tools/MinecraftTool.js";
 import { launchUITool, executeLaunchUITool, launchVirtualTerminalTool, executeLaunchVirtualTerminalTool } from "./tools/SystemIntegrationTool.js";
 import { terminateProcessTool, executeTerminateProcessTool, startProcessTool, executeStartProcessTool, getProcessInfoTool, executeGetProcessInfoTool } from "./tools/ProcessManagementTool.js";
 import { npmInstallTool, executeNpmInstallTool, pipInstallTool, executePipInstallTool, aptInstallTool, executeAptInstallTool, brewInstallTool, executeBrewInstallTool, chocoInstallTool, executeChocoInstallTool, checkMissingDependenciesTool, executeCheckMissingDependenciesTool, listInstalledPackagesTool, executeListInstalledPackagesTool, npmUninstallTool, executeNpmUninstallTool, pipUninstallTool, executePipUninstallTool, aptRemoveTool, executeAptRemoveTool, brewUninstallTool, executeBrewUninstallTool, chocoUninstallTool, executeChocoUninstallTool, npmUpdateTool, executeNpmUpdateTool, pipUpdateTool, executePipUpdateTool, aptUpdateTool, executeAptUpdateTool, brewUpdateTool, executeBrewUpdateTool, chocoUpdateTool, executeChocoUpdateTool } from "./tools/PackageManagerTool.js";
@@ -41,28 +41,52 @@ import { startServiceTool, executeStartServiceTool, stopServiceTool, executeStop
 import { createUserTool, executeCreateUserTool, deleteUserTool, executeDeleteUserTool, createGroupTool, executeCreateGroupTool, deleteGroupTool, executeDeleteGroupTool, addUserToGroupTool, executeAddUserToGroupTool, removeUserFromGroupTool, executeRemoveUserFromGroupTool } from "./tools/UserManagementTool.js";
 import { readLogFileTool, executeReadLogFileTool, filterLogFileTool, executeFilterLogFileTool, clearLogFileTool, executeClearLogFileTool } from "./tools/LogManagementTool.js";
 import { readConfigFileTool, executeReadConfigFileTool, modifyConfigFileTool, executeModifyConfigFileTool, validateConfigFileTool, executeValidateConfigFileTool } from "./tools/SystemConfigTool.js";
-import { connectDatabaseTool, executeConnectDatabaseTool, executeDatabaseQueryTool, listDatabaseTablesTool, getTableSchemaTool, executeDatabaseQueryTool as executeExecuteDatabaseQueryTool, executeListDatabaseTablesTool, executeGetTableSchemaTool } from "./tools/DatabaseTool.js";
+import { connectDatabaseTool, executeConnectDatabaseTool, databaseQueryTool, executeDatabaseQueryTool, listDatabaseTablesTool, getTableSchemaTool, executeListDatabaseTablesTool, executeGetTableSchemaTool } from "./tools/DatabaseTool.js";
 import { scanOpenPortsTool, executeScanOpenPortsTool, checkFileIntegrityTool, executeCheckFileIntegrityTool, listActiveConnectionsTool, executeListActiveConnectionsTool, scanForMalwareTool, executeScanForMalwareTool, analyzeSecurityLogsTool, executeAnalyzeSecurityLogsTool, manageCryptographicKeysTool, executeManageCryptographicKeysTool } from "./tools/SecurityTool.js";
 import { listCloudResourcesTool, executeListCloudResourcesTool, manageVirtualMachineTool, executeManageVirtualMachineTool, manageStorageBucketTool, executeManageStorageBucketTool } from "./tools/CloudTool.js";
 import { listVirtualMachinesTool, executeListVirtualMachinesTool, manageVirtualMachineLifecycleTool, executeManageVirtualMachineLifecycleTool } from "./tools/VirtualizationTool.js";
 import { checkNetworkConnectivityTool, executeCheckNetworkConnectivityTool, performNetworkSpeedTestTool, executePerformNetworkSpeedTestTool } from "./tools/NetworkDiagnosticsTool.js";
-import { createScriptFileTool, executeCreateScriptFileTool, executeScriptFileTool, scheduleScriptTool, executeScheduleScriptTool } from "./tools/AutomationTool.js";
-import { getInstalledSoftwareTool, executeGetInstalledSoftwareTool, getSystemLogsTool, executeGetSystemLogsTool } from "./tools/SystemTool.js";
+import { createScriptFileTool, executeCreateScriptFileTool, executeScriptFileTool, executeExecuteScriptFileTool, scheduleScriptTool, executeScheduleScriptTool } from "./tools/AutomationTool.js";
 
 export async function main() {
   logger.info("Starting Open Interpreter CLI...");
 
   const argv = minimist(process.argv.slice(2));
 
+  const envBool = (value: string | undefined, fallback: boolean) => {
+    if (value === undefined) return fallback;
+    return value.toLowerCase() === 'true';
+  };
+
+  const envNumber = (value: string | undefined, fallback: number) => {
+    if (value === undefined) return fallback;
+    const num = parseFloat(value);
+    return isNaN(num) ? fallback : num;
+  };
+
+  const envString = (value: string | undefined, fallback?: string) => {
+    return value !== undefined ? value : fallback;
+  };
+
   const options: InterpreterOptions = {
     ...argv, // Pass all command-line arguments to options
-    autoRun: argv.autoRun !== undefined ? argv.autoRun : true, // Default autoRun to true
-    loop: argv.loop || config.defaultLoop,
-    safeMode: argv.safeMode || config.defaultSafeMode,
-    llmProvider: argv.llmProvider as string,
-    llmModel: argv.llmModel as string,
-    llmApiKey: argv.llmApiKey as string,
-    llmBaseUrl: argv.llmBaseUrl as string,
+    autoRun: argv.autoRun !== undefined ? argv.autoRun : envBool(process.env.AUTO_RUN, true),
+    loop: argv.loop !== undefined ? argv.loop : envBool(process.env.LOOP, config.defaultLoop),
+    offline: argv.offline !== undefined ? argv.offline : envBool(process.env.OFFLINE, false),
+    verbose: argv.verbose !== undefined ? argv.verbose : envBool(process.env.VERBOSE, false),
+    debug: argv.debug !== undefined ? argv.debug : envBool(process.env.DEBUG, false),
+    safeMode: argv.safeMode || process.env.SAFE_MODE || config.defaultSafeMode,
+    maxOutput: argv.maxOutput !== undefined ? parseInt(argv.maxOutput, 10) : envNumber(process.env.MAX_OUTPUT, config.defaultMaxOutput),
+    llmProvider: argv.llmProvider || process.env.LLM_PROVIDER,
+    llmModel: argv.llmModel || process.env.LLM_MODEL,
+    llmApiKey: argv.llmApiKey || process.env.LLM_API_KEY || (process.env.LLM_PROVIDER === 'ollama' ? process.env.OLLAMA_API_KEY : process.env.OPENAI_API_KEY),
+    llmBaseUrl: argv.llmBaseUrl || process.env.LLM_BASE_URL || (process.env.LLM_PROVIDER === 'openai' ? process.env.OPENAI_BASE_URL : process.env.OLLAMA_BASE_URL),
+    llmTemperature: argv.llmTemperature !== undefined ? parseFloat(argv.llmTemperature) : envNumber(process.env.LLM_TEMPERATURE, 0),
+    llmMaxTokens: argv.llmMaxTokens !== undefined ? parseInt(argv.llmMaxTokens, 10) : envNumber(process.env.LLM_MAX_TOKENS, config.defaultMaxOutput),
+    conversationHistoryPath: envString(argv.conversationHistoryPath, process.env.CONVERSATION_HISTORY_PATH),
+    conversationFilename: envString(argv.conversationFilename, process.env.CONVERSATION_FILENAME ?? config.conversationFilename),
+    skillsPath: envString(argv.skillsPath, process.env.SKILLS_PATH),
+    importSkills: argv.importSkills !== undefined ? argv.importSkills : envBool(process.env.IMPORT_SKILLS, false),
     // ... other options from original file
   };
 
@@ -194,7 +218,7 @@ export async function main() {
   interpreter.registerTool(modifyConfigFileTool, executeModifyConfigFileTool);
   interpreter.registerTool(validateConfigFileTool, executeValidateConfigFileTool);
   interpreter.registerTool(connectDatabaseTool, executeConnectDatabaseTool);
-  interpreter.registerTool(executeDatabaseQueryTool, executeExecuteDatabaseQueryTool);
+  interpreter.registerTool(databaseQueryTool, executeDatabaseQueryTool);
   interpreter.registerTool(listDatabaseTablesTool, executeListDatabaseTablesTool);
   interpreter.registerTool(getTableSchemaTool, executeGetTableSchemaTool);
   interpreter.registerTool(scanOpenPortsTool, executeScanOpenPortsTool);
@@ -213,10 +237,6 @@ export async function main() {
   interpreter.registerTool(createScriptFileTool, executeCreateScriptFileTool);
   interpreter.registerTool(executeScriptFileTool, executeExecuteScriptFileTool);
   interpreter.registerTool(scheduleScriptTool, executeScheduleScriptTool);
-  interpreter.registerTool(getInstalledSoftwareTool, executeGetInstalledSoftwareTool);
-  interpreter.registerTool(getSystemLogsTool, executeGetSystemLogsTool);
-  interpreter.registerTool(getInstalledSoftwareTool, executeGetInstalledSoftwareTool);
-  interpreter.registerTool(getSystemLogsTool, executeGetSystemLogsTool);
 
 
   const rl = readline.createInterface({
@@ -248,7 +268,8 @@ export async function main() {
     }
 
     if (userInput.toLowerCase() === 'cyrah') {
-      console.log("Launching conceptual Cyrah UI. A real UI would open in a separate window or browser. This is a placeholder.");
+      const msg = await executeLaunchUITool({ uiName: 'cyrah' });
+      console.log(msg);
       chat();
       return;
     }

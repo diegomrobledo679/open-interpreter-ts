@@ -16,13 +16,18 @@ import * as fs from "fs";
 import * as path from "path";
 import { logger } from "../utils/logger.js";
 import { config } from "../config.js";
+const envBool = (value, fallback) => {
+    if (value === undefined)
+        return fallback;
+    return value.toLowerCase() === "true";
+};
 export class Interpreter {
     constructor(options = {}) {
         this.messages = [];
         this.responding = false;
         this.lastMessageCount = 0;
         this.tools = [];
-        const { messages = [], offline = false, autoRun = true, verbose = false, debug = false, maxOutput = config.defaultMaxOutput, safeMode = config.defaultSafeMode, shrinkImages = config.defaultShrinkImages, loop = false, loopMessage = "Proceed. You CAN run code on my machine. If the entire task I asked for is done, say exactly 'The task is done.'                      If you need some specific information (like username or password) say EXACTLY 'Please provide more information.' If it's impossible,                      say 'The task is impossible. (If I haven't provided a task, say exactly 'Let me know what you'd like to do next.') Otherwise keep going.", loopBreakers = [
+        const { messages = [], offline = envBool(process.env.OFFLINE, false), autoRun = true, verbose = envBool(process.env.VERBOSE, false), debug = envBool(process.env.DEBUG, false), maxOutput = config.defaultMaxOutput, safeMode = config.defaultSafeMode, shrinkImages = config.defaultShrinkImages, loop = false, loopMessage = "Proceed. You CAN run code on my machine. If the entire task I asked for is done, say exactly 'The task is done.'                      If you need some specific information (like username or password) say EXACTLY 'Please provide more information.' If it's impossible,                      say 'The task is impossible. (If I haven't provided a task, say exactly 'Let me know what you'd like to do next.') Otherwise keep going.", loopBreakers = [
             "The Task is done.",
             "The Task is impossible.",
             "Let me know what you'd like to do next",
@@ -58,6 +63,11 @@ export class Interpreter {
         if (skillsPath)
             this.computer.skills.path = skillsPath;
         this.importSkills = importSkills;
+        if (this.importSkills) {
+            this.computer.loadSkills(skillsPath !== null && skillsPath !== void 0 ? skillsPath : "./skills").catch((err) => {
+                logger.error(`Failed to load skills: ${err}`);
+            });
+        }
         this.llm = llm == null ? new Llm(this, options) : llm;
         this.customerInstructions = customerInstructions;
         this.userMessageTemplate = userMessageTemplate;
