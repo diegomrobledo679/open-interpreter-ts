@@ -88,6 +88,10 @@ The interpreter reads various settings from environment variables if correspondi
 - `LLM_MODEL` – Model identifier to use.
 - `LLM_API_KEY` – API key for the provider.
 - `LLM_BASE_URL` – Base URL for API requests.
+- `OPENAI_BASE_URL` – Override the default OpenAI API URL when using the `openai` provider.
+- `OLLAMA_BASE_URL` – Override the default Ollama API URL when using the `ollama` provider.
+- `OPENAI_API_KEY` – API key specifically for OpenAI.
+- `OLLAMA_API_KEY` – API key specifically for Ollama if required.
 - `LLM_TEMPERATURE` – Sampling temperature for responses.
 - `LLM_MAX_TOKENS` – Maximum tokens to request from the model.
 - `AUTO_RUN` – Set to `true` or `false` to control automatic execution of code blocks.

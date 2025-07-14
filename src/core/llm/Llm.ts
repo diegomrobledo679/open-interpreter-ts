@@ -28,15 +28,15 @@ export class Llm {
   public setLlmSettings(options: InterpreterOptions) {
     this.llmProvider = options.llmProvider || process.env.LLM_PROVIDER || 'openai';
     this.model = options.llmModel || process.env.LLM_MODEL || Models.GPT_4O;
-    this.llmApiKey = options.llmApiKey || process.env.LLM_API_KEY || process.env.OPENAI_API_KEY;
+    this.llmApiKey = options.llmApiKey || process.env.LLM_API_KEY || (options.llmProvider === 'ollama' ? process.env.OLLAMA_API_KEY : process.env.OPENAI_API_KEY);
     this.llmBaseUrl = options.llmBaseUrl || process.env.LLM_BASE_URL;
     this.temperature = options.llmTemperature ?? (process.env.LLM_TEMPERATURE ? parseFloat(process.env.LLM_TEMPERATURE) : this.temperature);
     this.maxTokens = options.llmMaxTokens ?? (process.env.LLM_MAX_TOKENS ? parseInt(process.env.LLM_MAX_TOKENS, 10) : this.maxTokens);
 
     if (this.llmProvider === 'ollama') {
-      this.llmBaseUrl = this.llmBaseUrl || 'http://localhost:11434/v1';
+      this.llmBaseUrl = this.llmBaseUrl || process.env.OLLAMA_BASE_URL || 'http://localhost:11434/v1';
     } else if (this.llmProvider === 'openai') {
-      this.llmBaseUrl = this.llmBaseUrl || 'https://api.openai.com/v1';
+      this.llmBaseUrl = this.llmBaseUrl || process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
     }
 
     this.openai = new OpenAI({
