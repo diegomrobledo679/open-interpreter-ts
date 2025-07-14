@@ -1,5 +1,5 @@
 import envPaths from "env-paths";
-import { AppConst } from "@/const";
+import { AppConst } from "../const.js";
 import path from "path";
 const config_dir = envPaths(AppConst.appName);
 

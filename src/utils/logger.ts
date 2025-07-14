@@ -1,4 +1,5 @@
-import pino, { Logger } from "pino";
+
+import { pino, Logger } from "pino";
 
 export const logger: Logger = pino({
   transport: {

@@ -1,101 +1,110 @@
-import { getStoragePath } from "@utils/localStoragePath";
-import dotenv from "dotenv";
-import envPaths from "env-paths";
-import { AppConst } from "@/const";
-import { Logger } from "pino";
-import { Llm } from "./llm/Llm";
+
+
+import { Message, Role, MessageType, Tool, ToolCall } from "../core/types.js";
+import { InterpreterOptions } from "./InterpreterOptions.js";
+import { getStoragePath } from "../utils/localStoragePath.js";
+import { AppConst } from "../const.js";
+import { Llm } from "./llm/Llm.js";
+import { Computer } from "./Computer.js";
+import * as fs from "fs";
+import * as path from "path";
+import { logger } from "../utils/logger.js";
+import { config } from "../config.js";
+
 export class Interpreter {
-  private messages: string[] | null;
-  private responding: boolean;
-  private lastMessageCount: number;
-  private offline: boolean;
-  private autoRun: boolean;
-  private verbose: boolean;
-  private debug: boolean;
-  private maxOutput: number;
-  private safeMode: string;
-  private shrinkImages: boolean;
-  private loop: boolean;
-  private loopMessage: string;
-  private loopBreakers: string[];
-  private disableTelemetry: boolean;
-  private inTerminalInterface: boolean;
-  private conversationHistory: boolean;
-  private conversationFilaname: string | null;
-  private conversationHistoryPath: string;
-  private os: boolean;
-  private speakMessage: boolean;
-  // change this later
-  private llm: any | null;
-  private systemMessage: string;
-  private customerInstructions: string;
-  private userMessageTemplate: string;
-  private alwaysApplyMessageTemplate: boolean;
-  private codeOutputTemplate: string;
-  private emptyCodeOutputTemplate: string;
-  private codeOutputSender: string;
-  // change this later;
-  public computer: any;
-  private syncComputer: boolean;
-  private importComputerApi: boolean;
-  private skillsPath: string | null;
-  private multiLine: boolean;
-  private contributeConversation: boolean;
-  private plainTextDisplay: boolean;
-  private highlightActiveLine: boolean;
+  public messages: Message[] = [];
+  public responding = false;
+  private lastMessageCount = 0;
+  public llm: Llm;
+  public computer: Computer;
 
-  constructor(
-    messages: string[] | null,
-    offline: boolean = false,
-    autoRun: boolean = false,
-    verbose: boolean = false,
-    debug: boolean = false,
-    maxOutput: number = 2800,
-    safeMode: string = "off",
-    shrinkImages: boolean = true,
-    loop: boolean = false,
-    loopMessage: string = "Proceed. You CAN run code on my machine. If the entire task I asked for is done, say exactly 'The task is done.'\
-                      If you need some specific information (like username or password) say EXACTLY 'Please provide more information.' If it's impossible,\
-                      say 'The task is impossible. (If I haven't provided a task, say exactly 'Let me know what you'd like to do next.') Otherwise keep going.",
-    loopBreakers: string[] = [
-      "The Task is done.",
-      "The Task is impossible.",
-      "Let me know what you'd like to do next",
-      "Please provide more information",
-    ],
-    disableTelemetry: boolean = process.env.DISABLE_TELEMETRY == "false"
-      ? false
-      : true,
-    inTerminalInterface: boolean = false,
-    conversationHistory: boolean = true,
-    conversationFilaname: string | null = null,
-    conversationHistoryPath: string = getStoragePath("conversations"),
-    os: boolean = false,
-    speakMessage: boolean = false,
-    // change this later
-    llm: any | null = null,
-    systemMessage: string = AppConst.defaultSystemMessage,
-    customerInstructions: string = "",
-    userMessageTemplate: string = "{content}",
-    alwaysApplyMessageTemplate: boolean = false,
-    codeOutputTemplate: string = "Code output: {content}\n\nWhat does this output mean / what's next (if anything, or are we done)?",
-    emptyCodeOutputTemplate: string = "The code above was executed on my machine. It produced no text output. what's next (if anything, or are we done?)",
-    codeOutputSender: string = "user",
-    // change this later;
-    computer: any = null,
-    syncComputer: boolean = false,
-    importComputerApi: boolean = false,
-    skillsPath: string | null = null,
-    importSkills: boolean = false,
-    multiLine: boolean = true,
-    contributeConversation: boolean = false,
-    plainTextDisplay: boolean = false,
-  ) {
-    this.messages = messages == null ? [] : messages;
-    this.responding = false;
-    this.lastMessageCount = 0;
+  // Settings
+  public offline: boolean;
+  public autoRun: boolean;
+  public verbose: boolean;
+  public debug: boolean;
+  public maxOutput: number;
+  public safeMode: string;
+  public shrinkImages: boolean;
+  public disableTelemetry: boolean;
+  public inTerminalInterface: boolean;
+  public multiLine: boolean;
+  public contributeConversation: boolean;
+  public plainTextDisplay: boolean;
+  public highlightActiveLine: boolean;
 
-    // Settings
+  // Loop messages
+  public loop: boolean;
+  public loopMessage: string;
+  public loopBreakers: string[];
+
+  // Conversation History
+  public conversationHistory: boolean;
+  public conversationFilename: string | null;
+  public conversationHistoryPath: string;
+
+  // OS control mode related attributes
+  public speakMessage: boolean;
+
+  // LLM related
+  public systemMessage: string;
+  public customerInstructions: string;
+  public userMessageTemplate: string;
+  public alwaysApplyMessageTemplate: boolean;
+  public codeOutputTemplate: string;
+  public emptyCodeOutputTemplate: string;
+  public codeOutputSender: string;
+
+  // Computer related
+  public syncComputer: boolean;
+  public importComputerApi: boolean;
+  public skillsPath: string | null;
+  public importSkills: boolean;
+
+  public tools: (Tool & { execute: (args: any) => Promise<string> })[] = [];
+
+  constructor(options: InterpreterOptions = {}) {
+    const {
+      messages = [],
+      offline = false,
+      autoRun = true,
+      verbose = false,
+      debug = false,
+      maxOutput = config.defaultMaxOutput,
+      safeMode = config.defaultSafeMode,
+      shrinkImages = config.defaultShrinkImages,
+      loop = false,
+      loopMessage = "Proceed. You CAN run code on my machine. If the entire task I asked for is done, say exactly 'The task is done.'                      If you need some specific information (like username or password) say EXACTLY 'Please provide more information.' If it's impossible,                      say 'The task is impossible. (If I haven't provided a task, say exactly 'Let me know what you'd like to do next.') Otherwise keep going.",
+      loopBreakers = [
+        "The Task is done.",
+        "The Task is impossible.",
+        "Let me know what you'd like to do next",
+        "Please provide more information",
+      ],
+      disableTelemetry = config.defaultDisableTelemetry,
+      inTerminalInterface = config.defaultInTerminalInterface,
+      conversationHistory = config.conversationHistoryEnabled,
+      conversationFilename = config.conversationFilename,
+      conversationHistoryPath = getStoragePath("conversations"),
+      speakMessage = config.defaultSpeakMessage,
+      llm = null,
+      customerInstructions = "",
+      userMessageTemplate = "{content}",
+      alwaysApplyMessageTemplate = config.defaultAlwaysApplyMessageTemplate,
+      codeOutputTemplate = "Code output: {content}\n\nWhat does this output mean / what's next (if anything, or are we done)?",
+      emptyCodeOutputTemplate = "The code above was executed on my machine. It produced no text output. what's next (if anything, or are we done?)",
+      codeOutputSender = "user",
+      computer = null,
+      syncComputer = false,
+      importComputerApi = false,
+      skillsPath = null,
+      importSkills = false,
+      multiLine = config.defaultMultiLine,
+      contributeConversation = config.defaultContributeConversation,
+      plainTextDisplay = config.defaultPlainTextDisplay,
+    } = options;
+
+    this.messages = messages;
     this.offline = offline;
     this.autoRun = autoRun;
     this.verbose = verbose;
@@ -108,53 +117,237 @@ export class Interpreter {
     this.multiLine = multiLine;
     this.contributeConversation = contributeConversation;
     this.plainTextDisplay = plainTextDisplay;
-    this.highlightActiveLine = true; // additional setting to toggle active line highlighting. Defaults to True
+    this.highlightActiveLine = config.defaultHighlightActiveLine;
 
-    // Loo messages
     this.loop = loop;
     this.loopMessage = loopMessage;
     this.loopBreakers = loopBreakers;
 
-    // Conversation History
     this.conversationHistory = conversationHistory;
-    this.conversationFilaname = conversationFilaname;
+    this.conversationFilename = conversationFilename;
     this.conversationHistoryPath = conversationHistoryPath;
 
-    // os control mode related attributes
-    this.os = os;
+    if (this.conversationHistory && this.conversationFilename) {
+      this.loadConversation(this.conversationFilename);
+    }
+
     this.speakMessage = speakMessage;
-
-    // Computer
-    // this.computer = computer == null ? new Computer() : computer;
+    this.computer = computer == null ? new Computer(this) : computer;
     this.syncComputer = syncComputer;
-    this.computer.importComputerApi = importComputerApi;
+    this.importComputerApi = importComputerApi;
 
-    // Skills
     if (skillsPath) this.computer.skills.path = skillsPath;
+    this.importSkills = importSkills;
 
-    this.computer.importSkills = importSkills;
+    this.llm = llm == null ? new Llm(this, options) : llm;
 
-    // LLM
-
-    this.llm = llm == null ? new Llm(this) : llm;
-
-  
-    // llm related
-    this.systemMessage = systemMessage;
     this.customerInstructions = customerInstructions;
     this.userMessageTemplate = userMessageTemplate;
     this.alwaysApplyMessageTemplate = alwaysApplyMessageTemplate;
     this.codeOutputTemplate = codeOutputTemplate;
     this.emptyCodeOutputTemplate = emptyCodeOutputTemplate;
     this.codeOutputSender = codeOutputSender;
-
-    this.importComputerApi = importComputerApi;
     this.skillsPath = skillsPath;
+
+    this.systemMessage = this.getSystemMessage();
+    this.messages.unshift({ role: Role.System, messageType: MessageType.Message, content: this.systemMessage });
   }
 
-  public localSetup() {
-    /*
-      Opens a wizard that lets terminal users pick a local model.
-    */
+  private getConversationFilePath(filename: string): string {
+    return path.join(this.conversationHistoryPath, filename);
+  }
+
+  public saveConversation(filename: string) {
+    if (!fs.existsSync(this.conversationHistoryPath)) {
+      fs.mkdirSync(this.conversationHistoryPath, { recursive: true });
+    }
+    const filePath = this.getConversationFilePath(filename);
+    fs.writeFileSync(filePath, JSON.stringify(this.messages, null, 2));
+    logger.info(`Conversation saved to ${filePath}`);
+  }
+
+  public loadConversation(filename: string) {
+    const filePath = this.getConversationFilePath(filename);
+    if (fs.existsSync(filePath)) {
+      const data = fs.readFileSync(filePath, "utf-8");
+      this.messages = JSON.parse(data);
+      logger.info(`Conversation loaded from ${filePath}`);
+    } else {
+      logger.info("No existing conversation found.");
+    }
+  }
+
+  public async chat(message?: string): Promise<Message[]> {
+    if (message) {
+        logger.info(`Received message: ${message}`);
+        if (typeof message !== 'string' || message.trim() === '') {
+            logger.warn("Invalid input: Message must be a non-empty string.");
+            throw new Error("Message must be a non-empty string.");
+        }
+        this.messages.push({
+            role: Role.User,
+            messageType: MessageType.Message,
+            content: message,
+        });
+    }
+
+    if (this.loop) {
+        return this.runLoop();
+    }
+
+    const finalMessages = await this.respond();
+    if (this.conversationHistory && this.conversationFilename) {
+        this.saveConversation(this.conversationFilename);
+    }
+    return finalMessages;
+}
+
+private async runLoop(): Promise<Message[]> {
+    let finalMessages: Message[] = [];
+    while (true) {
+        finalMessages = await this.respond();
+        const lastMessageContent = finalMessages[finalMessages.length - 1]?.content?.trim() || "";
+
+        if (this.loopBreakers.some(breaker => lastMessageContent.includes(breaker))) {
+            logger.info("Loop broken due to break message.");
+            break;
+        }
+
+        this.messages.push({
+            role: Role.User,
+            messageType: MessageType.Message,
+            content: this.loopMessage,
+        });
+    }
+    if (this.conversationHistory && this.conversationFilename) {
+        this.saveConversation(this.conversationFilename);
+    }
+    return finalMessages;
+}
+
+private async respond(): Promise<Message[]> {
+    this.responding = true;
+    logger.info("Calling LLM for response...");
+
+    const llmResponse = await this.llm.run(this.messages, this.tools.map(t => t));
+    this.messages.push(llmResponse);
+
+    if (llmResponse.tool_calls && llmResponse.tool_calls.length > 0) {
+        await this.handleToolCalls(llmResponse.tool_calls);
+        return this.respond(); // Get another response after handling tool calls
+    }
+
+    const codeBlocks = this.extractCodeBlocks(llmResponse.content);
+    if (codeBlocks.length > 0 && this.autoRun) {
+        for (const block of codeBlocks) {
+            const output = await this.computer.execute(block.language, block.code);
+            this.messages.push({
+                role: Role.Computer,
+                messageType: MessageType.Console,
+                content: output,
+            });
+        }
+        return this.respond(); // Get another response after handling code execution
+    }
+
+    this.responding = false;
+    logger.info("LLM response received.");
+    this.streamOutput(llmResponse);
+    return this.messages;
+}
+
+private async handleToolCalls(toolCalls: ToolCall[]) {
+    logger.info(`Found ${toolCalls.length} tool calls. Executing...`);
+    for (const toolCall of toolCalls) {
+        const toolName = toolCall.function.name;
+        const toolArgs = JSON.parse(toolCall.function.arguments);
+        logger.info(`Executing tool: ${toolName} with arguments: ${JSON.stringify(toolArgs)}`);
+
+        const tool = this.tools.find(t => t.function.name === toolName);
+        if (tool) {
+            try {
+                const toolOutput = await tool.execute(toolArgs);
+                const toolMessage: Message = {
+                    role: Role.Tool,
+                    messageType: MessageType.Console,
+                    content: toolOutput,
+                };
+                this.messages.push(toolMessage);
+                this.streamOutput(toolMessage);
+                logger.info(`Tool execution output: ${toolOutput}`);
+            } catch (error: any) {
+                const errorMessage = `Error executing tool ${toolName}: ${error.message}`;
+                const errorToolMessage: Message = {
+                    role: Role.Tool,
+                    messageType: MessageType.Console,
+                    content: errorMessage,
+                };
+                this.messages.push(errorToolMessage);
+                this.streamOutput(errorToolMessage);
+                logger.error(errorMessage);
+            }
+        } else {
+            const errorMessage = `Tool not found: ${toolName}`;
+            const errorToolMessage: Message = {
+                role: Role.Tool,
+                messageType: MessageType.Console,
+                content: errorMessage,
+            };
+            this.messages.push(errorToolMessage);
+            this.streamOutput(errorToolMessage);
+            logger.error(errorMessage);
+        }
+    }
+}
+
+  private extractCodeBlocks(content: string): { language: string; code: string }[] {
+    const codeBlocks: { language: string; code: string }[] = [];
+    const regex = /```(\w+)?\n([\s\S]*?)\n```/g;
+    let match;
+    while ((match = regex.exec(content)) !== null) {
+      const language = match[1] || "unknown";
+      const code = match[2];
+      codeBlocks.push({ language, code });
+    }
+    return codeBlocks;
+  }
+
+  public registerTool(tool: Tool, executeFunction: (args: any) => Promise<string>) {
+    this.tools.push({ ...tool, execute: executeFunction });
+    this.systemMessage = this.getSystemMessage(); // Update system message
+    this.messages[0].content = this.systemMessage; // Update in messages array
+  }
+
+  private getSystemMessage(): string {
+    let systemMessage = AppConst.defaultSystemMessage;
+
+    if (this.tools.length > 0) {
+      systemMessage += "\n\nYou have access to the following tools:\n";
+      this.tools.forEach(tool => {
+        systemMessage += "\n### " + tool.function.name + "\n";
+        systemMessage += tool.function.description + "\n";
+        systemMessage += "\`\`\`json\n" + JSON.stringify(tool.function.parameters, null, 2) + "\n\`\`\`\n";
+      });
+    }
+    return systemMessage;
+  }
+
+  public streamOutput(message: Message) {
+    // In a real CLI, you would print this to the console.
+    // For this environment, we'll just log it.
+    console.log(`${message.role}: ${message.content}`);
+    logger.info(`Stream output: ${JSON.stringify(message)}`);
+  }
+
+  public reset() {
+    this.messages = [{ role: Role.System, messageType: MessageType.Message, content: this.systemMessage }];
+    if (this.conversationHistory && this.conversationFilename) {
+        const filePath = this.getConversationFilePath(this.conversationFilename);
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            logger.info(`Deleted conversation history file: ${filePath}`);
+        }
+    }
+    logger.info("Interpreter reset.");
   }
 }

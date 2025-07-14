@@ -1,10 +1,59 @@
-unoficial port of https://github.com/OpenInterpreter/open-interpreter to js/ts ecosystem
+# Open Interpreter (Unofficial JS/TS Port)
 
+This is an unofficial port of the Open Interpreter to the JavaScript/TypeScript ecosystem, aiming to provide a robust and extensible environment for AI-driven code execution and interaction.
 
+## Features:
 
+This CLI agent now supports a wide range of functionalities, including:
 
-# Features:
+*   **Multi-Language Code Execution:** Seamlessly execute code in various programming languages, including:
+    *   Python
+    *   JavaScript (Node.js)
+    *   Shell (Bash/Zsh)
+    *   Ruby
+    *   Perl
+    *   PHP
+    *   PowerShell
+    *   Java
+    *   Go
+    *   C++
+    *   Rust
+    *   Swift
+    *   C#
+    *   Kotlin
+    *   R
+    *   TypeScript
+    *   Groovy
+    *   Scala
 
+*   **Intelligent Environment Setup:** Automatically checks for and installs necessary language runtimes and package managers (e.g., `python`, `node`, `npm`, `brew`, `apt`, `yum`, `choco`, `rustup`) across different operating systems (Linux, macOS, Windows).
 
-Not supported:
- * LLM vendor budget management (https://github.com/zya/litellmjs) once implement it, will add it
+*   **Code Analysis Tools:**
+    *   **Syntax Checking:** Utilizes language-specific tools to perform syntax checks on provided code, reporting errors and warnings.
+    *   **Conceptual Error Fixing:** Provides a framework for an advanced AI model to analyze error messages and problematic code, suggesting potential fixes.
+
+*   **Configurable Options:** Many aspects of the interpreter's behavior can be configured via command-line arguments, including:
+    *   `--autoRun`: Automatically execute code blocks without user confirmation.
+    *   `--loop`: Continuously run the interpreter in a loop until a breaking condition is met.
+    *   `--safeMode`: Control the level of file system access during code execution.
+    *   `--shrinkImages`: Automatically resize images for vision processing.
+    *   `--disableTelemetry`: Disable telemetry data contribution.
+    *   `--inTerminalInterface`: Optimize output for terminal display.
+    *   `--speakMessage`: Enable text-to-speech for output messages.
+    *   `--alwaysApplyMessageTemplate`: Always apply a predefined message template to LLM responses.
+    *   `--multiLine`: Enable multi-line input.
+    *   `--contributeConversation`: Allow conversation data to be contributed for telemetry.
+    *   `--plainTextDisplay`: Force plain text output.
+    *   `--highlightActiveLine`: Highlight the active line in code blocks.
+    *   `--autoFixCode`: Enable automatic code fixing attempts.
+    *   `--displayMode`: Set the display mode ('cli' or 'gui-placeholder').
+    *   `--conversationHistory`: Enable or disable conversation history.
+    *   `--conversationFilename`: Specify the conversation history filename.
+
+*   **Extensible Tooling:** Easily integrate new tools and functionalities.
+
+*   **Conceptual GUI Integration:** Includes conceptual methods for display updates and input event handling, laying the groundwork for future graphical user interface implementations.
+
+## Installation and Usage:
+
+(Instructions to be added here for building and running the project)

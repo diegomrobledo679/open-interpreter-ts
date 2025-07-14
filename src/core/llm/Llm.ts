@@ -1,75 +1,105 @@
-import { Models } from "@/const";
-import { Interpreter } from "@core/Interpreter";
-import { logger } from "@utils/logger";
+
+import { Models } from "../../const.js";
+import { Interpreter } from "@core/Interpreter.js";
+import { logger } from "../../utils/logger.js";
 import { assert } from "console";
-import { Message, Role } from "@/core/types";
+import { Message, Role, MessageType, ToolCall } from "../types.js";
+import OpenAI from 'openai';
+import { InterpreterOptions } from "../InterpreterOptions.js";
+
 export class Llm {
-  /*
-    A stateless LMC-style LLM with some helpful properties.
-  */
-  private readonly intrepreter: Interpreter;
-  private readonly visionRenderer;
-  private readonly model: string = Models.GPT_4O;
-  private readonly temprature: number = 0;
-  private readonly supportsVision = null;
-  private readonly supportsFunctions = null;
-  private readonly executionInstructions =
-    "To execute code on the user's machine, \
-        write a markdown code block. Specify the language after the ```. \
-        You will receive the output. Use any programming language."; // If supportsFunctions is False, this will be added to the system message
+  private readonly interpreter: Interpreter;
+  private model: string;
+  private temperature: number = 0;
+  private contextWindow: number | null;
+  private maxTokens: number | null;
+  private openai: OpenAI;
+  private llmProvider: string;
+  private llmApiKey: string | undefined;
+  private llmBaseUrl: string | undefined;
 
-  // optional settings
-  private readonly contextWindow = null;
-  private maxTokens: number | null = null;
-  private readonly apiBase = null;
-  private readonly apiKey = null;
-  private readonly apiVersion = null;
-  private readonly isLoaded: boolean = false;
-
-  constructor(interepreter: Interpreter) {
-    this.intrepreter = interepreter;
-    this.visionRenderer = interepreter.computer.vision.query;
+  constructor(interpreter: Interpreter, options: InterpreterOptions) {
+    this.interpreter = interpreter;
+    this.contextWindow = interpreter.maxOutput;
+    this.maxTokens = interpreter.maxOutput;
+    this.setLlmSettings(options);
   }
 
-  run(messages: Message[]) {
-    /*
-    We're responsible for formatting the call into the llm.completions object,
-    starting with LMC messages in interpreter.messages, going to OpenAI compatible messages into the llm,
-    respecting whether it's a vision or function model, respecting its context window and max tokens, etc.
-    And then processing its output, whether it's a function or non function calling model, into LMC format.
-    */
+  public setLlmSettings(options: InterpreterOptions) {
+    this.llmProvider = options.llmProvider || 'openai';
+    this.model = options.llmModel || Models.GPT_4O;
+    this.llmApiKey = options.llmApiKey || process.env.OPENAI_API_KEY;
+    this.llmBaseUrl = options.llmBaseUrl;
 
-    if (!this.isLoaded) {
-      this.load();
+    if (this.llmProvider === 'ollama') {
+      this.llmBaseUrl = this.llmBaseUrl || 'http://localhost:11434/v1';
+    } else if (this.llmProvider === 'openai') {
+      this.llmBaseUrl = this.llmBaseUrl || 'https://api.openai.com/v1';
     }
 
-    if (
-      this.maxTokens != null &&
-      this.contextWindow != null &&
-      this.maxTokens > this.contextWindow
-    ) {
-      logger.warn(
-        "Warning: max_tokens is larger than context_window. Setting max_tokens to be 0.2 times the context_window.",
-      );
-      this.maxTokens = Number(0.2 * this.contextWindow);
+    this.openai = new OpenAI({
+        apiKey: this.llmApiKey,
+        baseURL: this.llmBaseUrl,
+    });
+  }
+
+  public async run(messages: Message[], tools?: any[]): Promise<Message> {
+    logger.debug("Llm.run called.");
+
+    if (this.maxTokens && this.contextWindow && this.maxTokens > this.contextWindow) {
+      logger.warn("Warning: max_tokens is larger than context_window. Setting max_tokens to 0.2 times the context_window.");
+      this.maxTokens = Math.floor(0.2 * this.contextWindow);
     }
 
-    // assertions
-    assert(
-      messages[0].role == Role.System,
-      "First message must have the role 'system'",
-    );
-    assert(
-      !messages.find((val, i) => i != 0 && val.role == Role.System),
-      "No message after the first can have the role 'system'",
-    );
+    assert(messages[0].role === Role.System, "First message must have the role 'system'");
+    assert(!messages.slice(1).some(m => m.role === Role.System), "No message after the first can have the role 'system'");
 
-    let model = this.model;
+    const model = this.model;
+    logger.info(`Running LLM with model: ${model}`);
+    logger.debug(`Messages sent to LLM: ${JSON.stringify(messages)}`);
+
+    const preparedMessages = messages.map(msg => ({
+      role: msg.role.toLowerCase() as 'system' | 'user' | 'assistant' | 'tool',
+      content: msg.content,
+      ...(msg.tool_calls && { tool_calls: msg.tool_calls }),
+    }));
+
+    const maxRetries = 3;
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        const response = await this.openai.chat.completions.create({
+          model: model,
+          messages: preparedMessages as any, // Cast to any to satisfy OpenAI type, as we handle roles dynamically
+          temperature: this.temperature,
+          max_tokens: this.maxTokens || undefined,
+          tools: tools as any,
+        });
+
+        const choice = response.choices[0];
+        if (!choice) {
+          logger.warn("LLM returned no choices.");
+          return { role: Role.Assistant, messageType: MessageType.Message, content: "" };
+        }
+
+        const message = choice.message;
+        logger.debug(`LLM response content: ${message.content}`);
+        logger.debug(`LLM tool calls: ${JSON.stringify(message.tool_calls)}`);
+
+        return {
+          role: Role.Assistant,
+          messageType: MessageType.Message,
+          content: message.content || "",
+          tool_calls: (message.tool_calls as ToolCall[]) || [],
+        };
+      } catch (error: any) {
+        logger.error(`Error during LLM completion (Attempt ${i + 1}/${maxRetries}): ${error}`);
+        if (i < maxRetries - 1) {
+          await new Promise(res => setTimeout(res, 1000 * 2 ** i));
+        } else {
+          throw error;
+        }
+      }
+    }
+    throw new Error("Failed to get LLM completion after multiple retries.");
   }
-
-  load() {
-    if (this.isLoaded) return;
-  }
-
-  fixedLiteLLmCompletions() {}
 }

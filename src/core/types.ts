@@ -3,6 +3,24 @@ export type Message = {
   messageType: MessageType;
   format?: Format;
   content: any;
+  tool_calls?: ToolCall[];
+};
+
+export type ToolCall = {
+  id: string;
+  function: { 
+    name: string;
+    arguments: string; // JSON string of arguments
+  };
+};
+
+export type Tool = {
+  type: "function";
+  function: {
+    name: string;
+    description?: string;
+    parameters: object; // JSON schema
+  };
 };
 
 export enum Role {
@@ -10,6 +28,7 @@ export enum Role {
   Computer = "computer",
   Assistant = "assistant",
   System = "system",
+  Tool = "tool",
 }
 
 export enum MessageType {
