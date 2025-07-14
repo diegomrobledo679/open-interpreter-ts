@@ -1,8 +1,11 @@
 import { Tool } from "../core/types.js";
+import { exec } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
-import * as yaml from "js-yaml"; // You might need to install js-yaml: npm install js-yaml
-import * as xml2js from "xml2js"; // You might need to install xml2js: npm install xml2js
+import * as yaml from "js-yaml";
+import { parseStringPromise } from "xml2js";
+import Ajv from "ajv";
+import os from "os";
 
 // Helper to execute shell commands (if needed for some config types)
 const executeShellCommand = (command: string): Promise<string> => {
@@ -66,12 +69,12 @@ export async function executeReadConfigFileTool(args: { filePath: string; fileTy
         });
         return JSON.stringify(iniConfig, null, 2);
       case "xml":
-        return new Promise((resolve, reject) => {
-          xml2js.parseString(content, (err, result) => {
-            if (err) reject(err);
-            else resolve(JSON.stringify(result, null, 2));
-          });
-        });
+        try {
+          const result = await parseStringPromise(content);
+          return JSON.stringify(result, null, 2);
+        } catch (err: any) {
+          throw err;
+        }
       default:
         return `Error: Unsupported file type for reading: ${args.fileType}`;
     }
@@ -186,30 +189,43 @@ export const validateConfigFileTool: Tool = {
   type: "function",
   function: {
     name: "validateConfigFile",
-    description: "Conceptually validates a configuration file against a predefined schema or best practices. This is a placeholder and requires a specific schema definition and validation library for each file type.",
+    description: "Validates a configuration file using an optional JSON Schema.",
     parameters: {
       type: "object",
       properties: {
-        filePath: {
-          type: "string",
-          description: "The path to the configuration file.",
-        },
-        fileType: {
-          type: "string",
-          enum: ["json", "yaml", "xml"],
-          description: "The type of the configuration file.",
-        },
-        schemaName: {
-          type: "string",
-          description: "Optional: The name or identifier of the schema to validate against.",
-          nullable: true,
-        },
+        filePath: { type: "string", description: "The path to the configuration file." },
+        fileType: { type: "string", enum: ["json", "yaml", "xml"], description: "The type of the configuration file." },
+        schemaPath: { type: "string", description: "Optional path to a JSON Schema file used for validation.", nullable: true },
       },
       required: ["filePath", "fileType"],
     },
   },
 };
 
-export async function executeValidateConfigFileTool(args: { filePath: string; fileType: "json" | "yaml" | "xml"; schemaName?: string }): Promise<string> {
-  return `Conceptual validation of ${args.fileType} file: ${args.filePath}.\nTo make this functional, you would need to define schemas (e.g., JSON Schema) and integrate a validation library (e.g., 'ajv' for JSON, 'jsonschema' for Python).`;
+export async function executeValidateConfigFileTool(args: { filePath: string; fileType: "json" | "yaml" | "xml"; schemaPath?: string }): Promise<string> {
+  try {
+    const content = fs.readFileSync(args.filePath, "utf-8");
+    let data: any;
+    if (args.fileType === "json") {
+      data = JSON.parse(content);
+    } else if (args.fileType === "yaml") {
+      data = yaml.load(content);
+    } else {
+      data = await parseStringPromise(content);
+    }
+
+    if (args.schemaPath) {
+      const schemaContent = fs.readFileSync(args.schemaPath, "utf-8");
+      const schema = JSON.parse(schemaContent);
+      const ajv = new Ajv({ allErrors: true });
+      const validate = ajv.compile(schema);
+      const valid = validate(data);
+      if (!valid) {
+        return `Validation failed: ${ajv.errorsText(validate.errors)}`;
+      }
+    }
+    return `Validation successful for ${args.filePath}.`;
+  } catch (error: any) {
+    return `Error validating configuration file: ${error.message}`;
+  }
 }
