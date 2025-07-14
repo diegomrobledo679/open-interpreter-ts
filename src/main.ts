@@ -53,11 +53,16 @@ export async function main() {
 
   const argv = minimist(process.argv.slice(2));
 
+  const envBool = (value: string | undefined, fallback: boolean) => {
+    if (value === undefined) return fallback;
+    return value.toLowerCase() === 'true';
+  };
+
   const options: InterpreterOptions = {
     ...argv, // Pass all command-line arguments to options
-    autoRun: argv.autoRun !== undefined ? argv.autoRun : true, // Default autoRun to true
-    loop: argv.loop || config.defaultLoop,
-    safeMode: argv.safeMode || config.defaultSafeMode,
+    autoRun: argv.autoRun !== undefined ? argv.autoRun : envBool(process.env.AUTO_RUN, true),
+    loop: argv.loop !== undefined ? argv.loop : envBool(process.env.LOOP, config.defaultLoop),
+    safeMode: argv.safeMode || process.env.SAFE_MODE || config.defaultSafeMode,
     llmProvider: argv.llmProvider || process.env.LLM_PROVIDER,
     llmModel: argv.llmModel || process.env.LLM_MODEL,
     llmApiKey: argv.llmApiKey || process.env.LLM_API_KEY || process.env.OPENAI_API_KEY,

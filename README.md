@@ -82,11 +82,14 @@ This CLI agent now supports a wide range of functionalities, including:
 
 ## Configuration via Environment Variables
 
-The interpreter reads LLM settings from environment variables if corresponding CLI options are omitted. Useful variables include:
+The interpreter reads various settings from environment variables if corresponding CLI options are omitted. Useful variables include:
 
 - `LLM_PROVIDER` – Provider name like `openai` or `ollama`.
 - `LLM_MODEL` – Model identifier to use.
 - `LLM_API_KEY` – API key for the provider.
 - `LLM_BASE_URL` – Base URL for API requests.
+- `AUTO_RUN` – Set to `true` or `false` to control automatic execution of code blocks.
+- `LOOP` – Set to `true` to keep the interpreter running in a loop.
+- `SAFE_MODE` – Specify the default safe mode level.
 
 Create a `.env` file with these values to avoid passing them as flags.

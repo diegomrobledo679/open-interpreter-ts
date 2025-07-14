@@ -46,7 +46,12 @@ export function main() {
     return __awaiter(this, void 0, void 0, function* () {
         logger.info("Starting Open Interpreter CLI...");
         const argv = minimist(process.argv.slice(2));
-        const options = Object.assign(Object.assign({}, argv), { autoRun: argv.autoRun !== undefined ? argv.autoRun : true, loop: argv.loop || config.defaultLoop, safeMode: argv.safeMode || config.defaultSafeMode, llmProvider: argv.llmProvider, llmModel: argv.llmModel, llmApiKey: argv.llmApiKey, llmBaseUrl: argv.llmBaseUrl });
+        const envBool = (value, fallback) => {
+            if (value === void 0)
+                return fallback;
+            return value.toLowerCase() === "true";
+        };
+        const options = Object.assign(Object.assign({}, argv), { autoRun: argv.autoRun !== undefined ? argv.autoRun : envBool(process.env.AUTO_RUN, true), loop: argv.loop !== undefined ? argv.loop : envBool(process.env.LOOP, config.defaultLoop), safeMode: argv.safeMode || process.env.SAFE_MODE || config.defaultSafeMode, llmProvider: argv.llmProvider || process.env.LLM_PROVIDER, llmModel: argv.llmModel || process.env.LLM_MODEL, llmApiKey: argv.llmApiKey || process.env.LLM_API_KEY || process.env.OPENAI_API_KEY, llmBaseUrl: argv.llmBaseUrl || process.env.LLM_BASE_URL });
         const interpreter = new Interpreter(options);
         // Register all tools
         interpreter.registerTool(calculatorTool, executeCalculatorTool);
