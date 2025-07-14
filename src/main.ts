@@ -72,6 +72,9 @@ export async function main() {
     ...argv, // Pass all command-line arguments to options
     autoRun: argv.autoRun !== undefined ? argv.autoRun : envBool(process.env.AUTO_RUN, true),
     loop: argv.loop !== undefined ? argv.loop : envBool(process.env.LOOP, config.defaultLoop),
+    offline: argv.offline !== undefined ? argv.offline : envBool(process.env.OFFLINE, false),
+    verbose: argv.verbose !== undefined ? argv.verbose : envBool(process.env.VERBOSE, false),
+    debug: argv.debug !== undefined ? argv.debug : envBool(process.env.DEBUG, false),
     safeMode: argv.safeMode || process.env.SAFE_MODE || config.defaultSafeMode,
     maxOutput: argv.maxOutput !== undefined ? parseInt(argv.maxOutput, 10) : envNumber(process.env.MAX_OUTPUT, config.defaultMaxOutput),
     llmProvider: argv.llmProvider || process.env.LLM_PROVIDER,

@@ -33,4 +33,17 @@ describe('Interpreter', () => {
     expect(typeof interpreter.computer.skills.hello).toBe('function');
     fs.rmSync(skillsDir, { recursive: true, force: true });
   });
+
+  it('reads boolean options from environment variables', () => {
+    process.env.OFFLINE = 'true';
+    process.env.VERBOSE = 'true';
+    process.env.DEBUG = 'true';
+    const interpreter = new Interpreter();
+    expect(interpreter.offline).toBe(true);
+    expect(interpreter.verbose).toBe(true);
+    expect(interpreter.debug).toBe(true);
+    delete process.env.OFFLINE;
+    delete process.env.VERBOSE;
+    delete process.env.DEBUG;
+  });
 });

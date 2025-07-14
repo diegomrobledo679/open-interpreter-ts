@@ -96,6 +96,9 @@ The interpreter reads various settings from environment variables if correspondi
 - `LLM_MAX_TOKENS` – Maximum tokens to request from the model.
 - `AUTO_RUN` – Set to `true` or `false` to control automatic execution of code blocks.
 - `LOOP` – Set to `true` to keep the interpreter running in a loop.
+- `OFFLINE` – Set to `true` to disable network access by default.
+- `VERBOSE` – Set to `true` for verbose logging output.
+- `DEBUG` – Set to `true` to enable debug logging.
 - `SAFE_MODE` – Specify the default safe mode level.
 - `MAX_OUTPUT` – Maximum number of characters to display from tool or code output.
 - `CONVERSATION_HISTORY_PATH` – Directory where conversation logs are stored.
