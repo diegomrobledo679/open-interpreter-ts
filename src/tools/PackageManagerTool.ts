@@ -641,7 +641,13 @@ export const runTestsTool: Tool = {
 
 export async function executeRunTestsTool(args: { testRunner: string; testPath?: string }): Promise<string> {
   const testPath = args.testPath ? ` ${args.testPath}` : '';
-  return `Conceptual test run using '${args.testRunner}'${testPath}. A real implementation would execute the test runner command and return its output.`;
+  const command = `${args.testRunner}${testPath}`;
+  try {
+    const output = await executeShellCommand(command);
+    return `Test run completed successfully:\n${output}`;
+  } catch (error: any) {
+    return `Error running tests: ${error.message}`;
+  }
 }
 
 export const generateDocumentationTool: Tool = {
@@ -671,7 +677,13 @@ export const generateDocumentationTool: Tool = {
 };
 
 export async function executeGenerateDocumentationTool(args: { docGenerator: string; sourcePath: string; outputPath: string }): Promise<string> {
-  return `Conceptual documentation generation using '${args.docGenerator}' from '${args.sourcePath}' to '${args.outputPath}'. A real implementation would execute the documentation generator command and return its output.`;
+  const command = `${args.docGenerator} ${args.sourcePath} ${args.outputPath}`;
+  try {
+    const output = await executeShellCommand(command);
+    return `Documentation generated successfully at ${args.outputPath}:\n${output}`;
+  } catch (error: any) {
+    return `Error generating documentation: ${error.message}`;
+  }
 }
 
 export const installFromGitTool: Tool = {
