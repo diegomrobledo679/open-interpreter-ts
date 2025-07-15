@@ -37,12 +37,17 @@ interface InterpreterOptions {
   inputEventHandler?: ((event: any) => void) | null;
   
   autoFixCode?: boolean;
-  displayMode?: 'cli' | 'gui-placeholder';
+  displayMode?: 'cli' | 'gui';
   google_web_search_function?: (query: string) => Promise<any>;
   llmProvider?: string;
   llmModel?: string;
   llmApiKey?: string;
   llmBaseUrl?: string;
+  llmTemperature?: number;
+  llmMaxTokens?: number;
+  conversationMaxLength?: number;
+  uiName?: string;
+  uiArgs?: string;
 }
 
 export type { InterpreterOptions };

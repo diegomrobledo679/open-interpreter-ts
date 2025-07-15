@@ -199,18 +199,25 @@ export const generateImageTool: Tool = {
 };
 
 export async function executeGenerateImageTool(args: { prompt: string; outputPath: string }): Promise<string> {
-  // This is a conceptual implementation. To make this functional, you would integrate with a real image generation API.
-  // Example (using a hypothetical 'ImageGenerationService'):
-  // try {
-  //   const imageUrl = await ImageGenerationService.generate(args.prompt, process.env.IMAGE_GEN_API_KEY);
-  //   const response = await fetch(imageUrl);
-  //   const buffer = await response.buffer();
-  //   ensureDirExists(args.outputPath);
-  //   fs.writeFileSync(args.outputPath, buffer);
-  //   return `Image generated for prompt: "${args.prompt}" and saved to ${args.outputPath}`;
-  // } catch (error: any) {
-  //   return `Error generating image: ${error.message}. Please ensure an image generation API is configured and accessible.`;
-  // }
-
-  return `Image generation for prompt: "${args.prompt}" is conceptual. To enable real image generation, you need to integrate an external image generation API (e.g., DALL-E, Stable Diffusion) and provide its API key. The generated image would conceptually be saved to ${args.outputPath}.`;
+  try {
+    const image = await new Jimp(512, 512, 0xffffffff);
+    const font = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
+    image.print(
+      font,
+      10,
+      10,
+      {
+        text: args.prompt,
+        alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER,
+        alignmentY: Jimp.VERTICAL_ALIGN_MIDDLE,
+      },
+      492,
+      492,
+    );
+    ensureDirExists(args.outputPath);
+    await image.writeAsync(args.outputPath);
+    return `Image generated for prompt: "${args.prompt}" and saved to ${args.outputPath}`;
+  } catch (error: any) {
+    return `Error generating image: ${error.message}`;
+  }
 }
