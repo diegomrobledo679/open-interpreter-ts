@@ -14,22 +14,23 @@ import minimist from "minimist";
 import { config } from "./config.js";
 // Import all tools and their execution functions
 import { calculatorTool, executeCalculatorTool } from "./tools/CalculatorTool.js";
-import { readFileTool, writeFileTool, executeReadFileTool, executeWriteFileTool, prependToFileTool, executePrependToFileTool, appendToFileTool, executeAppendToFileTool, insertIntoFileTool, executeInsertIntoFileTool, deleteFromFileTool, executeDeleteFromFileTool } from "./tools/FileTool.js";
+import { readFileTool, writeFileTool, executeReadFileTool, executeWriteFileTool, prependToFileTool, executePrependToFileTool, appendToFileTool, executeAppendToFileTool, insertIntoFileTool, executeInsertIntoFileTool, deleteFromFileTool, executeDeleteFromFileTool, replaceInFileTool, executeReplaceInFileTool, createDirectoryTool, executeCreateDirectoryTool, deletePathTool, executeDeletePathTool, copyPathTool, executeCopyPathTool, movePathTool, executeMovePathTool } from "./tools/FileTool.js";
 import { listDirectoryTool, executeListDirectoryTool } from "./tools/DirectoryTool.js";
 import { webFetchTool, executeWebFetchTool, httpRequestTool, executeHttpRequestTool } from "./tools/WebTool.js";
 import { searchTool, executeSearchTool } from "./tools/SearchTool.js";
 import { sqlTool, executeSqlTool } from "./tools/SqlTool.js";
 import { jsonTool, executeJsonTool } from "./tools/JsonTool.js";
-import { pingTool, executePingTool, tracerouteTool, executeTracerouteTool } from "./tools/NetworkTool.js";
-import { systemInfoTool, executeSystemInfoTool, processListTool, executeProcessListTool } from "./tools/SystemTool.js";
-import { syntaxCheckTool, executeSyntaxCheckTool, fixCodeTool, executeFixCodeTool, formatCodeTool, executeFormatCodeTool } from "./tools/CodeAnalysisTool.js";
+import { pingTool, executePingTool, tracerouteTool, executeTracerouteTool, dnsLookupTool, executeDnsLookupTool } from "./tools/NetworkTool.js";
+import { systemInfoTool, executeSystemInfoTool, processListTool, executeProcessListTool, executeShellCommandTool, executeExecuteShellCommandTool, getHardwareInfoTool, executeGetHardwareInfoTool, manageHardwareDeviceTool, executeManageHardwareDeviceTool, getInstalledSoftwareTool, executeGetInstalledSoftwareTool, getSystemLogsTool, executeGetSystemLogsTool } from "./tools/SystemTool.js";
+import { syntaxCheckTool, executeSyntaxCheckTool, fixCodeTool, executeFixCodeTool, formatCodeTool, executeFormatCodeTool, executeLinterFormatterTool, executeExecuteLinterFormatterTool } from "./tools/CodeAnalysisTool.js";
 import { gitStatusTool, executeGitStatusTool, gitDiffTool, executeGitDiffTool, gitAddTool, executeGitAddTool, gitCommitTool, executeGitCommitTool, gitLogTool, executeGitLogTool } from "./tools/GitTool.js";
+import { createBranchTool, executeCreateBranchTool, mergeBranchTool, executeMergeBranchTool, triggerCIBuildTool, executeTriggerCIBuildTool, deployProjectTool, executeDeployProjectTool, runStaticAnalysisTool, executeRunStaticAnalysisTool } from "./tools/SDLCtool.js";
 import { resizeImageTool, executeResizeImageTool, cropImageTool, executeCropImageTool, greyscaleImageTool, executeGreyscaleImageTool, rotateImageTool, executeRotateImageTool, generateImageTool, executeGenerateImageTool } from "./tools/ImageTool.js";
-import { countLinesInFileTool, executeCountLinesInFileTool, findTextInFileTool, executeFindTextInFileTool, getDirectoryStructureTool, executeGetDirectoryStructureTool, listFileTypesTool, executeListFileTypesTool, deepSearchTool, executeDeepSearchTool } from "./tools/AnalysisTool.js";
-import { minecraftPingTool, executeMinecraftPingTool } from "./tools/MinecraftTool.js";
+import { countLinesInFileTool, executeCountLinesInFileTool, findTextInFileTool, executeFindTextInFileTool, getDirectoryStructureTool, executeGetDirectoryStructureTool, listFileTypesTool, executeListFileTypesTool, deepSearchTool, executeDeepSearchTool, getFileContentTypeTool, executeGetFileContentTypeTool } from "./tools/AnalysisTool.js";
+import { minecraftPingTool, executeMinecraftPingTool, sendMinecraftRconCommandTool, executeSendMinecraftRconCommandTool } from "./tools/MinecraftTool.js";
 import { launchUITool, executeLaunchUITool, launchVirtualTerminalTool, executeLaunchVirtualTerminalTool } from "./tools/SystemIntegrationTool.js";
-import { terminateProcessTool, executeTerminateProcessTool } from "./tools/ProcessManagementTool.js";
-import { npmInstallTool, executeNpmInstallTool, pipInstallTool, executePipInstallTool, aptInstallTool, executeAptInstallTool, brewInstallTool, executeBrewInstallTool, chocoInstallTool, executeChocoInstallTool } from "./tools/PackageManagerTool.js";
+import { terminateProcessTool, executeTerminateProcessTool, startProcessTool, executeStartProcessTool, getProcessInfoTool, executeGetProcessInfoTool } from "./tools/ProcessManagementTool.js";
+import { npmInstallTool, executeNpmInstallTool, pipInstallTool, executePipInstallTool, aptInstallTool, executeAptInstallTool, brewInstallTool, executeBrewInstallTool, chocoInstallTool, executeChocoInstallTool, checkMissingDependenciesTool, executeCheckMissingDependenciesTool, listInstalledPackagesTool, executeListInstalledPackagesTool, npmUninstallTool, executeNpmUninstallTool, pipUninstallTool, executePipUninstallTool, aptRemoveTool, executeAptRemoveTool, brewUninstallTool, executeBrewUninstallTool, chocoUninstallTool, executeChocoUninstallTool, npmUpdateTool, executeNpmUpdateTool, pipUpdateTool, executePipUpdateTool, aptUpdateTool, executeAptUpdateTool, brewUpdateTool, executeBrewUpdateTool, chocoUpdateTool, executeChocoUpdateTool } from "./tools/PackageManagerTool.js";
 import { zipCompressTool, executeZipCompressTool, zipDecompressTool, executeZipDecompressTool, tarCompressTool, executeTarCompressTool, tarDecompressTool, executeTarDecompressTool } from "./tools/CompressionTool.js";
 import { generateBoilerplateCodeTool, executeGenerateBoilerplateCodeTool } from "./tools/CodeGenerationTool.js";
 import { getEnvironmentVariableTool, setEnvironmentVariableTool, unsetEnvironmentVariableTool, executeGetEnvironmentVariableTool, executeSetEnvironmentVariableTool, executeUnsetEnvironmentVariableTool } from "./tools/EnvironmentTool.js";
@@ -40,14 +41,44 @@ import { checkPortTool, executeCheckPortTool } from "./tools/NetworkScanTool.js"
 import { readClipboardTool, writeClipboardTool, executeReadClipboardTool, executeWriteClipboardTool } from "./tools/ClipboardTool.js";
 import { listDependenciesTool, executeListDependenciesTool } from "./tools/DependencyTool.js";
 import { listContainersTool, startContainerTool, stopContainerTool, executeListContainersTool, executeStartContainerTool, executeStopContainerTool } from "./tools/ContainerTool.js";
-import { getDiskUsageTool, getMemoryUsageTool, executeGetDiskUsageTool, executeGetMemoryUsageTool } from "./tools/SystemMonitorTool.js";
-import { getNetworkConfigTool, flushDnsCacheTool, executeGetNetworkConfigTool, executeFlushDnsCacheTool } from "./tools/NetworkConfigTool.js";
+import { getDiskUsageTool, getMemoryUsageTool, getDetailedCpuUsageTool, executeGetDiskUsageTool, executeGetMemoryUsageTool, executeGetDetailedCpuUsageTool } from "./tools/SystemMonitorTool.js";
+import { getNetworkConfigTool, flushDnsCacheTool, executeGetNetworkConfigTool, executeFlushDnsCacheTool, addFirewallRuleTool, executeAddFirewallRuleTool, deleteFirewallRuleTool, executeDeleteFirewallRuleTool } from "./tools/NetworkConfigTool.js";
+import { rebootSystemTool, executeRebootSystemTool, shutdownSystemTool, executeShutdownSystemTool } from "./tools/SystemPowerTool.js";
+import { startServiceTool, executeStartServiceTool, stopServiceTool, executeStopServiceTool, restartServiceTool, executeRestartServiceTool, getServiceStatusTool, executeGetServiceStatusTool } from "./tools/ServiceManagementTool.js";
+import { createUserTool, executeCreateUserTool, deleteUserTool, executeDeleteUserTool, createGroupTool, executeCreateGroupTool, deleteGroupTool, executeDeleteGroupTool, addUserToGroupTool, executeAddUserToGroupTool, removeUserFromGroupTool, executeRemoveUserFromGroupTool } from "./tools/UserManagementTool.js";
+import { readLogFileTool, executeReadLogFileTool, filterLogFileTool, executeFilterLogFileTool, clearLogFileTool, executeClearLogFileTool } from "./tools/LogManagementTool.js";
+import { readConfigFileTool, executeReadConfigFileTool, modifyConfigFileTool, executeModifyConfigFileTool, validateConfigFileTool, executeValidateConfigFileTool } from "./tools/SystemConfigTool.js";
+import { connectDatabaseTool, executeConnectDatabaseTool, databaseQueryTool, executeDatabaseQueryTool, listDatabaseTablesTool, getTableSchemaTool, executeListDatabaseTablesTool, executeGetTableSchemaTool } from "./tools/DatabaseTool.js";
+import { scanOpenPortsTool, executeScanOpenPortsTool, checkFileIntegrityTool, executeCheckFileIntegrityTool, listActiveConnectionsTool, executeListActiveConnectionsTool, scanForMalwareTool, executeScanForMalwareTool, analyzeSecurityLogsTool, executeAnalyzeSecurityLogsTool, manageCryptographicKeysTool, executeManageCryptographicKeysTool } from "./tools/SecurityTool.js";
+import { listCloudResourcesTool, executeListCloudResourcesTool, manageVirtualMachineTool, executeManageVirtualMachineTool, manageStorageBucketTool, executeManageStorageBucketTool } from "./tools/CloudTool.js";
+import { listVirtualMachinesTool, executeListVirtualMachinesTool, manageVirtualMachineLifecycleTool, executeManageVirtualMachineLifecycleTool } from "./tools/VirtualizationTool.js";
+import { checkNetworkConnectivityTool, executeCheckNetworkConnectivityTool, performNetworkSpeedTestTool, executePerformNetworkSpeedTestTool } from "./tools/NetworkDiagnosticsTool.js";
+import { createScriptFileTool, executeCreateScriptFileTool, executeScriptFileTool, executeExecuteScriptFileTool, scheduleScriptTool, executeScheduleScriptTool } from "./tools/AutomationTool.js";
 export function main() {
     return __awaiter(this, void 0, void 0, function* () {
+        var _a, _b;
         logger.info("Starting Open Interpreter CLI...");
         const argv = minimist(process.argv.slice(2));
-        const options = Object.assign(Object.assign({}, argv), { autoRun: argv.autoRun !== undefined ? argv.autoRun : true, loop: argv.loop || config.defaultLoop, safeMode: argv.safeMode || config.defaultSafeMode, llmProvider: argv.llmProvider, llmModel: argv.llmModel, llmApiKey: argv.llmApiKey, llmBaseUrl: argv.llmBaseUrl });
+        const envBool = (value, fallback) => {
+            if (value === undefined)
+                return fallback;
+            return value.toLowerCase() === 'true';
+        };
+        const envNumber = (value, fallback) => {
+            if (value === undefined)
+                return fallback;
+            const num = parseFloat(value);
+            return isNaN(num) ? fallback : num;
+        };
+        const envString = (value, fallback) => {
+            return value !== undefined ? value : fallback;
+        };
+        const options = Object.assign(Object.assign({}, argv), { autoRun: argv.autoRun !== undefined ? argv.autoRun : envBool(process.env.AUTO_RUN, true), loop: argv.loop !== undefined ? argv.loop : envBool(process.env.LOOP, config.defaultLoop), offline: argv.offline !== undefined ? argv.offline : envBool(process.env.OFFLINE, false), verbose: argv.verbose !== undefined ? argv.verbose : envBool(process.env.VERBOSE, false), debug: argv.debug !== undefined ? argv.debug : envBool(process.env.DEBUG, false), safeMode: argv.safeMode || process.env.SAFE_MODE || config.defaultSafeMode, maxOutput: argv.maxOutput !== undefined ? parseInt(argv.maxOutput, 10) : envNumber(process.env.MAX_OUTPUT, config.defaultMaxOutput), llmProvider: argv.llmProvider || process.env.LLM_PROVIDER, llmModel: argv.llmModel || process.env.LLM_MODEL, llmApiKey: argv.llmApiKey || process.env.LLM_API_KEY || (process.env.LLM_PROVIDER === 'ollama' ? process.env.OLLAMA_API_KEY : process.env.OPENAI_API_KEY), llmBaseUrl: argv.llmBaseUrl || process.env.LLM_BASE_URL || (process.env.LLM_PROVIDER === 'openai' ? process.env.OPENAI_BASE_URL : process.env.OLLAMA_BASE_URL), llmTemperature: argv.llmTemperature !== undefined ? parseFloat(argv.llmTemperature) : envNumber(process.env.LLM_TEMPERATURE, 0), llmMaxTokens: argv.llmMaxTokens !== undefined ? parseInt(argv.llmMaxTokens, 10) : envNumber(process.env.LLM_MAX_TOKENS, config.defaultMaxOutput), conversationHistoryPath: envString(argv.conversationHistoryPath, process.env.CONVERSATION_HISTORY_PATH), conversationFilename: envString(argv.conversationFilename, (_a = process.env.CONVERSATION_FILENAME) !== null && _a !== void 0 ? _a : config.conversationFilename), conversationMaxLength: argv.conversationMaxLength !== undefined ? parseInt(argv.conversationMaxLength, 10) : envNumber(process.env.CONVERSATION_MAX_LENGTH, undefined), skillsPath: envString(argv.skillsPath, process.env.SKILLS_PATH), importSkills: argv.importSkills !== undefined ? argv.importSkills : envBool(process.env.IMPORT_SKILLS, false), displayMode: envString(argv.displayMode, (_b = process.env.DISPLAY_MODE) !== null && _b !== void 0 ? _b : 'cli') });
         const interpreter = new Interpreter(options);
+        if (options.displayMode === 'gui') {
+            const msg = yield executeLaunchUITool({ uiName: process.env.UI_NAME || 'cyrah' });
+            console.log(msg);
+        }
         // Register all tools
         interpreter.registerTool(calculatorTool, executeCalculatorTool);
         interpreter.registerTool(readFileTool, executeReadFileTool);
@@ -56,6 +87,11 @@ export function main() {
         interpreter.registerTool(appendToFileTool, executeAppendToFileTool);
         interpreter.registerTool(insertIntoFileTool, executeInsertIntoFileTool);
         interpreter.registerTool(deleteFromFileTool, executeDeleteFromFileTool);
+        interpreter.registerTool(replaceInFileTool, executeReplaceInFileTool);
+        interpreter.registerTool(createDirectoryTool, executeCreateDirectoryTool);
+        interpreter.registerTool(deletePathTool, executeDeletePathTool);
+        interpreter.registerTool(copyPathTool, executeCopyPathTool);
+        interpreter.registerTool(movePathTool, executeMovePathTool);
         interpreter.registerTool(listDirectoryTool, executeListDirectoryTool);
         interpreter.registerTool(webFetchTool, executeWebFetchTool);
         interpreter.registerTool(httpRequestTool, executeHttpRequestTool);
@@ -64,16 +100,28 @@ export function main() {
         interpreter.registerTool(jsonTool, executeJsonTool);
         interpreter.registerTool(pingTool, executePingTool);
         interpreter.registerTool(tracerouteTool, executeTracerouteTool);
+        interpreter.registerTool(dnsLookupTool, executeDnsLookupTool);
         interpreter.registerTool(systemInfoTool, executeSystemInfoTool);
         interpreter.registerTool(processListTool, executeProcessListTool);
+        interpreter.registerTool(executeShellCommandTool, executeExecuteShellCommandTool);
+        interpreter.registerTool(getHardwareInfoTool, executeGetHardwareInfoTool);
+        interpreter.registerTool(manageHardwareDeviceTool, executeManageHardwareDeviceTool);
+        interpreter.registerTool(getInstalledSoftwareTool, executeGetInstalledSoftwareTool);
+        interpreter.registerTool(getSystemLogsTool, executeGetSystemLogsTool);
         interpreter.registerTool(syntaxCheckTool, executeSyntaxCheckTool);
         interpreter.registerTool(fixCodeTool, executeFixCodeTool);
         interpreter.registerTool(formatCodeTool, executeFormatCodeTool);
+        interpreter.registerTool(executeLinterFormatterTool, executeExecuteLinterFormatterTool);
         interpreter.registerTool(gitStatusTool, executeGitStatusTool);
         interpreter.registerTool(gitDiffTool, executeGitDiffTool);
         interpreter.registerTool(gitAddTool, executeGitAddTool);
         interpreter.registerTool(gitCommitTool, executeGitCommitTool);
         interpreter.registerTool(gitLogTool, executeGitLogTool);
+        interpreter.registerTool(createBranchTool, executeCreateBranchTool);
+        interpreter.registerTool(mergeBranchTool, executeMergeBranchTool);
+        interpreter.registerTool(triggerCIBuildTool, executeTriggerCIBuildTool);
+        interpreter.registerTool(deployProjectTool, executeDeployProjectTool);
+        interpreter.registerTool(runStaticAnalysisTool, executeRunStaticAnalysisTool);
         interpreter.registerTool(resizeImageTool, executeResizeImageTool);
         interpreter.registerTool(cropImageTool, executeCropImageTool);
         interpreter.registerTool(greyscaleImageTool, executeGreyscaleImageTool);
@@ -84,15 +132,31 @@ export function main() {
         interpreter.registerTool(getDirectoryStructureTool, executeGetDirectoryStructureTool);
         interpreter.registerTool(listFileTypesTool, executeListFileTypesTool);
         interpreter.registerTool(deepSearchTool, executeDeepSearchTool);
+        interpreter.registerTool(getFileContentTypeTool, executeGetFileContentTypeTool);
         interpreter.registerTool(minecraftPingTool, executeMinecraftPingTool);
+        interpreter.registerTool(sendMinecraftRconCommandTool, executeSendMinecraftRconCommandTool);
         interpreter.registerTool(launchUITool, executeLaunchUITool);
         interpreter.registerTool(launchVirtualTerminalTool, executeLaunchVirtualTerminalTool);
         interpreter.registerTool(terminateProcessTool, executeTerminateProcessTool);
+        interpreter.registerTool(startProcessTool, executeStartProcessTool);
+        interpreter.registerTool(getProcessInfoTool, executeGetProcessInfoTool);
         interpreter.registerTool(npmInstallTool, executeNpmInstallTool);
         interpreter.registerTool(pipInstallTool, executePipInstallTool);
         interpreter.registerTool(aptInstallTool, executeAptInstallTool);
         interpreter.registerTool(brewInstallTool, executeBrewInstallTool);
         interpreter.registerTool(chocoInstallTool, executeChocoInstallTool);
+        interpreter.registerTool(checkMissingDependenciesTool, executeCheckMissingDependenciesTool);
+        interpreter.registerTool(listInstalledPackagesTool, executeListInstalledPackagesTool);
+        interpreter.registerTool(npmUninstallTool, executeNpmUninstallTool);
+        interpreter.registerTool(pipUninstallTool, executePipUninstallTool);
+        interpreter.registerTool(aptRemoveTool, executeAptRemoveTool);
+        interpreter.registerTool(brewUninstallTool, executeBrewUninstallTool);
+        interpreter.registerTool(chocoUninstallTool, executeChocoUninstallTool);
+        interpreter.registerTool(npmUpdateTool, executeNpmUpdateTool);
+        interpreter.registerTool(pipUpdateTool, executePipUpdateTool);
+        interpreter.registerTool(aptUpdateTool, executeAptUpdateTool);
+        interpreter.registerTool(brewUpdateTool, executeBrewUpdateTool);
+        interpreter.registerTool(chocoUpdateTool, executeChocoUpdateTool);
         interpreter.registerTool(zipCompressTool, executeZipCompressTool);
         interpreter.registerTool(zipDecompressTool, executeZipDecompressTool);
         interpreter.registerTool(tarCompressTool, executeTarCompressTool);
@@ -117,8 +181,49 @@ export function main() {
         interpreter.registerTool(stopContainerTool, executeStopContainerTool);
         interpreter.registerTool(getDiskUsageTool, executeGetDiskUsageTool);
         interpreter.registerTool(getMemoryUsageTool, executeGetMemoryUsageTool);
+        interpreter.registerTool(getDetailedCpuUsageTool, executeGetDetailedCpuUsageTool);
         interpreter.registerTool(getNetworkConfigTool, executeGetNetworkConfigTool);
         interpreter.registerTool(flushDnsCacheTool, executeFlushDnsCacheTool);
+        interpreter.registerTool(addFirewallRuleTool, executeAddFirewallRuleTool);
+        interpreter.registerTool(deleteFirewallRuleTool, executeDeleteFirewallRuleTool);
+        interpreter.registerTool(rebootSystemTool, executeRebootSystemTool);
+        interpreter.registerTool(shutdownSystemTool, executeShutdownSystemTool);
+        interpreter.registerTool(startServiceTool, executeStartServiceTool);
+        interpreter.registerTool(stopServiceTool, executeStopServiceTool);
+        interpreter.registerTool(restartServiceTool, executeRestartServiceTool);
+        interpreter.registerTool(getServiceStatusTool, executeGetServiceStatusTool);
+        interpreter.registerTool(createUserTool, executeCreateUserTool);
+        interpreter.registerTool(deleteUserTool, executeDeleteUserTool);
+        interpreter.registerTool(createGroupTool, executeCreateGroupTool);
+        interpreter.registerTool(deleteGroupTool, executeDeleteGroupTool);
+        interpreter.registerTool(addUserToGroupTool, executeAddUserToGroupTool);
+        interpreter.registerTool(removeUserFromGroupTool, executeRemoveUserFromGroupTool);
+        interpreter.registerTool(readLogFileTool, executeReadLogFileTool);
+        interpreter.registerTool(filterLogFileTool, executeFilterLogFileTool);
+        interpreter.registerTool(clearLogFileTool, executeClearLogFileTool);
+        interpreter.registerTool(readConfigFileTool, executeReadConfigFileTool);
+        interpreter.registerTool(modifyConfigFileTool, executeModifyConfigFileTool);
+        interpreter.registerTool(validateConfigFileTool, executeValidateConfigFileTool);
+        interpreter.registerTool(connectDatabaseTool, executeConnectDatabaseTool);
+        interpreter.registerTool(databaseQueryTool, executeDatabaseQueryTool);
+        interpreter.registerTool(listDatabaseTablesTool, executeListDatabaseTablesTool);
+        interpreter.registerTool(getTableSchemaTool, executeGetTableSchemaTool);
+        interpreter.registerTool(scanOpenPortsTool, executeScanOpenPortsTool);
+        interpreter.registerTool(checkFileIntegrityTool, executeCheckFileIntegrityTool);
+        interpreter.registerTool(listActiveConnectionsTool, executeListActiveConnectionsTool);
+        interpreter.registerTool(scanForMalwareTool, executeScanForMalwareTool);
+        interpreter.registerTool(analyzeSecurityLogsTool, executeAnalyzeSecurityLogsTool);
+        interpreter.registerTool(manageCryptographicKeysTool, executeManageCryptographicKeysTool);
+        interpreter.registerTool(listCloudResourcesTool, executeListCloudResourcesTool);
+        interpreter.registerTool(manageVirtualMachineTool, executeManageVirtualMachineTool);
+        interpreter.registerTool(manageStorageBucketTool, executeManageStorageBucketTool);
+        interpreter.registerTool(listVirtualMachinesTool, executeListVirtualMachinesTool);
+        interpreter.registerTool(manageVirtualMachineLifecycleTool, executeManageVirtualMachineLifecycleTool);
+        interpreter.registerTool(checkNetworkConnectivityTool, executeCheckNetworkConnectivityTool);
+        interpreter.registerTool(performNetworkSpeedTestTool, executePerformNetworkSpeedTestTool);
+        interpreter.registerTool(createScriptFileTool, executeCreateScriptFileTool);
+        interpreter.registerTool(executeScriptFileTool, executeExecuteScriptFileTool);
+        interpreter.registerTool(scheduleScriptTool, executeScheduleScriptTool);
         const rl = readline.createInterface({
             input: process.stdin,
             output: process.stdout,
@@ -139,6 +244,12 @@ export function main() {
                 interpreter.reset();
                 console.clear();
                 logger.info("Conversation has been reset. Welcome to Open Interpreter! Type your message or '/exit' to quit, '/reset' to clear conversation.");
+                chat();
+                return;
+            }
+            if (userInput.toLowerCase() === 'cyrah') {
+                const msg = yield executeLaunchUITool({ uiName: process.env.UI_NAME || 'cyrah' });
+                console.log(msg);
                 chat();
                 return;
             }

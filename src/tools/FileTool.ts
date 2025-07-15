@@ -1,6 +1,7 @@
 import { Tool } from "../core/types.js";
 import * as fs from "fs";
 import * as os from "os";
+import * as path from "path";
 
 export const readFileTool: Tool = {
   type: "function",
@@ -393,133 +394,54 @@ export async function executeMovePathTool(args: { sourcePath: string; destinatio
   }
 }
 
-export const createDirectoryTool: Tool = {
+export const searchFilesTool: Tool = {
   type: "function",
   function: {
-    name: "createDirectory",
-    description: "Creates a new directory at the specified path.",
+    name: "searchFiles",
+    description: "Recursively searches for a regex pattern in all files under a directory and returns matching lines.",
     parameters: {
       type: "object",
       properties: {
-        directoryPath: {
+        directory: {
           type: "string",
-          description: "The path where the new directory will be created.",
+          description: "The directory to search within.",
         },
-        recursive: {
-          type: "boolean",
-          description: "Optional: If true, creates parent directories recursively. Defaults to false.",
-          nullable: true,
+        pattern: {
+          type: "string",
+          description: "The regex pattern to search for.",
         },
       },
-      required: ["directoryPath"],
+      required: ["directory", "pattern"],
     },
   },
 };
 
-export async function executeCreateDirectoryTool(args: { directoryPath: string; recursive?: boolean }): Promise<string> {
+export async function executeSearchFilesTool(args: { directory: string; pattern: string }): Promise<string> {
+  const results: string[] = [];
+  const regex = new RegExp(args.pattern, 'g');
+
+  const searchDir = (dir: string) => {
+    for (const entry of fs.readdirSync(dir)) {
+      const fullPath = path.join(dir, entry);
+      const stat = fs.statSync(fullPath);
+      if (stat.isDirectory()) {
+        searchDir(fullPath);
+      } else if (stat.isFile()) {
+        const lines = fs.readFileSync(fullPath, 'utf-8').split(/\r?\n/);
+        lines.forEach((line, idx) => {
+          if (regex.test(line)) {
+            results.push(`${fullPath}:${idx + 1}:${line.trim()}`);
+          }
+        });
+      }
+    }
+  };
+
   try {
-    fs.mkdirSync(args.directoryPath, { recursive: args.recursive });
-    return `Directory ${args.directoryPath} created successfully.`;
+    searchDir(args.directory);
+    return results.length > 0 ? results.join(os.EOL) : 'No matches found.';
   } catch (error: any) {
-    return `Error creating directory: ${error.message}`;
+    return `Error searching files: ${error.message}`;
   }
 }
 
-export const deletePathTool: Tool = {
-  type: "function",
-  function: {
-    name: "deletePath",
-    description: "Deletes a file or an empty directory. For non-empty directories, use recursive option.",
-    parameters: {
-      type: "object",
-      properties: {
-        path: {
-          type: "string",
-          description: "The path to the file or directory to delete.",
-        },
-        recursive: {
-          type: "boolean",
-          description: "Optional: If true, performs a recursive delete for directories. Use with caution. Defaults to false.",
-          nullable: true,
-        },
-      },
-      required: ["path"],
-    },
-  },
-};
-
-export async function executeDeletePathTool(args: { path: string; recursive?: boolean }): Promise<string> {
-  try {
-    fs.rmSync(args.path, { recursive: args.recursive, force: true });
-    return `Path ${args.path} deleted successfully.`;
-  } catch (error: any) {
-    return `Error deleting path: ${error.message}`;
-  }
-}
-
-export const copyPathTool: Tool = {
-  type: "function",
-  function: {
-    name: "copyPath",
-    description: "Copies a file or directory from a source path to a destination path.",
-    parameters: {
-      type: "object",
-      properties: {
-        sourcePath: {
-          type: "string",
-          description: "The path to the source file or directory.",
-        },
-        destinationPath: {
-          type: "string",
-          description: "The path to the destination.",
-        },
-        recursive: {
-          type: "boolean",
-          description: "Optional: If true, copies directories recursively. Defaults to false.",
-          nullable: true,
-        },
-      },
-      required: ["sourcePath", "destinationPath"],
-    },
-  },
-};
-
-export async function executeCopyPathTool(args: { sourcePath: string; destinationPath: string; recursive?: boolean }): Promise<string> {
-  try {
-    fs.cpSync(args.sourcePath, args.destinationPath, { recursive: args.recursive });
-    return `Path ${args.sourcePath} copied to ${args.destinationPath} successfully.`;
-  } catch (error: any) {
-    return `Error copying path: ${error.message}`;
-  }
-}
-
-export const movePathTool: Tool = {
-  type: "function",
-  function: {
-    name: "movePath",
-    description: "Moves a file or directory from a source path to a destination path.",
-    parameters: {
-      type: "object",
-      properties: {
-        sourcePath: {
-          type: "string",
-          description: "The path to the source file or directory.",
-        },
-        destinationPath: {
-          type: "string",
-          description: "The path to the destination.",
-        },
-      },
-      required: ["sourcePath", "destinationPath"],
-    },
-  },
-};
-
-export async function executeMovePathTool(args: { sourcePath: string; destinationPath: string }): Promise<string> {
-  try {
-    fs.renameSync(args.sourcePath, args.destinationPath);
-    return `Path ${args.sourcePath} moved to ${args.destinationPath} successfully.`;
-  } catch (error: any) {
-    return `Error moving path: ${error.message}`;
-  }
-}
