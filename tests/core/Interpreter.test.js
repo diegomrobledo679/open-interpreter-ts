@@ -1,3 +1,5 @@
+process.env.OPENAI_API_KEY = process.env.OPENAI_API_KEY || 'test-key';
+
 import { Interpreter } from '@/core/Interpreter';
 import { Role, MessageType } from '@/core/types';
 describe('Interpreter', () => {

@@ -2,6 +2,18 @@ import { Tool } from "../core/types.js";
 import { exec } from "child_process";
 import * as os from "os";
 
+const executeShellCommand = (command: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        reject(`Command failed: ${stderr || error.message}`);
+      } else {
+        resolve(stdout || stderr || `Command executed successfully: ${command}`);
+      }
+    });
+  });
+};
+
 export const systemInfoTool: Tool = {
   type: "function",
   function: {
@@ -115,7 +127,7 @@ export const getHardwareInfoTool: Tool = {
   type: "function",
   function: {
     name: "getHardwareInfo",
-    description: "Conceptually retrieves detailed hardware information (e.g., CPU, RAM, storage, network adapters, GPUs). A real implementation would parse output from system commands like 'lshw', 'dmidecode', 'lspci', 'lsusb'.",
+    description: "Retrieves hardware information using built-in Node.js calls and common system utilities.",
     parameters: {
       type: "object",
       properties: {
@@ -131,14 +143,58 @@ export const getHardwareInfoTool: Tool = {
 };
 
 export async function executeGetHardwareInfoTool(args: { infoType: "cpu" | "memory" | "storage" | "network" | "gpu" | "all" }): Promise<string> {
-  return `Conceptual retrieval of ${args.infoType} hardware information. A real implementation would involve parsing output from system commands.`;
+  const collect = async (type: string): Promise<string> => {
+    switch (type) {
+      case "cpu":
+        return JSON.stringify(os.cpus(), null, 2);
+      case "memory":
+        return `Total: ${os.totalmem()}\nFree: ${os.freemem()}`;
+      case "storage": {
+        const cmd = os.platform() === "win32"
+          ? "wmic logicaldisk get size,freespace,caption"
+          : "df -h";
+        try {
+          return await executeShellCommand(cmd);
+        } catch {
+          return "Storage information not available.";
+        }
+      }
+      case "network":
+        return JSON.stringify(os.networkInterfaces(), null, 2);
+      case "gpu": {
+        const cmd = os.platform() === "win32"
+          ? "wmic path win32_VideoController get name"
+          : "lspci | grep -i -E 'vga|3d|2d'";
+        try {
+          return await executeShellCommand(cmd);
+        } catch {
+          return "GPU information not available.";
+        }
+      }
+      default:
+        return "Unknown info type.";
+    }
+  };
+
+  if (args.infoType === "all") {
+    const parts = await Promise.all([
+      collect("cpu"),
+      collect("memory"),
+      collect("storage"),
+      collect("network"),
+      collect("gpu"),
+    ]);
+    return parts.join("\n\n");
+  }
+
+  return collect(args.infoType);
 }
 
 export const manageHardwareDeviceTool: Tool = {
   type: "function",
   function: {
     name: "manageHardwareDevice",
-    description: "Conceptually manages a hardware device (e.g., enable, disable, restart). A real implementation would interact with device drivers or system utilities.",
+    description: "Enables, disables, or restarts a network interface using common system commands.",
     parameters: {
       type: "object",
       properties: {
@@ -158,7 +214,27 @@ export const manageHardwareDeviceTool: Tool = {
 };
 
 export async function executeManageHardwareDeviceTool(args: { deviceId: string; operation: "enable" | "disable" | "restart" }): Promise<string> {
-  return `Conceptual operation '${args.operation}' on hardware device '${args.deviceId}'. A real implementation would involve interacting with device drivers or system utilities.`;
+  const cmds: string[] = [];
+  if (os.platform() === "win32") {
+    const base = `netsh interface set interface name="${args.deviceId}" admin=`;
+    if (args.operation === "enable") cmds.push(base + "enabled");
+    if (args.operation === "disable") cmds.push(base + "disabled");
+    if (args.operation === "restart") cmds.push(base + "disabled", base + "enabled");
+  } else {
+    const base = `ip link set ${args.deviceId}`;
+    if (args.operation === "enable") cmds.push(`${base} up`);
+    if (args.operation === "disable") cmds.push(`${base} down`);
+    if (args.operation === "restart") cmds.push(`${base} down`, `${base} up`);
+  }
+
+  try {
+    for (const c of cmds) {
+      await executeShellCommand(c);
+    }
+    return `Device ${args.deviceId} ${args.operation}d.`;
+  } catch (error: any) {
+    return `Failed to ${args.operation} ${args.deviceId}: ${error.message}`;
+  }
 }
 
 export const getInstalledSoftwareTool: Tool = {
@@ -166,8 +242,11 @@ export const getInstalledSoftwareTool: Tool = {
   function: {
     name: "getInstalledSoftware",
     description: "Lists installed software packages on the system. This is a conceptual tool as the method varies greatly by operating system.",
-    parameters: {},
-    required: [],
+    parameters: {
+      type: "object",
+      properties: {},
+      required: [],
+    },
   },
 };
 
