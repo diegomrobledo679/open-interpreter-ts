@@ -46,7 +46,7 @@ This CLI agent now supports a wide range of functionalities, including:
     *   `--plainTextDisplay`: Force plain text output.
     *   `--highlightActiveLine`: Highlight the active line in code blocks.
     *   `--autoFixCode`: Enable automatic code fixing attempts.
-    *   `--displayMode`: Set the display mode ('cli' or 'gui-placeholder').
+    *   `--displayMode`: Set the display mode ('cli' or 'gui').
     *   `--conversationHistory`: Enable or disable conversation history.
     *   `--conversationFilename`: Specify the conversation history filename.
 
@@ -112,5 +112,6 @@ The interpreter reads various settings from environment variables if correspondi
 - `SKILLS_PATH` – Directory containing custom skill modules.
 - `IMPORT_SKILLS` – Set to `true` to automatically load skills on startup.
 - `UI_BASE_URL` – Base URL used by the `launchUI` tool if no URL is provided.
+- `DISPLAY_MODE` – Set to `gui` to automatically open the UI when the interpreter starts.
 
 Create a `.env` file with these values to avoid passing them as flags.

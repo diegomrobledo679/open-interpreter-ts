@@ -87,10 +87,16 @@ export async function main() {
     conversationFilename: envString(argv.conversationFilename, process.env.CONVERSATION_FILENAME ?? config.conversationFilename),
     skillsPath: envString(argv.skillsPath, process.env.SKILLS_PATH),
     importSkills: argv.importSkills !== undefined ? argv.importSkills : envBool(process.env.IMPORT_SKILLS, false),
+    displayMode: envString(argv.displayMode, process.env.DISPLAY_MODE ?? 'cli') as 'cli' | 'gui',
     // ... other options from original file
   };
 
   const interpreter = new Interpreter(options);
+
+  if (options.displayMode === 'gui') {
+    const msg = await executeLaunchUITool({ uiName: 'cyrah' });
+    console.log(msg);
+  }
 
   // Register all tools
   interpreter.registerTool(calculatorTool, executeCalculatorTool);
