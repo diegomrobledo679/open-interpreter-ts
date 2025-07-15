@@ -1,6 +1,7 @@
 
 import { Tool } from "../core/types.js";
 import { exec, spawn } from "child_process";
+import pty from "node-pty";
 import os from "os";
 
 export const launchUITool: Tool = {
@@ -71,9 +72,42 @@ export const launchVirtualTerminalTool: Tool = {
 
 export async function executeLaunchVirtualTerminalTool(args: { terminalName: string; initialCommand?: string }): Promise<string> {
   const shell = os.platform() === 'win32' ? 'cmd.exe' : process.env.SHELL || 'bash';
-  const child = spawn(shell, [], { stdio: 'inherit' });
-  if (args.initialCommand && child.stdin) {
-    child.stdin.write(args.initialCommand + '\n');
+  try {
+    const ptyProcess = pty.spawn(shell, [], {
+      name: args.terminalName,
+      cols: process.stdout.columns || 80,
+      rows: process.stdout.rows || 24,
+      cwd: process.cwd(),
+      env: process.env as any,
+    });
+
+    ptyProcess.onData(data => process.stdout.write(data));
+
+    process.stdin.setRawMode?.(true);
+    const inputListener = (data: Buffer) => ptyProcess.write(data.toString());
+    process.stdin.on('data', inputListener);
+
+    if (args.initialCommand) {
+      ptyProcess.write(args.initialCommand + '\n');
+    }
+
+    return new Promise(resolve => {
+      ptyProcess.onExit(() => {
+        process.stdin.setRawMode?.(false);
+        process.stdin.off('data', inputListener);
+        resolve(`Virtual terminal "${args.terminalName}" session ended.`);
+      });
+    });
+  } catch (error: any) {
+    // Fallback to a plain shell if node-pty fails
+    return new Promise(resolve => {
+      const child = spawn(shell, { stdio: 'inherit' });
+      if (args.initialCommand && child.stdin) {
+        child.stdin.write(args.initialCommand + '\n');
+      }
+      child.on('exit', () => {
+        resolve(`Terminal "${args.terminalName}" session ended.`);
+      });
+    });
   }
-  return `Launched virtual terminal "${args.terminalName}" using ${shell}. Type 'exit' to close.`;
 }

@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import Jimp from 'jimp';
 import * as path from 'path';
 import * as fs from 'fs';
+import OpenAI from 'openai';
 // Helper function to ensure output directory exists
 const ensureDirExists = (filePath) => {
     const dir = path.dirname(filePath);
@@ -189,7 +190,7 @@ export const generateImageTool = {
     type: "function",
     function: {
         name: "generateImage",
-        description: "Generates an image based on a text prompt using an external API. This tool requires configuration with a specific image generation service (e.g., DALL-E, Stable Diffusion) and a valid API key. Without proper configuration, it will only provide a conceptual response.",
+        description: "Generates an image based on a text prompt. If an OpenAI API key is configured, it will use the OpenAI image generation endpoint. Otherwise it falls back to generating a placeholder image with the prompt text.",
         parameters: {
             type: "object",
             properties: {
@@ -208,6 +209,33 @@ export const generateImageTool = {
 };
 export function executeGenerateImageTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
+        var _a, _b;
+        if (process.env.OPENAI_API_KEY) {
+            const openai = new OpenAI({
+                apiKey: process.env.OPENAI_API_KEY,
+                baseURL: process.env.OPENAI_BASE_URL,
+            });
+            try {
+                const response = yield openai.images.generate({
+                    prompt: args.prompt,
+                    n: 1,
+                    size: '512x512',
+                    response_format: 'b64_json',
+                });
+                const imageData = (_b = (_a = response.data) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.b64_json;
+                if (!imageData) {
+                    throw new Error('No image data returned');
+                }
+                const buffer = Buffer.from(imageData, 'base64');
+                ensureDirExists(args.outputPath);
+                fs.writeFileSync(args.outputPath, buffer);
+                return `Image generated using OpenAI and saved to ${args.outputPath}`;
+            }
+            catch (error) {
+                return `Error generating image via OpenAI: ${error.message}`;
+            }
+        }
+        // Fallback to placeholder image if no API key is configured
         try {
             const image = yield new Jimp(512, 512, 0xffffffff);
             const font = yield Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
@@ -218,10 +246,10 @@ export function executeGenerateImageTool(args) {
             }, 492, 492);
             ensureDirExists(args.outputPath);
             yield image.writeAsync(args.outputPath);
-            return `Image generated for prompt: "${args.prompt}" and saved to ${args.outputPath}`;
+            return `Placeholder image created for prompt "${args.prompt}" and saved to ${args.outputPath}`;
         }
         catch (error) {
-            return `Error generating image: ${error.message}`;
+            return `Error generating placeholder image: ${error.message}`;
         }
     });
 }

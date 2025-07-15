@@ -3,6 +3,7 @@ import { Tool } from "../core/types.js";
 import Jimp from 'jimp';
 import * as path from 'path';
 import * as fs from 'fs';
+import OpenAI from 'openai';
 
 // Helper function to ensure output directory exists
 const ensureDirExists = (filePath: string) => {
@@ -180,7 +181,7 @@ export const generateImageTool: Tool = {
   type: "function",
   function: {
     name: "generateImage",
-    description: "Generates an image based on a text prompt using an external API. This tool requires configuration with a specific image generation service (e.g., DALL-E, Stable Diffusion) and a valid API key. Without proper configuration, it will only provide a conceptual response.",
+    description: "Generates an image based on a text prompt. If an OpenAI API key is configured, it will use the OpenAI image generation endpoint. Otherwise it falls back to generating a placeholder image with the prompt text.",
     parameters: {
       type: "object",
       properties: {
@@ -199,6 +200,32 @@ export const generateImageTool: Tool = {
 };
 
 export async function executeGenerateImageTool(args: { prompt: string; outputPath: string }): Promise<string> {
+  if (process.env.OPENAI_API_KEY) {
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+      baseURL: process.env.OPENAI_BASE_URL,
+    });
+    try {
+      const response = await openai.images.generate({
+        prompt: args.prompt,
+        n: 1,
+        size: '512x512',
+        response_format: 'b64_json',
+      });
+      const imageData = response.data?.[0]?.b64_json;
+      if (!imageData) {
+        throw new Error('No image data returned');
+      }
+      const buffer = Buffer.from(imageData, 'base64');
+      ensureDirExists(args.outputPath);
+      fs.writeFileSync(args.outputPath, buffer);
+      return `Image generated using OpenAI and saved to ${args.outputPath}`;
+    } catch (error: any) {
+      return `Error generating image via OpenAI: ${error.message}`;
+    }
+  }
+
+  // Fallback to placeholder image if no API key is configured
   try {
     const image = await new Jimp(512, 512, 0xffffffff);
     const font = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
@@ -216,8 +243,8 @@ export async function executeGenerateImageTool(args: { prompt: string; outputPat
     );
     ensureDirExists(args.outputPath);
     await image.writeAsync(args.outputPath);
-    return `Image generated for prompt: "${args.prompt}" and saved to ${args.outputPath}`;
+    return `Placeholder image created for prompt "${args.prompt}" and saved to ${args.outputPath}`;
   } catch (error: any) {
-    return `Error generating image: ${error.message}`;
+    return `Error generating placeholder image: ${error.message}`;
   }
 }

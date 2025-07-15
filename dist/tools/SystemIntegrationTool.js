@@ -8,6 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { exec, spawn } from "child_process";
+import pty from "node-pty";
 import os from "os";
 export const launchUITool = {
     type: "function",
@@ -76,11 +77,43 @@ export const launchVirtualTerminalTool = {
 };
 export function executeLaunchVirtualTerminalTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
+        var _a, _b;
         const shell = os.platform() === 'win32' ? 'cmd.exe' : process.env.SHELL || 'bash';
-        const child = spawn(shell, [], { stdio: 'inherit' });
-        if (args.initialCommand && child.stdin) {
-            child.stdin.write(args.initialCommand + '\n');
+        try {
+            const ptyProcess = pty.spawn(shell, [], {
+                name: args.terminalName,
+                cols: process.stdout.columns || 80,
+                rows: process.stdout.rows || 24,
+                cwd: process.cwd(),
+                env: process.env,
+            });
+            ptyProcess.onData(data => process.stdout.write(data));
+            (_b = (_a = process.stdin).setRawMode) === null || _b === void 0 ? void 0 : _b.call(_a, true);
+            const inputListener = (data) => ptyProcess.write(data.toString());
+            process.stdin.on('data', inputListener);
+            if (args.initialCommand) {
+                ptyProcess.write(args.initialCommand + '\n');
+            }
+            return new Promise(resolve => {
+                ptyProcess.onExit(() => {
+                    var _a, _b;
+                    (_b = (_a = process.stdin).setRawMode) === null || _b === void 0 ? void 0 : _b.call(_a, false);
+                    process.stdin.off('data', inputListener);
+                    resolve(`Virtual terminal "${args.terminalName}" session ended.`);
+                });
+            });
         }
-        return `Launched virtual terminal "${args.terminalName}" using ${shell}. Type 'exit' to close.`;
+        catch (error) {
+            // Fallback to a plain shell if node-pty fails
+            return new Promise(resolve => {
+                const child = spawn(shell, { stdio: 'inherit' });
+                if (args.initialCommand && child.stdin) {
+                    child.stdin.write(args.initialCommand + '\n');
+                }
+                child.on('exit', () => {
+                    resolve(`Terminal "${args.terminalName}" session ended.`);
+                });
+            });
+        }
     });
 }
