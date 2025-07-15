@@ -176,7 +176,7 @@ export const fixCodeTool = {
     type: "function",
     function: {
         name: "fixCode",
-        description: "Conceptually fixes code errors using AI or linting tools. This is a placeholder and requires integration with actual code analysis and fixing services.",
+        description: "Attempts to fix code errors using external linting tools or by leveraging AI capabilities. For a real implementation, this tool would integrate with language-specific linters (e.g., ESLint for JavaScript/TypeScript, Pylint for Python) or send the code to an AI model for suggested corrections.",
         parameters: {
             type: "object",
             properties: {
@@ -190,7 +190,7 @@ export const fixCodeTool = {
                 },
                 errorDetails: {
                     type: "string",
-                    description: "Details about the error to help in fixing the code.",
+                    description: "Optional: Details about the error to help in fixing the code.",
                     nullable: true,
                 },
             },
@@ -200,16 +200,30 @@ export const fixCodeTool = {
 };
 export function executeFixCodeTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
-        const codeBlock = `\`\`\`${args.language}\n${args.code}\n\`\`\``;
-        const errorInfo = args.errorDetails ? `\n\nError details: ${args.errorDetails}` : '';
-        return `Conceptual code fix for ${args.language} code. Original code: ${codeBlock}${errorInfo}\n\nNote: A real implementation would involve sending the code and error details to a linter, formatter, or an AI model for suggestions and applying the fixes.`;
+        const { code, language } = args;
+        const lang = language.toLowerCase();
+        if (lang === 'javascript' || lang === 'typescript') {
+            const prettier = yield import('prettier');
+            const parser = lang === 'javascript' ? 'babel' : 'typescript';
+            return prettier.format(code, { parser });
+        }
+        if (lang === 'python') {
+            try {
+                const { execSync } = yield import('child_process');
+                return execSync('autopep8 -', { input: code }).toString();
+            }
+            catch (err) {
+                return `autopep8 failed or is not installed: ${err.message}`;
+            }
+        }
+        return `Automatic fixing not supported for ${language}.`;
     });
 }
 export const formatCodeTool = {
     type: "function",
     function: {
         name: "formatCode",
-        description: "Conceptually formats code according to standard style guidelines. This is a placeholder and requires integration with actual code formatting tools (e.g., Prettier, Black, gofmt).",
+        description: "Formats code according to standard style guidelines using external formatting tools. For a real implementation, this tool would integrate with language-specific formatters (e.g., Prettier for JavaScript/TypeScript, Black for Python, gofmt for Go).",
         parameters: {
             type: "object",
             properties: {
@@ -228,7 +242,133 @@ export const formatCodeTool = {
 };
 export function executeFormatCodeTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
-        const codeBlock = `\`\`\`${args.language}\n${args.code}\n\`\`\``;
-        return `Conceptual code formatting for ${args.language} code. Original code: ${codeBlock}\n\nNote: A real implementation would involve calling an external formatter tool for the specified language.`;
+        const { code, language } = args;
+        const lang = language.toLowerCase();
+        if (lang === 'javascript' || lang === 'typescript') {
+            const prettier = yield import('prettier');
+            const parser = lang === 'javascript' ? 'babel' : 'typescript';
+            return prettier.format(code, { parser });
+        }
+        if (lang === 'python') {
+            try {
+                const { execSync } = yield import('child_process');
+                return execSync('black -q -', { input: code }).toString();
+            }
+            catch (err) {
+                return `black failed or is not installed: ${err.message}`;
+            }
+        }
+        return `Automatic formatting not supported for ${language}.`;
+    });
+}
+export const executeLinterFormatterTool = {
+    type: "function",
+    function: {
+        name: "executeLinterFormatter",
+        description: "Executes an external linter or formatter tool on the provided code and returns the output. This tool is intended to be used by the AI to apply actual code style and fix issues.",
+        parameters: {
+            type: "object",
+            properties: {
+                code: {
+                    type: "string",
+                    description: "The code to be processed by the linter/formatter.",
+                },
+                language: {
+                    type: "string",
+                    description: "The programming language of the code.",
+                },
+                command: {
+                    type: "string",
+                    description: "The shell command to execute the linter/formatter (e.g., 'eslint --fix', 'black', 'prettier --write'). The command should be able to read code from stdin or a temporary file and output to stdout.",
+                },
+                args: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Optional: Additional arguments for the linter/formatter command.",
+                    nullable: true,
+                },
+            },
+            required: ["code", "language", "command"],
+        },
+    },
+};
+export function executeExecuteLinterFormatterTool(args) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const tempDir = os.tmpdir();
+        const fileName = `temp_code_for_linter_${Date.now()}`;
+        let fileExtension;
+        switch (args.language.toLowerCase()) {
+            case 'python':
+                fileExtension = 'py';
+                break;
+            case 'javascript':
+                fileExtension = 'js';
+                break;
+            case 'typescript':
+                fileExtension = 'ts';
+                break;
+            case 'java':
+                fileExtension = 'java';
+                break;
+            case 'cpp':
+                fileExtension = 'cpp';
+                break;
+            case 'ruby':
+                fileExtension = 'rb';
+                break;
+            case 'php':
+                fileExtension = 'php';
+                break;
+            case 'go':
+                fileExtension = 'go';
+                break;
+            case 'rust':
+                fileExtension = 'rs';
+                break;
+            case 'swift':
+                fileExtension = 'swift';
+                break;
+            case 'csharp':
+                fileExtension = 'cs';
+                break;
+            case 'kotlin':
+                fileExtension = 'kt';
+                break;
+            case 'r':
+                fileExtension = 'R';
+                break;
+            case 'groovy':
+                fileExtension = 'groovy';
+                break;
+            case 'scala':
+                fileExtension = 'scala';
+                break;
+            case 'powershell':
+                fileExtension = 'ps1';
+                break;
+            default: return `Error: Unsupported language for linter/formatter: ${args.language}`;
+        }
+        const fullFilePath = path.join(tempDir, `${fileName}.${fileExtension}`);
+        fs.writeFileSync(fullFilePath, args.code);
+        return new Promise((resolve) => {
+            const commandToExecute = `${args.command} ${fullFilePath} ${args.args ? args.args.join(' ') : ''}`;
+            exec(commandToExecute, { cwd: tempDir }, (error, stdout, stderr) => {
+                fs.unlinkSync(fullFilePath); // Clean up temp file
+                if (error) {
+                    resolve(`Linter/Formatter execution failed: ${stderr || stdout || error.message}`);
+                }
+                else {
+                    // Read the potentially modified file content if the tool modifies in place
+                    try {
+                        const modifiedContent = fs.readFileSync(fullFilePath, "utf-8");
+                        resolve(`Linter/Formatter output:\n${stdout}\nModified code:\n\`\`\`${args.language}\n${modifiedContent}\n\`\`\``);
+                    }
+                    catch (readError) {
+                        const msg = readError.message || readError;
+                        resolve(`Linter/Formatter output:\n${stdout}\nError reading modified file: ${msg}`);
+                    }
+                }
+            });
+        });
     });
 }

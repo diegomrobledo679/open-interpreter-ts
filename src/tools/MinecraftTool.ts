@@ -1,6 +1,7 @@
 
 import { Tool } from "../core/types.js";
-import { createClient, createRconClient } from 'minecraft-protocol';
+import { createClient } from 'minecraft-protocol';
+import { Rcon } from 'rcon-client';
 
 export const minecraftPingTool: Tool = {
   type: "function",
@@ -84,27 +85,16 @@ export const sendMinecraftRconCommandTool: Tool = {
 };
 
 export async function executeSendMinecraftRconCommandTool(args: { host: string; port?: number; password: string; command: string }): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const rconClient = createRconClient({
+  try {
+    const rcon = await Rcon.connect({
       host: args.host,
       port: args.port || 25575,
       password: args.password,
     });
-
-    rconClient.on('error', (err: any) => {
-      reject(`Error connecting to RCON or sending command: ${err.message}`);
-    });
-
-    rconClient.on('connect', () => {
-      rconClient.send(args.command, (err: any, response: string) => {
-        if (err) {
-          rconClient.end();
-          reject(`Error sending RCON command: ${err.message}`);
-        } else {
-          rconClient.end();
-          resolve(`RCON command executed. Response: ${response}`);
-        }
-      });
-    });
-  });
+    const response = await rcon.send(args.command);
+    rcon.end();
+    return `RCON command executed. Response: ${response}`;
+  } catch (err: any) {
+    return `Error sending RCON command: ${err.message}`;
+  }
 }

@@ -2,6 +2,18 @@ import { Tool } from "../core/types.js";
 import { exec } from "child_process";
 import * as os from "os";
 
+const executeShellCommand = (command: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        reject(`Command failed: ${stderr || error.message}`);
+      } else {
+        resolve(stdout || stderr || `Command executed successfully: ${command}`);
+      }
+    });
+  });
+};
+
 export const systemInfoTool: Tool = {
   type: "function",
   function: {
@@ -166,8 +178,11 @@ export const getInstalledSoftwareTool: Tool = {
   function: {
     name: "getInstalledSoftware",
     description: "Lists installed software packages on the system. This is a conceptual tool as the method varies greatly by operating system.",
-    parameters: {},
-    required: [],
+    parameters: {
+      type: "object",
+      properties: {},
+      required: [],
+    },
   },
 };
 

@@ -74,8 +74,8 @@ export const startProcessTool: Tool = {
 
 export async function executeStartProcessTool(args: { command: string; args?: string[]; detached?: boolean }): Promise<string> {
   return new Promise((resolve, reject) => {
-    const child = exec(args.command + (args.args ? ' ' + args.args.join(' ') : ''), { detached: args.detached });
-    child.unref(); // Allow the parent process to exit independently of the child
+    const child = exec(args.command + (args.args ? ' ' + args.args.join(' ') : ''));
+    if (args.detached) child.unref();
     resolve(`Process started with PID: ${child.pid}. Command: ${args.command} ${args.args ? args.args.join(' ') : ''}`);
   });
 }
