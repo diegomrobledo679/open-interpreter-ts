@@ -89,13 +89,14 @@ export async function main() {
     skillsPath: envString(argv.skillsPath, process.env.SKILLS_PATH),
     importSkills: argv.importSkills !== undefined ? argv.importSkills : envBool(process.env.IMPORT_SKILLS, false),
     displayMode: envString(argv.displayMode, process.env.DISPLAY_MODE ?? 'cli') as 'cli' | 'gui',
+    uiName: envString(argv.uiName, process.env.UI_NAME ?? 'cyrah') as string,
     // ... other options from original file
   };
 
   const interpreter = new Interpreter(options);
 
   if (options.displayMode === 'gui') {
-    const msg = await executeLaunchUITool({ uiName: process.env.UI_NAME || 'cyrah' });
+    const msg = await executeLaunchUITool({ uiName: options.uiName as string });
     console.log(msg);
   }
 
@@ -275,7 +276,7 @@ export async function main() {
     }
 
     if (userInput.toLowerCase() === 'cyrah') {
-      const msg = await executeLaunchUITool({ uiName: process.env.UI_NAME || 'cyrah' });
+      const msg = await executeLaunchUITool({ uiName: options.uiName as string });
       console.log(msg);
       chat();
       return;

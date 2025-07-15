@@ -47,6 +47,7 @@ This CLI agent now supports a wide range of functionalities, including:
     *   `--highlightActiveLine`: Highlight the active line in code blocks.
     *   `--autoFixCode`: Enable automatic code fixing attempts.
     *   `--displayMode`: Set the display mode ('cli' or 'gui').
+    *   `--uiName`: Specify which UI to launch when the display mode is `gui` or when running the `cyrah` command.
     *   `--conversationHistory`: Enable or disable conversation history.
     *   `--conversationFilename`: Specify the conversation history filename.
 

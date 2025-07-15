@@ -46,6 +46,7 @@ interface InterpreterOptions {
   llmTemperature?: number;
   llmMaxTokens?: number;
   conversationMaxLength?: number;
+  uiName?: string;
 }
 
 export type { InterpreterOptions };
