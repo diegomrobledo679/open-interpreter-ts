@@ -81,11 +81,15 @@ This CLI agent now supports a wide range of functionalities, including:
    node dist/index.js
    ```
 
-After installation you can also launch the UI directly via the bundled command:
+After installation you can also launch **Cyrah**, an interactive menu that lets
+you start the interpreter in different modes:
 
 ```bash
 npx cyrah
 ```
+
+Choose **Launch UI** to open the browser interface or **Start CLI Interpreter**
+to run completely in the terminal.
 
 ## Configuration via Environment Variables
 
