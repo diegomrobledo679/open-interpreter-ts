@@ -55,7 +55,7 @@ This CLI agent now supports a wide range of functionalities, including:
 *   **Advanced File Analysis:** Tools like `deepSearch` (with optional depth limits), directory structure listing, and detection of file content types.
 *   **System Management Tools:** Retrieve hardware details and manage network interfaces across platforms.
 *   **Image Generation Tool:** Use the `generateImage` tool to create images from text prompts. When `OPENAI_API_KEY` is configured, the tool generates real images using OpenAI; otherwise it falls back to a placeholder image.
-*   **Virtual Terminal Tool:** The `launchVirtualTerminal` tool now utilizes `node-pty` to provide a fully interactive shell session directly within the CLI.
+*   **Virtual Terminal Tool:** The `launchVirtualTerminal` tool uses `node-pty` to provide an interactive shell session when available and falls back to a regular shell spawn if pseudo-terminals are unsupported.
 *   **Conceptual GUI Integration:** Includes conceptual methods for display updates and input event handling, laying the groundwork for future graphical user interface implementations.
 
 ## Installation and Usage:
