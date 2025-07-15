@@ -51,6 +51,7 @@ This CLI agent now supports a wide range of functionalities, including:
     *   `--conversationFilename`: Specify the conversation history filename.
 
 *   **Extensible Tooling:** Easily integrate new tools and functionalities.
+*   **File Utilities:** Built-in helpers for reading, writing, and recursively searching files.
 
 *   **Conceptual GUI Integration:** Includes conceptual methods for display updates and input event handling, laying the groundwork for future graphical user interface implementations.
 

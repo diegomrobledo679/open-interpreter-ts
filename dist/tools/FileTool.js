@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import * as fs from "fs";
 import * as os from "os";
+import * as path from "path";
 export const readFileTool = {
     type: "function",
     function: {
@@ -405,6 +406,57 @@ export function executeMovePathTool(args) {
         }
         catch (error) {
             return `Error moving path: ${error.message}`;
+        }
+    });
+}
+export const searchFilesTool = {
+    type: "function",
+    function: {
+        name: "searchFiles",
+        description: "Recursively searches for a regex pattern in all files under a directory and returns matching lines.",
+        parameters: {
+            type: "object",
+            properties: {
+                directory: {
+                    type: "string",
+                    description: "The directory to search within.",
+                },
+                pattern: {
+                    type: "string",
+                    description: "The regex pattern to search for.",
+                },
+            },
+            required: ["directory", "pattern"],
+        },
+    },
+};
+export function executeSearchFilesTool(args) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const results = [];
+        const regex = new RegExp(args.pattern, 'g');
+        const searchDir = (dir) => {
+            for (const entry of fs.readdirSync(dir)) {
+                const fullPath = path.join(dir, entry);
+                const stat = fs.statSync(fullPath);
+                if (stat.isDirectory()) {
+                    searchDir(fullPath);
+                }
+                else if (stat.isFile()) {
+                    const lines = fs.readFileSync(fullPath, 'utf-8').split(/\r?\n/);
+                    lines.forEach((line, idx) => {
+                        if (regex.test(line)) {
+                            results.push(`${fullPath}:${idx + 1}:${line.trim()}`);
+                        }
+                    });
+                }
+            }
+        };
+        try {
+            searchDir(args.directory);
+            return results.length > 0 ? results.join(os.EOL) : 'No matches found.';
+        }
+        catch (error) {
+            return `Error searching files: ${error.message}`;
         }
     });
 }
