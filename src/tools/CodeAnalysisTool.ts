@@ -193,9 +193,22 @@ export const fixCodeTool: Tool = {
 };
 
 export async function executeFixCodeTool(args: { code: string; language: string; errorDetails?: string }): Promise<string> {
-  const codeBlock = `\`\`\`${args.language}\n${args.code}\n\`\`\``;
-  const errorInfo = args.errorDetails ? `\n\nError details: ${args.errorDetails}` : '';
-  return `Conceptual code fix for ${args.language} code. Original code: ${codeBlock}${errorInfo}\n\nNote: A real implementation would involve calling an external linter/formatter or an AI model. You would need to configure and integrate these tools (e.g., by executing shell commands for linters like 'eslint --fix' or 'black', or by making API calls to an AI service).`;
+  const { code, language } = args;
+  const lang = language.toLowerCase();
+  if (lang === 'javascript' || lang === 'typescript') {
+    const prettier = await import('prettier');
+    const parser = lang === 'javascript' ? 'babel' : 'typescript';
+    return prettier.format(code, { parser });
+  }
+  if (lang === 'python') {
+    try {
+      const { execSync } = await import('child_process');
+      return execSync('autopep8 -', { input: code }).toString();
+    } catch (err: any) {
+      return `autopep8 failed or is not installed: ${err.message}`;
+    }
+  }
+  return `Automatic fixing not supported for ${language}.`;
 }
 
 export const formatCodeTool: Tool = {
@@ -221,8 +234,22 @@ export const formatCodeTool: Tool = {
 };
 
 export async function executeFormatCodeTool(args: { code: string; language: string }): Promise<string> {
-  const codeBlock = `\`\`\`${args.language}\n${args.code}\n\`\`\``;
-  return `Conceptual code formatting for ${args.language} code. Original code: ${codeBlock}\n\nNote: A real implementation would involve calling an external formatter tool for the specified language (e.g., by executing shell commands like 'prettier --write' or 'black').`;
+  const { code, language } = args;
+  const lang = language.toLowerCase();
+  if (lang === 'javascript' || lang === 'typescript') {
+    const prettier = await import('prettier');
+    const parser = lang === 'javascript' ? 'babel' : 'typescript';
+    return prettier.format(code, { parser });
+  }
+  if (lang === 'python') {
+    try {
+      const { execSync } = await import('child_process');
+      return execSync('black -q -', { input: code }).toString();
+    } catch (err: any) {
+      return `black failed or is not installed: ${err.message}`;
+    }
+  }
+  return `Automatic formatting not supported for ${language}.`;
 }
 
 export const executeLinterFormatterTool: Tool = {

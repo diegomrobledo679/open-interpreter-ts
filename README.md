@@ -30,7 +30,7 @@ This CLI agent now supports a wide range of functionalities, including:
 
 *   **Code Analysis Tools:**
     *   **Syntax Checking:** Utilizes language-specific tools to perform syntax checks on provided code, reporting errors and warnings.
-    *   **Conceptual Error Fixing:** Provides a framework for an advanced AI model to analyze error messages and problematic code, suggesting potential fixes.
+    *   **Automatic Error Fixing and Formatting:** Uses Prettier for JavaScript/TypeScript and leverages `autopep8` or `black` when available for Python to fix and format code snippets.
 
 *   **Configurable Options:** Many aspects of the interpreter's behavior can be configured via command-line arguments, including:
     *   `--autoRun`: Automatically execute code blocks without user confirmation.
