@@ -52,6 +52,7 @@ This CLI agent now supports a wide range of functionalities, including:
 
 *   **Extensible Tooling:** Easily integrate new tools and functionalities.
 *   **File Utilities:** Built-in helpers for reading, writing, and recursively searching files.
+*   **Advanced File Analysis:** Tools like `deepSearch` (with optional depth limits), directory structure listing, and detection of file content types.
 *   **System Management Tools:** Retrieve hardware details and manage network interfaces across platforms.
 *   **Image Generation Tool:** Use the `generateImage` tool to create images from text prompts. When `OPENAI_API_KEY` is configured, the tool generates real images using OpenAI; otherwise it falls back to a placeholder image.
 *   **Virtual Terminal Tool:** The `launchVirtualTerminal` tool now utilizes `node-pty` to provide a fully interactive shell session directly within the CLI.
