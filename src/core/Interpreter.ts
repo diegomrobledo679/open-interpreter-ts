@@ -47,6 +47,7 @@ export class Interpreter {
   public conversationHistory: boolean;
   public conversationFilename: string | null;
   public conversationHistoryPath: string;
+  public conversationMaxLength?: number;
 
   // OS control mode related attributes
   public speakMessage: boolean;
@@ -91,6 +92,7 @@ export class Interpreter {
       conversationHistory = config.conversationHistoryEnabled,
       conversationFilename = config.conversationFilename,
       conversationHistoryPath = getStoragePath("conversations"),
+      conversationMaxLength,
       speakMessage = config.defaultSpeakMessage,
       llm = null,
       customerInstructions = "",
@@ -131,6 +133,7 @@ export class Interpreter {
     this.conversationHistory = conversationHistory;
     this.conversationFilename = conversationFilename;
     this.conversationHistoryPath = conversationHistoryPath;
+    this.conversationMaxLength = conversationMaxLength;
 
     if (this.conversationHistory && this.conversationFilename) {
       this.loadConversation(this.conversationFilename);
@@ -171,6 +174,7 @@ export class Interpreter {
     if (!fs.existsSync(this.conversationHistoryPath)) {
       fs.mkdirSync(this.conversationHistoryPath, { recursive: true });
     }
+    this.trimConversation();
     const filePath = this.getConversationFilePath(filename);
     fs.writeFileSync(filePath, JSON.stringify(this.messages, null, 2));
     logger.info(`Conversation saved to ${filePath}`);
@@ -187,6 +191,13 @@ export class Interpreter {
     }
   }
 
+  private trimConversation() {
+    if (this.conversationMaxLength && this.messages.length > this.conversationMaxLength + 1) {
+      const keep = this.messages.slice(-this.conversationMaxLength);
+      this.messages = [this.messages[0], ...keep];
+    }
+  }
+
   public async chat(message?: string): Promise<Message[]> {
     if (message) {
         logger.info(`Received message: ${message}`);
@@ -199,6 +210,7 @@ export class Interpreter {
             messageType: MessageType.Message,
             content: message,
         });
+        this.trimConversation();
     }
 
     if (this.loop) {
@@ -228,6 +240,7 @@ private async runLoop(): Promise<Message[]> {
             messageType: MessageType.Message,
             content: this.loopMessage,
         });
+        this.trimConversation();
     }
     if (this.conversationHistory && this.conversationFilename) {
         this.saveConversation(this.conversationFilename);
@@ -241,6 +254,7 @@ private async respond(): Promise<Message[]> {
 
     const llmResponse = await this.llm.run(this.messages, this.tools.map(t => t));
     this.messages.push(llmResponse);
+    this.trimConversation();
 
     if (llmResponse.tool_calls && llmResponse.tool_calls.length > 0) {
         await this.handleToolCalls(llmResponse.tool_calls);
@@ -256,6 +270,7 @@ private async respond(): Promise<Message[]> {
                 messageType: MessageType.Console,
                 content: output,
             });
+            this.trimConversation();
         }
         return this.respond(); // Get another response after handling code execution
     }
@@ -283,6 +298,7 @@ private async handleToolCalls(toolCalls: ToolCall[]) {
                     content: toolOutput,
                 };
                 this.messages.push(toolMessage);
+                this.trimConversation();
                 this.streamOutput(toolMessage);
                 logger.info(`Tool execution output: ${toolOutput}`);
             } catch (error: any) {
@@ -293,6 +309,7 @@ private async handleToolCalls(toolCalls: ToolCall[]) {
                     content: errorMessage,
                 };
                 this.messages.push(errorToolMessage);
+                this.trimConversation();
                 this.streamOutput(errorToolMessage);
                 logger.error(errorMessage);
             }
@@ -304,6 +321,7 @@ private async handleToolCalls(toolCalls: ToolCall[]) {
                 content: errorMessage,
             };
             this.messages.push(errorToolMessage);
+            this.trimConversation();
             this.streamOutput(errorToolMessage);
             logger.error(errorMessage);
         }

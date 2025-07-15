@@ -32,7 +32,7 @@ export class Interpreter {
             "The Task is impossible.",
             "Let me know what you'd like to do next",
             "Please provide more information",
-        ], disableTelemetry = config.defaultDisableTelemetry, inTerminalInterface = config.defaultInTerminalInterface, conversationHistory = config.conversationHistoryEnabled, conversationFilename = config.conversationFilename, conversationHistoryPath = getStoragePath("conversations"), speakMessage = config.defaultSpeakMessage, llm = null, customerInstructions = "", userMessageTemplate = "{content}", alwaysApplyMessageTemplate = config.defaultAlwaysApplyMessageTemplate, codeOutputTemplate = "Code output: {content}\n\nWhat does this output mean / what's next (if anything, or are we done)?", emptyCodeOutputTemplate = "The code above was executed on my machine. It produced no text output. what's next (if anything, or are we done?)", codeOutputSender = "user", computer = null, syncComputer = false, importComputerApi = false, skillsPath = null, importSkills = false, multiLine = config.defaultMultiLine, contributeConversation = config.defaultContributeConversation, plainTextDisplay = config.defaultPlainTextDisplay, } = options;
+        ], disableTelemetry = config.defaultDisableTelemetry, inTerminalInterface = config.defaultInTerminalInterface, conversationHistory = config.conversationHistoryEnabled, conversationFilename = config.conversationFilename, conversationHistoryPath = getStoragePath("conversations"), conversationMaxLength, speakMessage = config.defaultSpeakMessage, llm = null, customerInstructions = "", userMessageTemplate = "{content}", alwaysApplyMessageTemplate = config.defaultAlwaysApplyMessageTemplate, codeOutputTemplate = "Code output: {content}\n\nWhat does this output mean / what's next (if anything, or are we done)?", emptyCodeOutputTemplate = "The code above was executed on my machine. It produced no text output. what's next (if anything, or are we done?)", codeOutputSender = "user", computer = null, syncComputer = false, importComputerApi = false, skillsPath = null, importSkills = false, multiLine = config.defaultMultiLine, contributeConversation = config.defaultContributeConversation, plainTextDisplay = config.defaultPlainTextDisplay, } = options;
         this.messages = messages;
         this.offline = offline;
         this.autoRun = autoRun;
@@ -53,6 +53,7 @@ export class Interpreter {
         this.conversationHistory = conversationHistory;
         this.conversationFilename = conversationFilename;
         this.conversationHistoryPath = conversationHistoryPath;
+        this.conversationMaxLength = conversationMaxLength;
         if (this.conversationHistory && this.conversationFilename) {
             this.loadConversation(this.conversationFilename);
         }
@@ -86,6 +87,7 @@ export class Interpreter {
         if (!fs.existsSync(this.conversationHistoryPath)) {
             fs.mkdirSync(this.conversationHistoryPath, { recursive: true });
         }
+        this.trimConversation();
         const filePath = this.getConversationFilePath(filename);
         fs.writeFileSync(filePath, JSON.stringify(this.messages, null, 2));
         logger.info(`Conversation saved to ${filePath}`);
@@ -101,6 +103,12 @@ export class Interpreter {
             logger.info("No existing conversation found.");
         }
     }
+    trimConversation() {
+        if (this.conversationMaxLength && this.messages.length > this.conversationMaxLength + 1) {
+            const keep = this.messages.slice(-this.conversationMaxLength);
+            this.messages = [this.messages[0], ...keep];
+        }
+    }
     chat(message) {
         return __awaiter(this, void 0, void 0, function* () {
             if (message) {
@@ -114,6 +122,7 @@ export class Interpreter {
                     messageType: MessageType.Message,
                     content: message,
                 });
+                this.trimConversation();
             }
             if (this.loop) {
                 return this.runLoop();
@@ -141,6 +150,7 @@ export class Interpreter {
                     messageType: MessageType.Message,
                     content: this.loopMessage,
                 });
+                this.trimConversation();
             }
             if (this.conversationHistory && this.conversationFilename) {
                 this.saveConversation(this.conversationFilename);
@@ -154,6 +164,7 @@ export class Interpreter {
             logger.info("Calling LLM for response...");
             const llmResponse = yield this.llm.run(this.messages, this.tools.map(t => t));
             this.messages.push(llmResponse);
+            this.trimConversation();
             if (llmResponse.tool_calls && llmResponse.tool_calls.length > 0) {
                 yield this.handleToolCalls(llmResponse.tool_calls);
                 return this.respond(); // Get another response after handling tool calls
@@ -167,6 +178,7 @@ export class Interpreter {
                         messageType: MessageType.Console,
                         content: output,
                     });
+                    this.trimConversation();
                 }
                 return this.respond(); // Get another response after handling code execution
             }
@@ -193,6 +205,7 @@ export class Interpreter {
                             content: toolOutput,
                         };
                         this.messages.push(toolMessage);
+                        this.trimConversation();
                         this.streamOutput(toolMessage);
                         logger.info(`Tool execution output: ${toolOutput}`);
                     }
@@ -204,6 +217,7 @@ export class Interpreter {
                             content: errorMessage,
                         };
                         this.messages.push(errorToolMessage);
+                        this.trimConversation();
                         this.streamOutput(errorToolMessage);
                         logger.error(errorMessage);
                     }
@@ -216,6 +230,7 @@ export class Interpreter {
                         content: errorMessage,
                     };
                     this.messages.push(errorToolMessage);
+                    this.trimConversation();
                     this.streamOutput(errorToolMessage);
                     logger.error(errorMessage);
                 }

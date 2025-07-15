@@ -58,7 +58,7 @@ export async function main() {
     return value.toLowerCase() === 'true';
   };
 
-  const envNumber = (value: string | undefined, fallback: number) => {
+  const envNumber = (value: string | undefined, fallback?: number) => {
     if (value === undefined) return fallback;
     const num = parseFloat(value);
     return isNaN(num) ? fallback : num;
@@ -85,6 +85,7 @@ export async function main() {
     llmMaxTokens: argv.llmMaxTokens !== undefined ? parseInt(argv.llmMaxTokens, 10) : envNumber(process.env.LLM_MAX_TOKENS, config.defaultMaxOutput),
     conversationHistoryPath: envString(argv.conversationHistoryPath, process.env.CONVERSATION_HISTORY_PATH),
     conversationFilename: envString(argv.conversationFilename, process.env.CONVERSATION_FILENAME ?? config.conversationFilename),
+    conversationMaxLength: argv.conversationMaxLength !== undefined ? parseInt(argv.conversationMaxLength, 10) : envNumber(process.env.CONVERSATION_MAX_LENGTH, undefined as any),
     skillsPath: envString(argv.skillsPath, process.env.SKILLS_PATH),
     importSkills: argv.importSkills !== undefined ? argv.importSkills : envBool(process.env.IMPORT_SKILLS, false),
     displayMode: envString(argv.displayMode, process.env.DISPLAY_MODE ?? 'cli') as 'cli' | 'gui',

@@ -45,6 +45,7 @@ interface InterpreterOptions {
   llmBaseUrl?: string;
   llmTemperature?: number;
   llmMaxTokens?: number;
+  conversationMaxLength?: number;
 }
 
 export type { InterpreterOptions };
