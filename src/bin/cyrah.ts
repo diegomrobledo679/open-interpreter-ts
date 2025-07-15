@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import { executeLaunchUITool } from '../tools/SystemIntegrationTool.js';
 
 dotenv.config();
-
-executeLaunchUITool({ uiName: 'cyrah' }).then(msg => {
+const uiName = process.env.UI_NAME || 'cyrah';
+executeLaunchUITool({ uiName }).then(msg => {
   console.log(msg);
 });

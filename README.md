@@ -115,6 +115,8 @@ The interpreter reads various settings from environment variables if correspondi
 - `SKILLS_PATH` – Directory containing custom skill modules.
 - `IMPORT_SKILLS` – Set to `true` to automatically load skills on startup.
 - `UI_BASE_URL` – Base URL used by the `launchUI` tool if no URL is provided.
+- `UI_NAME` – Name of the UI to launch when running the `cyrah` command or when
+  `DISPLAY_MODE` is set to `gui`.
 - `DISPLAY_MODE` – Set to `gui` to automatically open the UI when the interpreter starts.
 
 Create a `.env` file with these values to avoid passing them as flags.

@@ -95,7 +95,7 @@ export async function main() {
   const interpreter = new Interpreter(options);
 
   if (options.displayMode === 'gui') {
-    const msg = await executeLaunchUITool({ uiName: 'cyrah' });
+    const msg = await executeLaunchUITool({ uiName: process.env.UI_NAME || 'cyrah' });
     console.log(msg);
   }
 
@@ -275,7 +275,7 @@ export async function main() {
     }
 
     if (userInput.toLowerCase() === 'cyrah') {
-      const msg = await executeLaunchUITool({ uiName: 'cyrah' });
+      const msg = await executeLaunchUITool({ uiName: process.env.UI_NAME || 'cyrah' });
       console.log(msg);
       chat();
       return;
