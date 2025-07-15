@@ -52,7 +52,7 @@ This CLI agent now supports a wide range of functionalities, including:
 
 *   **Extensible Tooling:** Easily integrate new tools and functionalities.
 *   **File Utilities:** Built-in helpers for reading, writing, and recursively searching files.
-
+*   **System Management Tools:** Retrieve hardware details and manage network interfaces across platforms.
 *   **Conceptual GUI Integration:** Includes conceptual methods for display updates and input event handling, laying the groundwork for future graphical user interface implementations.
 
 ## Installation and Usage:

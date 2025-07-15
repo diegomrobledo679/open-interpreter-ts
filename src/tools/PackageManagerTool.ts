@@ -560,7 +560,7 @@ export const createPackageTool: Tool = {
   type: "function",
   function: {
     name: "createPackage",
-    description: "Conceptually creates a distributable package from source code (e.g., npm package, Python wheel, Debian package).",
+    description: "Creates a distributable package from source code using common tooling (npm, Python build, deb packages).",
     parameters: {
       type: "object",
       properties: {
@@ -584,15 +584,35 @@ export const createPackageTool: Tool = {
 };
 
 export async function executeCreatePackageTool(args: { sourcePath: string; packageType: string; outputDir?: string }): Promise<string> {
-  const outputDir = args.outputDir || '.';
-  return `Conceptual creation of a ${args.packageType} package from ${args.sourcePath} to ${outputDir}. A real implementation would involve using specific packaging tools (e.g., 'npm pack', 'python setup.py sdist bdist_wheel', 'dpkg-buildpackage').`;
+  const cwd = path.resolve(args.sourcePath);
+  const out = args.outputDir ? path.resolve(args.outputDir) : cwd;
+  let command: string;
+  switch (args.packageType) {
+    case 'npm':
+      command = `npm pack ${cwd} --pack-destination ${out}`;
+      break;
+    case 'pip':
+      command = `python -m build ${cwd} -o ${out}`;
+      break;
+    case 'deb':
+      command = `dpkg-buildpackage -b -us -uc`;
+      break;
+    default:
+      return `Unsupported package type: ${args.packageType}`;
+  }
+  try {
+    const output = await executeShellCommand(command);
+    return `Package created using ${args.packageType}:\n${output}`;
+  } catch (error: any) {
+    return `Error creating package: ${error.message}`;
+  }
 }
 
 export const publishPackageTool: Tool = {
   type: "function",
   function: {
     name: "publishPackage",
-    description: "Conceptually publishes a package to a package registry (e.g., npm, PyPI, Docker Hub).",
+    description: "Publishes a package to a registry using npm or twine when possible.",
     parameters: {
       type: "object",
       properties: {
@@ -612,8 +632,23 @@ export const publishPackageTool: Tool = {
 };
 
 export async function executePublishPackageTool(args: { packageName: string; registryUrl?: string }): Promise<string> {
-  const registryInfo = args.registryUrl ? ` to ${args.registryUrl}` : '';
-  return `Conceptual publishing of package '${args.packageName}'${registryInfo}. A real implementation would involve using specific publishing commands (e.g., 'npm publish', 'twine upload', 'docker push').`;
+  const cwd = path.resolve(args.packageName);
+  let command: string | null = null;
+  if (fs.existsSync(path.join(cwd, 'package.json'))) {
+    command = `npm publish${args.registryUrl ? ' --registry ' + args.registryUrl : ''}`;
+  } else if (fs.existsSync(path.join(cwd, 'setup.py')) || fs.existsSync(path.join(cwd, 'pyproject.toml'))) {
+    const repoFlag = args.registryUrl ? ` --repository-url ${args.registryUrl}` : '';
+    command = `twine upload${repoFlag} dist/*`;
+  }
+  if (!command) {
+    return 'Unsupported package directory. Expecting package.json or setup.py.';
+  }
+  try {
+    const output = await executeShellCommand(command + '');
+    return `Package published:\n${output}`;
+  } catch (error: any) {
+    return `Error publishing package: ${error.message}`;
+  }
 }
 
 export const runTestsTool: Tool = {
