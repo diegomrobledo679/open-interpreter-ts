@@ -86,7 +86,7 @@ export async function executeGetDetailedCpuUsageTool(): Promise<string> {
   if (os.platform() === 'win32') {
     command = `wmic cpu get LoadPercentage /value`;
   } else {
-    command = `top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1}'`; // Linux CPU usage
+    command = `top -bn1 | grep "Cpu(s)" | sed "s/.*, *\\([0-9.]*\\)%* id.*/\\1/" | awk '{print 100 - $1}'`; // Linux CPU usage
   }
   try {
     const output = await executeShellCommand(command);

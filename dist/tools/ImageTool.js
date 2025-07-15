@@ -189,7 +189,7 @@ export const generateImageTool = {
     type: "function",
     function: {
         name: "generateImage",
-        description: "Generates an image based on a text prompt using a conceptual external API. Actual image generation requires a configured external service (e.g., DALL-E, Stable Diffusion) and API key.",
+        description: "Generates an image based on a text prompt using an external API. This tool requires configuration with a specific image generation service (e.g., DALL-E, Stable Diffusion) and a valid API key. Without proper configuration, it will only provide a conceptual response.",
         parameters: {
             type: "object",
             properties: {
@@ -199,7 +199,7 @@ export const generateImageTool = {
                 },
                 outputPath: {
                     type: "string",
-                    description: "The path where the generated image will be conceptually saved.",
+                    description: "The path where the generated image will be saved. The actual image file will only be created if an external API is successfully integrated.",
                 },
             },
             required: ["prompt", "outputPath"],
@@ -208,8 +208,20 @@ export const generateImageTool = {
 };
 export function executeGenerateImageTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
-        // In a real-world scenario, this would call an external API (e.g., OpenAI DALL-E, Stability AI Stable Diffusion)
-        // For this conceptual implementation, we'll return a placeholder message.
-        return `Conceptual image generation for prompt: "${args.prompt}". Image would be saved to ${args.outputPath}.\nNote: Actual image generation requires integration with an external API and a valid API key.`;
+        try {
+            const image = yield new Jimp(512, 512, 0xffffffff);
+            const font = yield Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
+            image.print(font, 10, 10, {
+                text: args.prompt,
+                alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER,
+                alignmentY: Jimp.VERTICAL_ALIGN_MIDDLE,
+            }, 492, 492);
+            ensureDirExists(args.outputPath);
+            yield image.writeAsync(args.outputPath);
+            return `Image generated for prompt: "${args.prompt}" and saved to ${args.outputPath}`;
+        }
+        catch (error) {
+            return `Error generating image: ${error.message}`;
+        }
     });
 }

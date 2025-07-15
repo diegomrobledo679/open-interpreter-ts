@@ -105,8 +105,11 @@ export const listContainerImagesTool: Tool = {
   function: {
     name: "listContainerImages",
     description: "Lists Docker container images.",
-    parameters: {},
-    required: [],
+    parameters: {
+      type: "object",
+      properties: {},
+      required: [],
+    },
   },
 };
 
