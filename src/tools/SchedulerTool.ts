@@ -69,8 +69,12 @@ export async function executeListScheduledTasksTool(): Promise<string> {
   } else {
     return "Error: Listing scheduled tasks is not supported on this operating system.";
   }
-  await executeShellCommand(cmd);
-  return "Scheduled task deleted.";
+  try {
+    const output = await executeShellCommand(cmd);
+    return output.trim() || "No scheduled tasks found.";
+  } catch (error: any) {
+    return `Error listing scheduled tasks: ${error.message}`;
+  }
 }
 
 export const deleteScheduledTaskTool: Tool = {

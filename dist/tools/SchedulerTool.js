@@ -78,7 +78,13 @@ export function executeListScheduledTasksTool() {
         else {
             return "Error: Listing scheduled tasks is not supported on this operating system.";
         }
-        return executeShellCommand(cmd);
+        try {
+            const output = yield executeShellCommand(cmd);
+            return output.trim() || "No scheduled tasks found.";
+        }
+        catch (error) {
+            return `Error listing scheduled tasks: ${error.message}`;
+        }
     });
 }
 export const deleteScheduledTaskTool = {
