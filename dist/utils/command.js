@@ -19,3 +19,9 @@ export const commandExists = (command) => {
         });
     });
 };
+export const shellEscape = (arg) => {
+    if (process.platform === 'win32') {
+        return `"${arg.replace(/"/g, '""')}"`;
+    }
+    return `'${arg.replace(/'/g, `'\\''`)}'`;
+};

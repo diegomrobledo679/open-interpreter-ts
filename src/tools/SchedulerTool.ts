@@ -2,7 +2,7 @@
 
 import { Tool } from "../core/types.js";
 import * as os from "os";
-import { executeShellCommand, commandExists } from "@utils/command.js";
+import { executeShellCommand, commandExists, shellEscape } from "@utils/command.js";
 
 export const createScheduledTaskTool: Tool = {
   type: "function",
@@ -38,7 +38,8 @@ export async function executeCreateScheduledTaskTool(args: { name: string; comma
     }
     // Replace any existing entry with the same name and then append the new one
     const entry = `${args.schedule} ${args.command} # ${args.name}`;
-    cmd = `(crontab -l 2>/dev/null | grep -v '# ${args.name}$'; echo "${entry}") | crontab -`;
+    const safeEntry = entry.replace(/"/g, '\"');
+    cmd = `(crontab -l 2>/dev/null | grep -v -F '# ${args.name}' ; echo "${safeEntry}") | crontab -`;
   } else if (os.platform() === 'win32') {
     if (!(await commandExists("schtasks"))) {
       return "schtasks not found. This tool requires Windows Task Scheduler.";
@@ -56,7 +57,9 @@ export async function executeCreateScheduledTaskTool(args: { name: string; comma
       st = parts[1];
       sd = parts[2];
     }
-    cmd = `schtasks /create /tn "${args.name}" /tr "${args.command}" /sc ${sc}`;
+    const safeName = shellEscape(args.name);
+    const safeCommand = shellEscape(args.command);
+    cmd = `schtasks /create /tn ${safeName} /tr ${safeCommand} /sc ${sc}`;
     if (st) cmd += ` /st ${st}`;
     if (sd) cmd += ` /sd ${sd}`;
   } else {
@@ -127,12 +130,13 @@ export async function executeDeleteScheduledTaskTool(args: { name: string }): Pr
       return 'crontab not found. Please install cron.';
     }
     // Remove lines containing the identifier comment added during creation
-    cmd = `crontab -l | grep -v '# ${args.name}$' | crontab -`;
+    cmd = `crontab -l | grep -v -F '# ${args.name}' | crontab -`;
   } else if (os.platform() === 'win32') {
     if (!(await commandExists('schtasks'))) {
       return 'schtasks not found. This tool requires Windows Task Scheduler.';
     }
-    cmd = `schtasks /delete /tn "${args.name}" /f`; // /f to force delete
+    const safeName = shellEscape(args.name);
+    cmd = `schtasks /delete /tn ${safeName} /f`; // /f to force delete
   }
   else {
     return "Error: Deleting scheduled tasks is not supported on this operating system.";
