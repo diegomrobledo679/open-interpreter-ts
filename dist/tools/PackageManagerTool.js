@@ -792,7 +792,7 @@ export const manageCronJobTool = {
                 },
                 jobIdentifier: {
                     type: "string",
-                    description: "A unique identifier for the cron job to delete. Required for 'delete' operation.",
+                    description: "An optional identifier comment for the cron job. Required when deleting and recommended when adding for easy removal.",
                     nullable: true,
                 },
             },
@@ -811,7 +811,10 @@ export function executeManageCronJobTool(args) {
                 if (!args.schedule || !args.command) {
                     return "Error: 'schedule' and 'command' are required for adding a cron job.";
                 }
-                cmd = `(crontab -l 2>/dev/null; echo "${args.schedule} ${args.command}") | crontab -`;
+                const entry = args.jobIdentifier
+                    ? `${args.schedule} ${args.command} # ${args.jobIdentifier}`
+                    : `${args.schedule} ${args.command}`;
+                cmd = `(crontab -l 2>/dev/null; echo "${entry}") | crontab -`;
                 break;
             case "list":
                 cmd = `crontab -l`;
