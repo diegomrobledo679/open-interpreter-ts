@@ -13,7 +13,16 @@ export const systemInfoTool: Tool = {
       properties: {
         infoType: {
           type: "string",
-          enum: ["platform", "arch", "hostname", "uptime", "totalmem", "freemem", "cpus", "networkInterfaces"],
+          enum: [
+            "platform",
+            "arch",
+            "hostname",
+            "uptime",
+            "totalmem",
+            "freemem",
+            "cpus",
+            "networkInterfaces",
+          ],
           description: "The type of system information to retrieve.",
         },
       },
@@ -22,29 +31,46 @@ export const systemInfoTool: Tool = {
   },
 };
 
-export async function executeSystemInfoTool(args: { infoType: string }): Promise<string> {
+export async function executeSystemInfoTool(args: {
+  infoType: string;
+}): Promise<string> {
   try {
     switch (args.infoType) {
-    case "platform":
-      return os.platform();
-    case "arch":
-      return os.arch();
-    case "hostname":
-      return os.hostname();
-    case "uptime":
-      const uptimeSeconds = os.uptime();
-      const hours = Math.floor(uptimeSeconds / 3600);
-      const minutes = Math.floor((uptimeSeconds % 3600) / 60);
-      const seconds = Math.floor(uptimeSeconds % 60);
-      return `${hours} hours, ${minutes} minutes, ${seconds} seconds`;
-    case "totalmem":
-      return `${(os.totalmem() / (1024 ** 3)).toFixed(2)} GB`;
-    case "freemem":
-      return `${(os.freemem() / (1024 ** 3)).toFixed(2)} GB`;
-    case "cpus":      const cpus = os.cpus();      return `CPU Model: ${cpus[0].model}, Cores: ${cpus.length}`;    case "networkInterfaces":      const nets = os.networkInterfaces();      let networkInfo = '';      for (const name of Object.keys(nets)) {        for (const net of nets[name]!) {          if (net.family === 'IPv4' && !net.internal) {            networkInfo += `Interface: ${name}, Address: ${net.address}, MAC: ${net.mac}\n`;          }        }      }      return networkInfo.trim();
-    default:
-      return `Error: Unknown info type ${args.infoType}`;
-  }
+      case "platform":
+        return os.platform();
+      case "arch":
+        return os.arch();
+      case "hostname":
+        return os.hostname();
+      case "uptime":
+        const uptimeSeconds = os.uptime();
+        const hours = Math.floor(uptimeSeconds / 3600);
+        const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+        const seconds = Math.floor(uptimeSeconds % 60);
+        return `${hours} hours, ${minutes} minutes, ${seconds} seconds`;
+      case "totalmem":
+        return `${(os.totalmem() / 1024 ** 3).toFixed(2)} GB`;
+      case "freemem":
+        return `${(os.freemem() / 1024 ** 3).toFixed(2)} GB`;
+      case "cpus": {
+        const cpus = os.cpus();
+        return `CPU Model: ${cpus[0].model}, Cores: ${cpus.length}`;
+      }
+      case "networkInterfaces": {
+        const nets = os.networkInterfaces();
+        let networkInfo = "";
+        for (const name of Object.keys(nets)) {
+          for (const net of nets[name]!) {
+            if (net.family === "IPv4" && !net.internal) {
+              networkInfo += `Interface: ${name}, Address: ${net.address}, MAC: ${net.mac}\n`;
+            }
+          }
+        }
+        return networkInfo.trim();
+      }
+      default:
+        return `Error: Unknown info type ${args.infoType}`;
+    }
   } catch (error: any) {
     return `Error retrieving ${args.infoType} information: ${error.message}`;
   }
@@ -66,10 +92,10 @@ export const processListTool: Tool = {
 export async function executeProcessListTool(): Promise<string> {
   return new Promise((resolve, reject) => {
     let command: string;
-    if (os.platform() === 'win32') {
-      command = 'tasklist';
+    if (os.platform() === "win32") {
+      command = "tasklist";
     } else {
-      command = 'ps aux';
+      command = "ps aux";
     }
 
     exec(command, (error, stdout, stderr) => {
@@ -100,7 +126,9 @@ export const executeShellCommandTool: Tool = {
   },
 };
 
-export async function executeExecuteShellCommandTool(args: { command: string }): Promise<string> {
+export async function executeExecuteShellCommandTool(args: {
+  command: string;
+}): Promise<string> {
   return new Promise((resolve, reject) => {
     exec(args.command, (error, stdout, stderr) => {
       if (error) {
@@ -116,7 +144,8 @@ export const getHardwareInfoTool: Tool = {
   type: "function",
   function: {
     name: "getHardwareInfo",
-    description: "Retrieves hardware information using built-in Node.js calls and common system utilities.",
+    description:
+      "Retrieves hardware information using built-in Node.js calls and common system utilities.",
     parameters: {
       type: "object",
       properties: {
@@ -131,7 +160,9 @@ export const getHardwareInfoTool: Tool = {
   },
 };
 
-export async function executeGetHardwareInfoTool(args: { infoType: "cpu" | "memory" | "storage" | "network" | "gpu" | "all" }): Promise<string> {
+export async function executeGetHardwareInfoTool(args: {
+  infoType: "cpu" | "memory" | "storage" | "network" | "gpu" | "all";
+}): Promise<string> {
   const collect = async (type: string): Promise<string> => {
     switch (type) {
       case "cpu":
@@ -139,9 +170,10 @@ export async function executeGetHardwareInfoTool(args: { infoType: "cpu" | "memo
       case "memory":
         return `Total: ${os.totalmem()}\nFree: ${os.freemem()}`;
       case "storage": {
-        const cmd = os.platform() === "win32"
-          ? "wmic logicaldisk get size,freespace,caption"
-          : "df -h";
+        const cmd =
+          os.platform() === "win32"
+            ? "wmic logicaldisk get size,freespace,caption"
+            : "df -h";
         try {
           return await executeShellCommand(cmd);
         } catch {
@@ -151,9 +183,10 @@ export async function executeGetHardwareInfoTool(args: { infoType: "cpu" | "memo
       case "network":
         return JSON.stringify(os.networkInterfaces(), null, 2);
       case "gpu": {
-        const cmd = os.platform() === "win32"
-          ? "wmic path win32_VideoController get name"
-          : "lspci | grep -i -E 'vga|3d|2d'";
+        const cmd =
+          os.platform() === "win32"
+            ? "wmic path win32_VideoController get name"
+            : "lspci | grep -i -E 'vga|3d|2d'";
         try {
           return await executeShellCommand(cmd);
         } catch {
@@ -183,7 +216,8 @@ export const manageHardwareDeviceTool: Tool = {
   type: "function",
   function: {
     name: "manageHardwareDevice",
-    description: "Enables, disables, or restarts a network interface using common system commands.",
+    description:
+      "Enables, disables, or restarts a network interface using common system commands.",
     parameters: {
       type: "object",
       properties: {
@@ -202,13 +236,17 @@ export const manageHardwareDeviceTool: Tool = {
   },
 };
 
-export async function executeManageHardwareDeviceTool(args: { deviceId: string; operation: "enable" | "disable" | "restart" }): Promise<string> {
+export async function executeManageHardwareDeviceTool(args: {
+  deviceId: string;
+  operation: "enable" | "disable" | "restart";
+}): Promise<string> {
   const cmds: string[] = [];
   if (os.platform() === "win32") {
     const base = `netsh interface set interface name="${args.deviceId}" admin=`;
     if (args.operation === "enable") cmds.push(base + "enabled");
     if (args.operation === "disable") cmds.push(base + "disabled");
-    if (args.operation === "restart") cmds.push(base + "disabled", base + "enabled");
+    if (args.operation === "restart")
+      cmds.push(base + "disabled", base + "enabled");
   } else {
     const base = `ip link set ${args.deviceId}`;
     if (args.operation === "enable") cmds.push(`${base} up`);
@@ -230,7 +268,8 @@ export const getInstalledSoftwareTool: Tool = {
   type: "function",
   function: {
     name: "getInstalledSoftware",
-    description: "Lists installed software packages on the system. This is a conceptual tool as the method varies greatly by operating system.",
+    description:
+      "Lists installed software packages on the system. This is a conceptual tool as the method varies greatly by operating system.",
     parameters: {
       type: "object",
       properties: {},
@@ -241,12 +280,12 @@ export const getInstalledSoftwareTool: Tool = {
 
 export async function executeGetInstalledSoftwareTool(): Promise<string> {
   let command: string;
-  if (os.platform() === 'win32') {
-    command = 'wmic product get name,version';
-  } else if (os.platform() === 'linux') {
-    command = 'dpkg -l | grep ^ii || rpm -qa'; // Debian/Ubuntu or RedHat/CentOS
-  } else if (os.platform() === 'darwin') {
-    command = 'brew list || system_profiler SPApplicationsDataType';
+  if (os.platform() === "win32") {
+    command = "wmic product get name,version";
+  } else if (os.platform() === "linux") {
+    command = "dpkg -l | grep ^ii || rpm -qa"; // Debian/Ubuntu or RedHat/CentOS
+  } else if (os.platform() === "darwin") {
+    command = "brew list || system_profiler SPApplicationsDataType";
   } else {
     return "Error: Listing installed software is not supported on this operating system.";
   }
@@ -262,17 +301,20 @@ export const getSystemLogsTool: Tool = {
   type: "function",
   function: {
     name: "getSystemLogs",
-    description: "Retrieves system logs. This is a conceptual tool as log locations and commands vary by OS.",
+    description:
+      "Retrieves system logs. This is a conceptual tool as log locations and commands vary by OS.",
     parameters: {
       type: "object",
       properties: {
         logType: {
           type: "string",
-          description: "The type of logs to retrieve (e.g., 'syslog', 'auth.log', 'eventlog').",
+          description:
+            "The type of logs to retrieve (e.g., 'syslog', 'auth.log', 'eventlog').",
         },
         lines: {
           type: "number",
-          description: "Optional: Number of recent lines to retrieve. Defaults to 100.",
+          description:
+            "Optional: Number of recent lines to retrieve. Defaults to 100.",
           nullable: true,
         },
       },
@@ -281,12 +323,15 @@ export const getSystemLogsTool: Tool = {
   },
 };
 
-export async function executeGetSystemLogsTool(args: { logType: string; lines?: number }): Promise<string> {
+export async function executeGetSystemLogsTool(args: {
+  logType: string;
+  lines?: number;
+}): Promise<string> {
   const numLines = args.lines || 100;
   let command: string;
-  if (os.platform() === 'win32') {
+  if (os.platform() === "win32") {
     command = `wevtutil qe ${args.logType} /c:${numLines} /f:text`;
-  } else if (os.platform() === 'linux' || os.platform() === 'darwin') {
+  } else if (os.platform() === "linux" || os.platform() === "darwin") {
     command = `tail -n ${numLines} /var/log/${args.logType}`;
   } else {
     return "Error: Retrieving system logs is not supported on this operating system.";

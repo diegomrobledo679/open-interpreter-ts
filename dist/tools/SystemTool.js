@@ -20,7 +20,16 @@ export const systemInfoTool = {
             properties: {
                 infoType: {
                     type: "string",
-                    enum: ["platform", "arch", "hostname", "uptime", "totalmem", "freemem", "cpus", "networkInterfaces"],
+                    enum: [
+                        "platform",
+                        "arch",
+                        "hostname",
+                        "uptime",
+                        "totalmem",
+                        "freemem",
+                        "cpus",
+                        "networkInterfaces",
+                    ],
                     description: "The type of system information to retrieve.",
                 },
             },
@@ -45,23 +54,25 @@ export function executeSystemInfoTool(args) {
                     const seconds = Math.floor(uptimeSeconds % 60);
                     return `${hours} hours, ${minutes} minutes, ${seconds} seconds`;
                 case "totalmem":
-                    return `${(os.totalmem() / (1024 ** 3)).toFixed(2)} GB`;
+                    return `${(os.totalmem() / 1024 ** 3).toFixed(2)} GB`;
                 case "freemem":
-                    return `${(os.freemem() / (1024 ** 3)).toFixed(2)} GB`;
-                case "cpus":
+                    return `${(os.freemem() / 1024 ** 3).toFixed(2)} GB`;
+                case "cpus": {
                     const cpus = os.cpus();
                     return `CPU Model: ${cpus[0].model}, Cores: ${cpus.length}`;
-                case "networkInterfaces":
+                }
+                case "networkInterfaces": {
                     const nets = os.networkInterfaces();
-                    let networkInfo = '';
+                    let networkInfo = "";
                     for (const name of Object.keys(nets)) {
                         for (const net of nets[name]) {
-                            if (net.family === 'IPv4' && !net.internal) {
+                            if (net.family === "IPv4" && !net.internal) {
                                 networkInfo += `Interface: ${name}, Address: ${net.address}, MAC: ${net.mac}\n`;
                             }
                         }
                     }
                     return networkInfo.trim();
+                }
                 default:
                     return `Error: Unknown info type ${args.infoType}`;
             }
@@ -87,11 +98,11 @@ export function executeProcessListTool() {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve, reject) => {
             let command;
-            if (os.platform() === 'win32') {
-                command = 'tasklist';
+            if (os.platform() === "win32") {
+                command = "tasklist";
             }
             else {
-                command = 'ps aux';
+                command = "ps aux";
             }
             exec(command, (error, stdout, stderr) => {
                 if (error) {
@@ -271,14 +282,14 @@ export const getInstalledSoftwareTool = {
 export function executeGetInstalledSoftwareTool() {
     return __awaiter(this, void 0, void 0, function* () {
         let command;
-        if (os.platform() === 'win32') {
-            command = 'wmic product get name,version';
+        if (os.platform() === "win32") {
+            command = "wmic product get name,version";
         }
-        else if (os.platform() === 'linux') {
-            command = 'dpkg -l | grep ^ii || rpm -qa'; // Debian/Ubuntu or RedHat/CentOS
+        else if (os.platform() === "linux") {
+            command = "dpkg -l | grep ^ii || rpm -qa"; // Debian/Ubuntu or RedHat/CentOS
         }
-        else if (os.platform() === 'darwin') {
-            command = 'brew list || system_profiler SPApplicationsDataType';
+        else if (os.platform() === "darwin") {
+            command = "brew list || system_profiler SPApplicationsDataType";
         }
         else {
             return "Error: Listing installed software is not supported on this operating system.";
@@ -318,10 +329,10 @@ export function executeGetSystemLogsTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
         const numLines = args.lines || 100;
         let command;
-        if (os.platform() === 'win32') {
+        if (os.platform() === "win32") {
             command = `wevtutil qe ${args.logType} /c:${numLines} /f:text`;
         }
-        else if (os.platform() === 'linux' || os.platform() === 'darwin') {
+        else if (os.platform() === "linux" || os.platform() === "darwin") {
             command = `tail -n ${numLines} /var/log/${args.logType}`;
         }
         else {

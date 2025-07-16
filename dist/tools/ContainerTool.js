@@ -7,7 +7,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { executeShellCommand } from "@utils/command.js";
+import { executeShellCommand, commandExists } from "@utils/command.js";
+function ensureDocker() {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (yield commandExists("docker")) {
+            return null;
+        }
+        return "Docker CLI not found. Please install Docker to use container tools.";
+    });
+}
 export const listContainersTool = {
     type: "function",
     function: {
@@ -28,7 +36,10 @@ export const listContainersTool = {
 };
 export function executeListContainersTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
-        const command = args.all ? 'docker ps -a' : 'docker ps';
+        const missing = yield ensureDocker();
+        if (missing)
+            return missing;
+        const command = args.all ? "docker ps -a" : "docker ps";
         try {
             const output = yield executeShellCommand(command);
             return `Docker Containers:\n${output}`;
@@ -57,6 +68,9 @@ export const startContainerTool = {
 };
 export function executeStartContainerTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
+        const missing = yield ensureDocker();
+        if (missing)
+            return missing;
         const command = `docker start ${args.containerId}`;
         try {
             const output = yield executeShellCommand(command);
@@ -86,6 +100,9 @@ export const stopContainerTool = {
 };
 export function executeStopContainerTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
+        const missing = yield ensureDocker();
+        if (missing)
+            return missing;
         const command = `docker stop ${args.containerId}`;
         try {
             const output = yield executeShellCommand(command);
@@ -110,7 +127,10 @@ export const listContainerImagesTool = {
 };
 export function executeListContainerImagesTool() {
     return __awaiter(this, void 0, void 0, function* () {
-        const command = 'docker images';
+        const missing = yield ensureDocker();
+        if (missing)
+            return missing;
+        const command = "docker images";
         try {
             const output = yield executeShellCommand(command);
             return `Docker Images:\n${output}`;
@@ -144,7 +164,10 @@ export const buildContainerImageTool = {
 };
 export function executeBuildContainerImageTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
-        const tag = args.tagName ? `-t ${args.tagName}` : '';
+        const missing = yield ensureDocker();
+        if (missing)
+            return missing;
+        const tag = args.tagName ? `-t ${args.tagName}` : "";
         const command = `docker build ${tag} ${args.path}`;
         try {
             const output = yield executeShellCommand(command);
@@ -174,6 +197,9 @@ export const pushContainerImageTool = {
 };
 export function executePushContainerImageTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
+        const missing = yield ensureDocker();
+        if (missing)
+            return missing;
         const command = `docker push ${args.imageName}`;
         try {
             const output = yield executeShellCommand(command);
@@ -203,6 +229,9 @@ export const pullContainerImageTool = {
 };
 export function executePullContainerImageTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
+        const missing = yield ensureDocker();
+        if (missing)
+            return missing;
         const command = `docker pull ${args.imageName}`;
         try {
             const output = yield executeShellCommand(command);
@@ -232,6 +261,9 @@ export const removeContainerImageTool = {
 };
 export function executeRemoveContainerImageTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
+        const missing = yield ensureDocker();
+        if (missing)
+            return missing;
         const command = `docker rmi ${args.imageId}`;
         try {
             const output = yield executeShellCommand(command);
