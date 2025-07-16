@@ -1,5 +1,6 @@
 import { Tool } from "../core/types.js";
 import { exec } from "child_process";
+import * as os from "os";
 const executeShellCommand = (command: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     exec(command, (error, stdout, stderr) => {
@@ -18,14 +19,14 @@ export const checkNetworkConnectivityTool: Tool = {
   function: {
     name: "checkNetworkConnectivity",
     description:
-      "Conceptually performs a suite of network connectivity checks (e.g., ping, DNS lookup, route tracing). A real implementation would run various network commands and analyze their output.",
+      "Performs basic network diagnostics including ping, DNS lookup, and traceroute.",
     parameters: {
       type: "object",
       properties: {
         targetHost: {
           type: "string",
           description:
-            "Optional: The host to check connectivity to. Defaults to a common internet host like 'google.com'.",
+            "Optional: The host to check connectivity to. Defaults to 'google.com'.",
           nullable: true,
         },
       },
@@ -37,17 +38,51 @@ export async function executeCheckNetworkConnectivityTool(args: {
   targetHost?: string;
 }): Promise<string> {
   const target = args.targetHost || "google.com";
-  return `Conceptual network connectivity check to ${target} initiated. A real implementation would involve running commands like 'ping', 'nslookup', 'traceroute', and summarizing their output.`;
+  const pingCmd =
+    os.platform() === "win32" ? `ping -n 4 ${target}` : `ping -c 4 ${target}`;
+  const nsCmd = `nslookup ${target}`;
+  const traceCmd =
+    os.platform() === "win32"
+      ? `tracert -d ${target}`
+      : `traceroute ${target}`;
+  try {
+    const pingOutput = await executeShellCommand(pingCmd);
+    const nsOutput = await executeShellCommand(nsCmd);
+    const traceOutput = await executeShellCommand(traceCmd);
+    return [
+      `Network diagnostics for ${target}:`,
+      "--- PING ---",
+      pingOutput.trim(),
+      "--- DNS LOOKUP ---",
+      nsOutput.trim(),
+      "--- TRACEROUTE ---",
+      traceOutput.trim(),
+    ].join("\n");
+  } catch (error: any) {
+    return `Error performing network diagnostics: ${error.message}`;
+  }
 }
 export const performNetworkSpeedTestTool: Tool = {
   type: "function",
   function: {
     name: "performNetworkSpeedTest",
     description:
-      "Conceptually performs a network speed test (upload and download bandwidth). A real implementation would integrate with a speed test service or tool.",
+      "Runs a simple network speed test using 'speedtest-cli' if available, falling back to a curl based test.",
     parameters: { type: "object", properties: {}, required: [] },
   },
 };
 export async function executePerformNetworkSpeedTestTool(): Promise<string> {
-  return `Conceptual network speed test initiated. A real implementation would involve using a command-line speed test tool (e.g., 'speedtest-cli') or interacting with a web-based speed test service's API.`;
+  try {
+    const output = await executeShellCommand("speedtest-cli --simple");
+    return output.trim();
+  } catch {
+    const curlCmd =
+      "curl -o /dev/null -s -w 'Download speed: %{speed_download}\n' https://speed.hetzner.de/1MB.bin";
+    try {
+      const output = await executeShellCommand(curlCmd);
+      return output.trim();
+    } catch (error: any) {
+      return `Error performing speed test: ${error.message}`;
+    }
+  }
 }
