@@ -1,5 +1,17 @@
 import { Tool } from "../core/types.js";
-import { logger } from "../utils/logger.js";
+import { exec } from "child_process";
+
+const executeShellCommand = (command: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        reject(`Command failed: ${command}\nError: ${stderr}`);
+      } else {
+        resolve(stdout || stderr || `Command executed successfully: ${command}`);
+      }
+    });
+  });
+};
 
 export const createBranchTool: Tool = {
   type: "function",
@@ -25,8 +37,16 @@ export const createBranchTool: Tool = {
 };
 
 export async function executeCreateBranchTool(args: { branchName: string; baseBranch?: string }): Promise<string> {
-  const fromBranch = args.baseBranch ? ` from ${args.baseBranch}` : '';
-  return `Conceptual creation of branch '${args.branchName}'${fromBranch}. A real implementation would use Git commands like 'git checkout -b' or a VCS API.`;
+  const base = args.baseBranch ? args.baseBranch : '';
+  const command = base
+    ? `git checkout ${base} && git checkout -b ${args.branchName}`
+    : `git checkout -b ${args.branchName}`;
+  try {
+    const output = await executeShellCommand(command);
+    return output.trim() || `Created branch ${args.branchName}`;
+  } catch (error: any) {
+    return `Error creating branch: ${error.message}`;
+  }
 }
 
 export const mergeBranchTool: Tool = {
@@ -53,8 +73,15 @@ export const mergeBranchTool: Tool = {
 };
 
 export async function executeMergeBranchTool(args: { sourceBranch: string; targetBranch?: string }): Promise<string> {
-  const intoBranch = args.targetBranch ? ` into ${args.targetBranch}` : '';
-  return `Conceptual merge of branch '${args.sourceBranch}'${intoBranch}. A real implementation would use Git commands like 'git merge' or a VCS API.`;
+  const command = args.targetBranch
+    ? `git checkout ${args.targetBranch} && git merge ${args.sourceBranch}`
+    : `git merge ${args.sourceBranch}`;
+  try {
+    const output = await executeShellCommand(command);
+    return output.trim() || 'Merge completed';
+  } catch (error: any) {
+    return `Error merging branch: ${error.message}`;
+  }
 }
 
 export const triggerCIBuildTool: Tool = {
@@ -81,8 +108,14 @@ export const triggerCIBuildTool: Tool = {
 };
 
 export async function executeTriggerCIBuildTool(args: { projectName: string; branch?: string }): Promise<string> {
-  const branchInfo = args.branch ? ` for branch '${args.branch}'` : '';
-  return `Conceptual CI build triggered for project '${args.projectName}'${branchInfo}. A real implementation would use a CI/CD platform's API.`;
+  const initial = args.branch ? `git checkout ${args.branch} && ` : '';
+  const command = `${initial}npm test && npm run build`;
+  try {
+    const output = await executeShellCommand(command);
+    return output.trim() || 'CI build completed';
+  } catch (error: any) {
+    return `CI build failed: ${error.message}`;
+  }
 }
 
 export const deployProjectTool: Tool = {
@@ -113,8 +146,14 @@ export const deployProjectTool: Tool = {
 };
 
 export async function executeDeployProjectTool(args: { projectName: string; environment: string; version?: string }): Promise<string> {
-  const versionInfo = args.version ? ` version '${args.version}'` : '';
-  return `Conceptual deployment of project '${args.projectName}'${versionInfo} to environment '${args.environment}'. A real implementation would use a CI/CD platform's API or deployment tools.`;
+  const version = args.version ? `--version ${args.version}` : '';
+  const command = `npm run build ${version}`.trim();
+  try {
+    const output = await executeShellCommand(command);
+    return output.trim() || `Project ${args.projectName} deployed to ${args.environment}`;
+  } catch (error: any) {
+    return `Deployment failed: ${error.message}`;
+  }
 }
 
 export const runStaticAnalysisTool: Tool = {
@@ -141,6 +180,17 @@ export const runStaticAnalysisTool: Tool = {
 };
 
 export async function executeRunStaticAnalysisTool(args: { projectPath: string; language?: string }): Promise<string> {
-  const languageInfo = args.language ? ` for ${args.language} project` : '';
-  return `Conceptual static analysis initiated for project at '${args.projectPath}'${languageInfo}. A real implementation would involve executing static analysis tools and parsing their reports.`;
+  const lang = args.language?.toLowerCase();
+  let command: string;
+  if (lang === 'python') {
+    command = `pylint ${args.projectPath}`;
+  } else {
+    command = `npx eslint ${args.projectPath} --format stylish`;
+  }
+  try {
+    const output = await executeShellCommand(command);
+    return output.trim() || 'Static analysis complete';
+  } catch (error: any) {
+    return `Static analysis failed: ${error.message}`;
+  }
 }

@@ -7,6 +7,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+import { exec } from "child_process";
+const executeShellCommand = (command) => {
+    return new Promise((resolve, reject) => {
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                reject(`Command failed: ${command}\nError: ${stderr}`);
+            }
+            else {
+                resolve(stdout || stderr || `Command executed successfully: ${command}`);
+            }
+        });
+    });
+};
 export const listCloudResourcesTool = {
     type: "function",
     function: {
@@ -32,8 +45,65 @@ export const listCloudResourcesTool = {
 };
 export function executeListCloudResourcesTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
-        const resourceType = args.resourceType ? ` of type ${args.resourceType}` : '';
-        return `Conceptual listing of ${resourceType} resources from ${args.provider}. A real implementation would require configuring API access for the specific cloud provider.`;
+        var _a;
+        const provider = args.provider.toLowerCase();
+        const type = (_a = args.resourceType) === null || _a === void 0 ? void 0 : _a.toLowerCase();
+        let command = null;
+        if (provider === 'aws') {
+            switch (type) {
+                case 'vm':
+                    command = "aws ec2 describe-instances --query 'Reservations[].Instances[].InstanceId' --output text";
+                    break;
+                case 'storage':
+                    command = 'aws s3 ls';
+                    break;
+                case 'database':
+                    command = "aws rds describe-db-instances --query 'DBInstances[].DBInstanceIdentifier' --output text";
+                    break;
+                default:
+                    command = "aws resourcegroupstaggingapi get-resources --query 'ResourceTagMappingList[].ResourceARN' --output text";
+            }
+        }
+        else if (provider === 'azure') {
+            switch (type) {
+                case 'vm':
+                    command = 'az vm list --query [].name -o tsv';
+                    break;
+                case 'storage':
+                    command = 'az storage account list --query [].name -o tsv';
+                    break;
+                default:
+                    command = 'az resource list --query [].name -o tsv';
+            }
+        }
+        else if (provider === 'gcp') {
+            switch (type) {
+                case 'vm':
+                    command = 'gcloud compute instances list --format=value(name)';
+                    break;
+                case 'storage':
+                    command = 'gsutil ls';
+                    break;
+                default:
+                    command = 'gcloud asset search-all-resources --format=value(name)';
+            }
+        }
+        else {
+            return `Unsupported provider: ${args.provider}`;
+        }
+        try {
+            yield executeShellCommand(`which ${provider === 'aws' ? 'aws' : provider === 'azure' ? 'az' : 'gcloud'}`);
+        }
+        catch (_b) {
+            return `${provider} CLI not found. Please install and configure it first.`;
+        }
+        try {
+            const output = yield executeShellCommand(command);
+            return output.trim() || 'No resources found.';
+        }
+        catch (error) {
+            return `Error listing resources: ${error.message}`;
+        }
     });
 }
 export const manageVirtualMachineTool = {
@@ -65,7 +135,72 @@ export const manageVirtualMachineTool = {
 };
 export function executeManageVirtualMachineTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
-        return `Conceptual operation '${args.operation}' on VM '${args.vmId}' in ${args.provider}. A real implementation would use cloud provider APIs.`;
+        const provider = args.provider.toLowerCase();
+        let command = null;
+        if (provider === 'aws') {
+            switch (args.operation) {
+                case 'start':
+                    command = `aws ec2 start-instances --instance-ids ${args.vmId}`;
+                    break;
+                case 'stop':
+                    command = `aws ec2 stop-instances --instance-ids ${args.vmId}`;
+                    break;
+                case 'restart':
+                    command = `aws ec2 reboot-instances --instance-ids ${args.vmId}`;
+                    break;
+                case 'status':
+                    command = `aws ec2 describe-instances --instance-ids ${args.vmId} --query 'Reservations[].Instances[].State.Name' --output text`;
+                    break;
+            }
+        }
+        else if (provider === 'azure') {
+            switch (args.operation) {
+                case 'start':
+                    command = `az vm start --ids ${args.vmId}`;
+                    break;
+                case 'stop':
+                    command = `az vm deallocate --ids ${args.vmId}`;
+                    break;
+                case 'restart':
+                    command = `az vm restart --ids ${args.vmId}`;
+                    break;
+                case 'status':
+                    command = `az vm get-instance-view --ids ${args.vmId} --query instanceView.statuses[1].displayStatus -o tsv`;
+                    break;
+            }
+        }
+        else if (provider === 'gcp') {
+            switch (args.operation) {
+                case 'start':
+                    command = `gcloud compute instances start ${args.vmId}`;
+                    break;
+                case 'stop':
+                    command = `gcloud compute instances stop ${args.vmId}`;
+                    break;
+                case 'restart':
+                    command = `gcloud compute instances reset ${args.vmId}`;
+                    break;
+                case 'status':
+                    command = `gcloud compute instances describe ${args.vmId} --format=value(status)`;
+                    break;
+            }
+        }
+        else {
+            return `Unsupported provider: ${args.provider}`;
+        }
+        try {
+            yield executeShellCommand(`which ${provider === 'aws' ? 'aws' : provider === 'azure' ? 'az' : 'gcloud'}`);
+        }
+        catch (_a) {
+            return `${provider} CLI not found. Please install and configure it first.`;
+        }
+        try {
+            const output = yield executeShellCommand(command);
+            return output.trim() || 'Command executed';
+        }
+        catch (error) {
+            return `Error managing VM: ${error.message}`;
+        }
     });
 }
 export const manageStorageBucketTool = {
@@ -107,11 +242,94 @@ export const manageStorageBucketTool = {
 };
 export function executeManageStorageBucketTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
-        let extraInfo = '';
-        if (args.filePath)
-            extraInfo += ` local path: ${args.filePath}`;
-        if (args.cloudPath)
-            extraInfo += ` cloud path: ${args.cloudPath}`;
-        return `Conceptual operation '${args.operation}' on storage bucket '${args.bucketName}' in ${args.provider}${extraInfo}. A real implementation would use cloud provider APIs.`;
+        var _a, _b, _c, _d, _e, _f;
+        const provider = args.provider.toLowerCase();
+        let command = null;
+        if (provider === 'aws') {
+            switch (args.operation) {
+                case 'create':
+                    command = `aws s3 mb s3://${args.bucketName}`;
+                    break;
+                case 'delete':
+                    command = `aws s3 rb s3://${args.bucketName} --force`;
+                    break;
+                case 'list':
+                    command = `aws s3 ls s3://${args.bucketName}`;
+                    break;
+                case 'upload':
+                    if (!args.filePath)
+                        return 'filePath required for upload';
+                    command = `aws s3 cp ${args.filePath} s3://${args.bucketName}/${(_a = args.cloudPath) !== null && _a !== void 0 ? _a : ''}`.trim();
+                    break;
+                case 'download':
+                    if (!args.filePath)
+                        return 'filePath required for download';
+                    command = `aws s3 cp s3://${args.bucketName}/${(_b = args.cloudPath) !== null && _b !== void 0 ? _b : ''} ${args.filePath}`.trim();
+                    break;
+            }
+        }
+        else if (provider === 'azure') {
+            switch (args.operation) {
+                case 'create':
+                    command = `az storage container create --name ${args.bucketName}`;
+                    break;
+                case 'delete':
+                    command = `az storage container delete --name ${args.bucketName}`;
+                    break;
+                case 'list':
+                    command = `az storage blob list --container-name ${args.bucketName} --query [].name -o tsv`;
+                    break;
+                case 'upload':
+                    if (!args.filePath)
+                        return 'filePath required for upload';
+                    command = `az storage blob upload --container-name ${args.bucketName} --file ${args.filePath} --name ${(_c = args.cloudPath) !== null && _c !== void 0 ? _c : ''}`.trim();
+                    break;
+                case 'download':
+                    if (!args.filePath)
+                        return 'filePath required for download';
+                    command = `az storage blob download --container-name ${args.bucketName} --name ${(_d = args.cloudPath) !== null && _d !== void 0 ? _d : ''} --file ${args.filePath}`.trim();
+                    break;
+            }
+        }
+        else if (provider === 'gcp') {
+            switch (args.operation) {
+                case 'create':
+                    command = `gsutil mb gs://${args.bucketName}`;
+                    break;
+                case 'delete':
+                    command = `gsutil rm -r gs://${args.bucketName}`;
+                    break;
+                case 'list':
+                    command = `gsutil ls gs://${args.bucketName}`;
+                    break;
+                case 'upload':
+                    if (!args.filePath)
+                        return 'filePath required for upload';
+                    command = `gsutil cp ${args.filePath} gs://${args.bucketName}/${(_e = args.cloudPath) !== null && _e !== void 0 ? _e : ''}`.trim();
+                    break;
+                case 'download':
+                    if (!args.filePath)
+                        return 'filePath required for download';
+                    command = `gsutil cp gs://${args.bucketName}/${(_f = args.cloudPath) !== null && _f !== void 0 ? _f : ''} ${args.filePath}`.trim();
+                    break;
+            }
+        }
+        else {
+            return `Unsupported provider: ${args.provider}`;
+        }
+        try {
+            const cli = provider === 'aws' ? 'aws' : provider === 'azure' ? 'az' : 'gsutil';
+            yield executeShellCommand(`which ${cli}`);
+        }
+        catch (_g) {
+            return `${provider} CLI not found. Please install and configure it first.`;
+        }
+        try {
+            const output = yield executeShellCommand(command);
+            return output.trim() || 'Command executed';
+        }
+        catch (error) {
+            return `Error managing bucket: ${error.message}`;
+        }
     });
 }
