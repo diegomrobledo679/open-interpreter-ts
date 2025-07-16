@@ -37,10 +37,10 @@ export const createScheduledTaskTool = {
 export function executeCreateScheduledTaskTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
         let cmd;
-        if (os.platform() === 'linux' || os.platform() === 'darwin') {
-            // For Linux/macOS, append the job with a comment so we can identify it later
+        if (os.platform() === "linux" || os.platform() === "darwin") {
+            // For Linux/macOS, replace any existing entry with the same name and then append the new one
             const entry = `${args.schedule} ${args.command} # ${args.name}`;
-            cmd = `(crontab -l 2>/dev/null; echo "${entry}") | crontab -`;
+            cmd = `(crontab -l 2>/dev/null | grep -v '# ${args.name}$'; echo "${entry}") | crontab -`;
         }
         else if (os.platform() === 'win32') {
             // For Windows, use schtasks
@@ -50,7 +50,8 @@ export function executeCreateScheduledTaskTool(args) {
         else {
             return "Error: Scheduled tasks are not supported on this operating system.";
         }
-        return executeShellCommand(cmd);
+        yield executeShellCommand(cmd);
+        return "Scheduled task created.";
     });
 }
 export const listScheduledTasksTool = {
@@ -110,6 +111,7 @@ export function executeDeleteScheduledTaskTool(args) {
         else {
             return "Error: Deleting scheduled tasks is not supported on this operating system.";
         }
-        return executeShellCommand(cmd);
+        yield executeShellCommand(cmd);
+        return "Scheduled task deleted.";
     });
 }

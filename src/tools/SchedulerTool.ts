@@ -32,10 +32,10 @@ export const createScheduledTaskTool: Tool = {
 
 export async function executeCreateScheduledTaskTool(args: { name: string; command: string; schedule: string }): Promise<string> {
   let cmd: string;
-  if (os.platform() === 'linux' || os.platform() === 'darwin') {
-    // For Linux/macOS, append the job with a comment so we can identify it later
+  if (os.platform() === "linux" || os.platform() === "darwin") {
+    // For Linux/macOS, replace any existing entry with the same name and then append the new one
     const entry = `${args.schedule} ${args.command} # ${args.name}`;
-    cmd = `(crontab -l 2>/dev/null; echo "${entry}") | crontab -`;
+    cmd = `(crontab -l 2>/dev/null | grep -v '# ${args.name}$'; echo "${entry}") | crontab -`;
   } else if (os.platform() === 'win32') {
     // For Windows, use schtasks
     // This is a simplified example; schtasks is complex.
@@ -43,7 +43,8 @@ export async function executeCreateScheduledTaskTool(args: { name: string; comma
   } else {
     return "Error: Scheduled tasks are not supported on this operating system.";
   }
-  return executeShellCommand(cmd);
+  await executeShellCommand(cmd);
+  return "Scheduled task created.";
 }
 
 export const listScheduledTasksTool: Tool = {
@@ -68,7 +69,8 @@ export async function executeListScheduledTasksTool(): Promise<string> {
   } else {
     return "Error: Listing scheduled tasks is not supported on this operating system.";
   }
-  return executeShellCommand(cmd);
+  await executeShellCommand(cmd);
+  return "Scheduled task deleted.";
 }
 
 export const deleteScheduledTaskTool: Tool = {
@@ -100,6 +102,7 @@ export async function executeDeleteScheduledTaskTool(args: { name: string }): Pr
   else {
     return "Error: Deleting scheduled tasks is not supported on this operating system.";
   }
-  return executeShellCommand(cmd);
+  await executeShellCommand(cmd);
+  return "Scheduled task deleted.";
 }
 
