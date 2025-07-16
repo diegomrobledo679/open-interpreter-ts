@@ -104,6 +104,11 @@ export const deepSearchTool = {
                     description: "Optional: Filter files by extension (e.g., 'js', 'ts').",
                     nullable: true,
                 },
+                maxDepth: {
+                    type: "number",
+                    description: "Optional: The maximum depth to recurse. Defaults to unlimited.",
+                    nullable: true,
+                },
             },
             required: ["directoryPath", "pattern"],
         },
@@ -113,14 +118,33 @@ export function executeDeepSearchTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
         const results = [];
         const regex = new RegExp(args.pattern, 'gim');
-        function searchDir(currentPath) {
-            const files = fs.readdirSync(currentPath);
+        const maxDepth = args.maxDepth !== undefined ? args.maxDepth : -1; // -1 for unlimited depth
+        function searchDir(currentPath, currentDepth) {
+            if (maxDepth !== -1 && currentDepth > maxDepth) {
+                return;
+            }
+            let files;
+            try {
+                files = fs.readdirSync(currentPath);
+            }
+            catch (e) {
+                results.push(`Error accessing directory ${currentPath}: ${e.message}`);
+                return;
+            }
             files.forEach(file => {
                 const fullPath = path.join(currentPath, file);
-                if (fs.statSync(fullPath).isDirectory()) {
-                    searchDir(fullPath);
+                let stats;
+                try {
+                    stats = fs.statSync(fullPath);
                 }
-                else {
+                catch (e) {
+                    results.push(`Error accessing file/directory ${fullPath}: ${e.message}`);
+                    return;
+                }
+                if (stats.isDirectory()) {
+                    searchDir(fullPath, currentDepth + 1);
+                }
+                else if (stats.isFile()) {
                     if (args.fileExtension && !file.endsWith(`.${args.fileExtension}`)) {
                         return; // Skip if extension doesn't match
                     }
@@ -134,13 +158,13 @@ export function executeDeepSearchTool(args) {
                         });
                     }
                     catch (e) {
-                        // Ignore errors for unreadable files (e.g., binary files)
+                        // Ignore errors for unreadable files (e.g., binary files) or encoding issues
                     }
                 }
             });
         }
         try {
-            searchDir(args.directoryPath);
+            searchDir(args.directoryPath, 0);
             if (results.length > 0) {
                 return `Deep search found ${results.length} matches for pattern "${args.pattern}" in ${args.directoryPath}:\n${results.join('\n')}`;
             }
@@ -220,6 +244,7 @@ export const listFileTypesTool = {
         },
     },
 };
+import fileType from 'file-type';
 export function executeListFileTypesTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
         const fileTypes = new Set();
@@ -249,6 +274,40 @@ export function executeListFileTypesTool(args) {
         }
         catch (error) {
             return `Error listing file types: ${error.message}`;
+        }
+    });
+}
+export const getFileContentTypeTool = {
+    type: "function",
+    function: {
+        name: "getFileContentType",
+        description: "Determines the content type (MIME type) of a specified file.",
+        parameters: {
+            type: "object",
+            properties: {
+                filePath: {
+                    type: "string",
+                    description: "The path to the file.",
+                },
+            },
+            required: ["filePath"],
+        },
+    },
+};
+export function executeGetFileContentTypeTool(args) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const buffer = fs.readFileSync(args.filePath);
+            const type = yield fileType.fromBuffer(buffer);
+            if (type) {
+                return `File ${args.filePath} has content type: ${type.mime} (extension: ${type.ext})`;
+            }
+            else {
+                return `Could not determine content type for file ${args.filePath}. It might be a text file or an unknown binary format.`;
+            }
+        }
+        catch (error) {
+            return `Error getting file content type: ${error.message}`;
         }
     });
 }

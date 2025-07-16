@@ -54,6 +54,7 @@ import { listCloudResourcesTool, executeListCloudResourcesTool, manageVirtualMac
 import { listVirtualMachinesTool, executeListVirtualMachinesTool, manageVirtualMachineLifecycleTool, executeManageVirtualMachineLifecycleTool } from "./tools/VirtualizationTool.js";
 import { checkNetworkConnectivityTool, executeCheckNetworkConnectivityTool, performNetworkSpeedTestTool, executePerformNetworkSpeedTestTool } from "./tools/NetworkDiagnosticsTool.js";
 import { createScriptFileTool, executeCreateScriptFileTool, executeScriptFileTool, executeExecuteScriptFileTool, scheduleScriptTool, executeScheduleScriptTool } from "./tools/AutomationTool.js";
+import { checkSystemHealthTool, executeCheckSystemHealthTool, generateSystemReportTool, executeGenerateSystemReportTool, troubleshootIssueTool, executeTroubleshootIssueTool } from "./tools/SystemDiagnosticsTool.js";
 export function main() {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b;
@@ -224,6 +225,9 @@ export function main() {
         interpreter.registerTool(createScriptFileTool, executeCreateScriptFileTool);
         interpreter.registerTool(executeScriptFileTool, executeExecuteScriptFileTool);
         interpreter.registerTool(scheduleScriptTool, executeScheduleScriptTool);
+        interpreter.registerTool(checkSystemHealthTool, executeCheckSystemHealthTool);
+        interpreter.registerTool(generateSystemReportTool, executeGenerateSystemReportTool);
+        interpreter.registerTool(troubleshootIssueTool, executeTroubleshootIssueTool);
         const rl = readline.createInterface({
             input: process.stdin,
             output: process.stdout,

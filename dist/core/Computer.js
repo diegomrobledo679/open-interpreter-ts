@@ -71,6 +71,15 @@ export class Computer {
                     case 'yum':
                         installCmd = `sudo yum install -y ${pkg}`;
                         break;
+                    case 'dnf':
+                        installCmd = `sudo dnf install -y ${pkg}`;
+                        break;
+                    case 'pacman':
+                        installCmd = `sudo pacman -S --noconfirm ${pkg}`;
+                        break;
+                    case 'zypper':
+                        installCmd = `sudo zypper install -y ${pkg}`;
+                        break;
                     case 'brew':
                         installCmd = `brew install ${pkg}`;
                         break;
@@ -114,6 +123,12 @@ export class Computer {
                         return 'apt';
                     if (yield this.checkCommand('yum'))
                         return 'yum';
+                    if (yield this.checkCommand('dnf'))
+                        return 'dnf';
+                    if (yield this.checkCommand('pacman'))
+                        return 'pacman';
+                    if (yield this.checkCommand('zypper'))
+                        return 'zypper';
                 }
                 else if (platform === 'darwin') {
                     if (yield this.checkCommand('brew'))
@@ -230,6 +245,24 @@ export class Computer {
                     yield ensureCommand('scala', 'scala');
                     break;
                 case 'shell': break; // Shell is assumed to be present
+                case 'c':
+                    yield ensureCommand('gcc', 'build-essential');
+                    break;
+                case 'fortran':
+                    yield ensureCommand('gfortran', 'gfortran');
+                    break;
+                case 'lua':
+                    yield ensureCommand('lua', 'lua');
+                    break;
+                case 'haskell':
+                    yield ensureCommand('runghc', 'haskell-platform');
+                    break;
+                case 'erlang':
+                    yield ensureCommand('escript', 'erlang');
+                    break;
+                case 'elixir':
+                    yield ensureCommand('elixir', 'elixir');
+                    break;
                 default:
                     logger.warn(`No specific environment setup for language: ${language}`);
             }
@@ -397,6 +430,38 @@ export class Computer {
                         case "scala":
                             cmd = "scala";
                             args = [writeTempFile(code, 'scala')];
+                            break;
+                        case "c": {
+                            const execName = `c_exec_${Date.now()}`;
+                            const cFile = writeTempFile(code, 'c');
+                            const execPath = path.join(os.tmpdir(), execName);
+                            cleanupFiles.push(execPath);
+                            yield compileAndRun(`gcc ${cFile} -o ${execPath}`, execPath, []);
+                            break;
+                        }
+                        case "fortran": {
+                            const execName = `fortran_exec_${Date.now()}`;
+                            const fortranFile = writeTempFile(code, 'f90'); // Common Fortran extension
+                            const execPath = path.join(os.tmpdir(), execName);
+                            cleanupFiles.push(execPath);
+                            yield compileAndRun(`gfortran ${fortranFile} -o ${execPath}`, execPath, []);
+                            break;
+                        }
+                        case "lua":
+                            cmd = "lua";
+                            args = [writeTempFile(code, 'lua')];
+                            break;
+                        case "haskell":
+                            cmd = "runghc";
+                            args = [writeTempFile(code, 'hs')];
+                            break;
+                        case "erlang":
+                            cmd = "escript";
+                            args = [writeTempFile(code, 'erl')];
+                            break;
+                        case "elixir":
+                            cmd = "elixir";
+                            args = [writeTempFile(code, 'exs')];
                             break;
                         default:
                             const errorMessage = `Unsupported language: ${language}`;
