@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import * as os from "os";
-import { exec } from "child_process";
+import { spawn } from "child_process";
 import { executeShellCommand } from "@utils/command.js";
 export const terminateProcessTool = {
     type: "function",
@@ -70,10 +70,18 @@ export const startProcessTool = {
 export function executeStartProcessTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve, reject) => {
-            const child = exec(args.command + (args.args ? ' ' + args.args.join(' ') : ''));
-            if (args.detached)
+            var _a;
+            const child = spawn(args.command, (_a = args.args) !== null && _a !== void 0 ? _a : [], { shell: true, detached: !!args.detached, stdio: args.detached ? 'ignore' : 'inherit' });
+            child.on('error', (err) => reject(`Error starting process: ${err.message}`));
+            if (args.detached) {
                 child.unref();
-            resolve(`Process started with PID: ${child.pid}. Command: ${args.command} ${args.args ? args.args.join(' ') : ''}`);
+                resolve(`Process started in background with PID ${child.pid}.`);
+            }
+            else {
+                child.on('close', (code) => {
+                    resolve(`Process exited with code ${code !== null && code !== void 0 ? code : 0}.`);
+                });
+            }
         });
     });
 }
