@@ -1,17 +1,29 @@
 import { Tool } from "../core/types.js";
-import { logger } from "../utils/logger.js";
+import { exec } from "child_process";
+
+const executeShellCommand = (command: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        reject(`Command failed: ${command}\nError: ${stderr}`);
+      } else {
+        resolve(stdout || stderr || `Command executed successfully: ${command}`);
+      }
+    });
+  });
+};
 
 export const listVirtualMachinesTool: Tool = {
   type: "function",
   function: {
     name: "listVirtualMachines",
-    description: "Conceptually lists virtual machines managed by virtualization software (e.g., VirtualBox, VMware, KVM). A real implementation would require integration with the virtualization software's CLI or API.",
+    description: "Lists virtual machines managed by common hypervisors (VirtualBox, VMware, KVM).",
     parameters: {
       type: "object",
       properties: {
         hypervisor: {
           type: "string",
-          description: "Optional: The virtualization software to query (e.g., 'VirtualBox', 'VMware', 'KVM').",
+          description: "Optional: The virtualization software to query (e.g., 'virtualbox', 'vmware', 'kvm').",
           nullable: true,
         },
       },
@@ -21,15 +33,28 @@ export const listVirtualMachinesTool: Tool = {
 };
 
 export async function executeListVirtualMachinesTool(args: { hypervisor?: string }): Promise<string> {
-  const hypervisor = args.hypervisor ? ` for ${args.hypervisor}` : '';
-  return `Conceptual listing of virtual machines${hypervisor}. A real implementation would involve executing commands like 'VBoxManage list vms' or interacting with a hypervisor API.`;
+  const hv = (args.hypervisor || 'virtualbox').toLowerCase();
+  let command: string;
+  if (hv === 'vmware') {
+    command = 'vmrun list';
+  } else if (hv === 'kvm' || hv === 'libvirt') {
+    command = 'virsh list --all';
+  } else {
+    command = 'VBoxManage list vms';
+  }
+  try {
+    const output = await executeShellCommand(command);
+    return output.trim() || 'No virtual machines found.';
+  } catch (error: any) {
+    return `Error listing VMs using ${hv}: ${error.message}`;
+  }
 }
 
 export const manageVirtualMachineLifecycleTool: Tool = {
   type: "function",
   function: {
     name: "manageVirtualMachineLifecycle",
-    description: "Conceptually manages the lifecycle of a virtual machine (e.g., create, delete, start, stop, pause, resume, snapshot). A real implementation would interact with virtualization software's CLI or API.",
+    description: "Manages the lifecycle of a virtual machine using common hypervisor CLIs.",
     parameters: {
       type: "object",
       properties: {
@@ -54,6 +79,85 @@ export const manageVirtualMachineLifecycleTool: Tool = {
 };
 
 export async function executeManageVirtualMachineLifecycleTool(args: { vmName: string; operation: "create" | "delete" | "start" | "stop" | "pause" | "resume" | "snapshot"; hypervisor?: string }): Promise<string> {
-  const hypervisorInfo = args.hypervisor ? ` using ${args.hypervisor}` : '';
-  return `Conceptual operation '${args.operation}' on VM '${args.vmName}'${hypervisorInfo}. A real implementation would involve executing commands like 'VBoxManage startvm' or interacting with a hypervisor API.`;
+  const hv = (args.hypervisor || 'virtualbox').toLowerCase();
+  let command: string | null = null;
+  switch (hv) {
+    case 'vmware':
+      switch (args.operation) {
+        case 'start':
+          command = `vmrun start ${args.vmName}`;
+          break;
+        case 'stop':
+          command = `vmrun stop ${args.vmName}`;
+          break;
+        case 'pause':
+          command = `vmrun pause ${args.vmName}`;
+          break;
+        case 'resume':
+          command = `vmrun unpause ${args.vmName}`;
+          break;
+        case 'delete':
+          command = `vmrun deleteVM ${args.vmName}`;
+          break;
+        case 'snapshot':
+          command = `vmrun snapshot ${args.vmName} snapshot-${Date.now()}`;
+          break;
+      }
+      break;
+    case 'kvm':
+    case 'libvirt':
+      switch (args.operation) {
+        case 'start':
+          command = `virsh start ${args.vmName}`;
+          break;
+        case 'stop':
+          command = `virsh shutdown ${args.vmName}`;
+          break;
+        case 'pause':
+          command = `virsh suspend ${args.vmName}`;
+          break;
+        case 'resume':
+          command = `virsh resume ${args.vmName}`;
+          break;
+        case 'delete':
+          command = `virsh undefine ${args.vmName}`;
+          break;
+        case 'snapshot':
+          command = `virsh snapshot-create-as ${args.vmName} snapshot-${Date.now()}`;
+          break;
+      }
+      break;
+    default:
+      switch (args.operation) {
+        case 'start':
+          command = `VBoxManage startvm ${args.vmName} --type headless`;
+          break;
+        case 'stop':
+          command = `VBoxManage controlvm ${args.vmName} acpipowerbutton`;
+          break;
+        case 'pause':
+          command = `VBoxManage controlvm ${args.vmName} pause`;
+          break;
+        case 'resume':
+          command = `VBoxManage controlvm ${args.vmName} resume`;
+          break;
+        case 'delete':
+          command = `VBoxManage unregistervm ${args.vmName} --delete`;
+          break;
+        case 'snapshot':
+          command = `VBoxManage snapshot ${args.vmName} take snapshot-${Date.now()}`;
+          break;
+      }
+  }
+
+  if (!command) {
+    return `Operation '${args.operation}' is not supported by this tool.`;
+  }
+
+  try {
+    const output = await executeShellCommand(command);
+    return output.trim() || 'Command executed';
+  } catch (error: any) {
+    return `Error executing ${args.operation} on ${args.vmName}: ${error.message}`;
+  }
 }
