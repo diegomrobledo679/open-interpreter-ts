@@ -27,3 +27,12 @@ export const executeShellCommand = (
     );
   });
 };
+
+export const commandExists = (command: string): Promise<boolean> => {
+  const checkCmd = process.platform === 'win32' ? `where ${command}` : `which ${command}`;
+  return new Promise((resolve) => {
+    exec(checkCmd, (error) => {
+      resolve(!error);
+    });
+  });
+};

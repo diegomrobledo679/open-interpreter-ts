@@ -11,3 +11,11 @@ export const executeShellCommand = (command, options = {}) => {
         });
     });
 };
+export const commandExists = (command) => {
+    const checkCmd = process.platform === 'win32' ? `where ${command}` : `which ${command}`;
+    return new Promise((resolve) => {
+        exec(checkCmd, (error) => {
+            resolve(!error);
+        });
+    });
+};

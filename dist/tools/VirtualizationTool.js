@@ -7,16 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { executeShellCommand } from "@utils/command.js";
-const checkCliExists = (cli) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        yield executeShellCommand(`which ${cli}`);
-        return true;
-    }
-    catch (_a) {
-        return false;
-    }
-});
+import { executeShellCommand, commandExists } from "@utils/command.js";
 export const listVirtualMachinesTool = {
     type: "function",
     function: {
@@ -52,7 +43,7 @@ export function executeListVirtualMachinesTool(args) {
             command = 'VBoxManage list vms';
             cli = 'VBoxManage';
         }
-        if (!(yield checkCliExists(cli))) {
+        if (!(yield commandExists(cli))) {
             return `${cli} not found. Please install it first.`;
         }
         try {
@@ -170,7 +161,7 @@ export function executeManageVirtualMachineLifecycleTool(args) {
         if (!command) {
             return `Operation '${args.operation}' is not supported by this tool.`;
         }
-        if (!(yield checkCliExists(cli))) {
+        if (!(yield commandExists(cli))) {
             return `${cli} not found. Please install it first.`;
         }
         try {

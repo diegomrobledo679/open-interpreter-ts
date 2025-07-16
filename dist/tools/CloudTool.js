@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { executeShellCommand } from "@utils/command.js";
+import { executeShellCommand, commandExists } from "@utils/command.js";
 export const listCloudResourcesTool = {
     type: "function",
     function: {
@@ -79,10 +79,8 @@ export function executeListCloudResourcesTool(args) {
         else {
             return `Unsupported provider: ${args.provider}`;
         }
-        try {
-            yield executeShellCommand(`which ${provider === 'aws' ? 'aws' : provider === 'azure' ? 'az' : 'gcloud'}`);
-        }
-        catch (_b) {
+        const cli = provider === 'aws' ? 'aws' : provider === 'azure' ? 'az' : 'gcloud';
+        if (!(yield commandExists(cli))) {
             return `${provider} CLI not found. Please install and configure it first.`;
         }
         try {
@@ -176,10 +174,8 @@ export function executeManageVirtualMachineTool(args) {
         else {
             return `Unsupported provider: ${args.provider}`;
         }
-        try {
-            yield executeShellCommand(`which ${provider === 'aws' ? 'aws' : provider === 'azure' ? 'az' : 'gcloud'}`);
-        }
-        catch (_a) {
+        const cli2 = provider === 'aws' ? 'aws' : provider === 'azure' ? 'az' : 'gcloud';
+        if (!(yield commandExists(cli2))) {
             return `${provider} CLI not found. Please install and configure it first.`;
         }
         try {
@@ -305,11 +301,8 @@ export function executeManageStorageBucketTool(args) {
         else {
             return `Unsupported provider: ${args.provider}`;
         }
-        try {
-            const cli = provider === 'aws' ? 'aws' : provider === 'azure' ? 'az' : 'gsutil';
-            yield executeShellCommand(`which ${cli}`);
-        }
-        catch (_g) {
+        const cli3 = provider === 'aws' ? 'aws' : provider === 'azure' ? 'az' : 'gsutil';
+        if (!(yield commandExists(cli3))) {
             return `${provider} CLI not found. Please install and configure it first.`;
         }
         try {

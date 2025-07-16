@@ -12,7 +12,7 @@ import * as fs from "fs";
 import { exec } from "child_process";
 import * as crypto from "crypto";
 import * as path from "path";
-import { executeShellCommand } from "@utils/command.js";
+import { executeShellCommand, commandExists } from "@utils/command.js";
 export const scanOpenPortsTool = {
     type: "function",
     function: {
@@ -51,7 +51,9 @@ export function executeScanOpenPortsTool(args) {
         else if (os.platform() === 'linux' || os.platform() === 'darwin') {
             // Linux/macOS: Prefer nmap if available, otherwise netstat
             try {
-                yield executeShellCommand('which nmap'); // Check if nmap is installed
+                if (!(yield commandExists('nmap'))) {
+                    throw new Error('nmap not found');
+                }
                 command = `nmap ${portScan} ${target}`;
             }
             catch (e) {
@@ -175,8 +177,8 @@ export function executeScanForMalwareTool(args) {
                 });
             }
             else {
-                exec('which clamscan', (err) => {
-                    if (err) {
+                commandExists('clamscan').then((available) => {
+                    if (!available) {
                         resolve('ClamAV (clamscan) not found. Install clamav to enable malware scanning.');
                     }
                     else {

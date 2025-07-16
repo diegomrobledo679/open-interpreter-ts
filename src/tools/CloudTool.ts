@@ -1,5 +1,5 @@
 import { Tool } from "../core/types.js";
-import { executeShellCommand } from "@utils/command.js";
+import { executeShellCommand, commandExists } from "@utils/command.js";
 
 export const listCloudResourcesTool: Tool = {
   type: "function",
@@ -71,9 +71,8 @@ export async function executeListCloudResourcesTool(args: { provider: string; re
     return `Unsupported provider: ${args.provider}`;
   }
 
-  try {
-    await executeShellCommand(`which ${provider === 'aws' ? 'aws' : provider === 'azure' ? 'az' : 'gcloud'}`);
-  } catch {
+  const cli = provider === 'aws' ? 'aws' : provider === 'azure' ? 'az' : 'gcloud';
+  if (!(await commandExists(cli))) {
     return `${provider} CLI not found. Please install and configure it first.`;
   }
 
@@ -167,9 +166,8 @@ export async function executeManageVirtualMachineTool(args: { provider: string; 
     return `Unsupported provider: ${args.provider}`;
   }
 
-  try {
-    await executeShellCommand(`which ${provider === 'aws' ? 'aws' : provider === 'azure' ? 'az' : 'gcloud'}`);
-  } catch {
+  const cli2 = provider === 'aws' ? 'aws' : provider === 'azure' ? 'az' : 'gcloud';
+  if (!(await commandExists(cli2))) {
     return `${provider} CLI not found. Please install and configure it first.`;
   }
 
@@ -288,10 +286,8 @@ export async function executeManageStorageBucketTool(args: { provider: string; b
     return `Unsupported provider: ${args.provider}`;
   }
 
-  try {
-    const cli = provider === 'aws' ? 'aws' : provider === 'azure' ? 'az' : 'gsutil';
-    await executeShellCommand(`which ${cli}`);
-  } catch {
+  const cli3 = provider === 'aws' ? 'aws' : provider === 'azure' ? 'az' : 'gsutil';
+  if (!(await commandExists(cli3))) {
     return `${provider} CLI not found. Please install and configure it first.`;
   }
 

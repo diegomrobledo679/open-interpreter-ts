@@ -1,14 +1,5 @@
 import { Tool } from "../core/types.js";
-import { executeShellCommand } from "@utils/command.js";
-
-const checkCliExists = async (cli: string): Promise<boolean> => {
-  try {
-    await executeShellCommand(`which ${cli}`);
-    return true;
-  } catch {
-    return false;
-  }
-};
+import { executeShellCommand, commandExists } from "@utils/command.js";
 
 export const listVirtualMachinesTool: Tool = {
   type: "function",
@@ -43,7 +34,7 @@ export async function executeListVirtualMachinesTool(args: { hypervisor?: string
     command = 'VBoxManage list vms';
     cli = 'VBoxManage';
   }
-  if (!(await checkCliExists(cli))) {
+  if (!(await commandExists(cli))) {
     return `${cli} not found. Please install it first.`;
   }
   try {
@@ -162,7 +153,7 @@ export async function executeManageVirtualMachineLifecycleTool(args: { vmName: s
     return `Operation '${args.operation}' is not supported by this tool.`;
   }
 
-  if (!(await checkCliExists(cli))) {
+  if (!(await commandExists(cli))) {
     return `${cli} not found. Please install it first.`;
   }
 
