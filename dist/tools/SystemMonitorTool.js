@@ -7,21 +7,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { exec } from "child_process";
 import * as os from "os";
-// Helper to execute shell commands
-const executeShellCommand = (command) => {
-    return new Promise((resolve, reject) => {
-        exec(command, (error, stdout, stderr) => {
-            if (error) {
-                reject(`Command failed: ${command}\nError: ${stderr}`);
-            }
-            else {
-                resolve(stdout || stderr || `Command executed successfully: ${command}`);
-            }
-        });
-    });
-};
+import { executeShellCommand } from "@utils/command.js";
 export const getDiskUsageTool = {
     type: "function",
     function: {
@@ -74,5 +61,41 @@ export function executeGetMemoryUsageTool() {
             command = `free -h`;
         }
         return executeShellCommand(command);
+    });
+}
+export const getDetailedCpuUsageTool = {
+    type: "function",
+    function: {
+        name: "getDetailedCpuUsage",
+        description: "Retrieves detailed CPU usage information, including load averages and per-core usage.",
+        parameters: {
+            type: "object",
+            properties: {},
+            required: [],
+        },
+    },
+};
+export function executeGetDetailedCpuUsageTool() {
+    return __awaiter(this, void 0, void 0, function* () {
+        let command;
+        if (os.platform() === 'win32') {
+            command = `wmic cpu get LoadPercentage /value`;
+        }
+        else {
+            command = `top -bn1 | grep "Cpu(s)" | sed "s/.*, *\\([0-9.]*\\)%* id.*/\\1/" | awk '{print 100 - $1}'`; // Linux CPU usage
+        }
+        try {
+            const output = yield executeShellCommand(command);
+            let result = `CPU Load Average: ${os.loadavg().map(l => l.toFixed(2)).join(', ')}\n`;
+            result += `Per-CPU Information:\n`;
+            os.cpus().forEach((cpu, index) => {
+                result += `  CPU ${index}: Model: ${cpu.model}, Speed: ${cpu.speed}MHz\n`;
+            });
+            result += `Current CPU Usage: ${output.trim()}%`;
+            return result;
+        }
+        catch (error) {
+            return `Error getting detailed CPU usage: ${error.message}`;
+        }
     });
 }

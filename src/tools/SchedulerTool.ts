@@ -1,21 +1,8 @@
 
 
 import { Tool } from "../core/types.js";
-import { exec } from "child_process";
 import * as os from "os";
-
-// Helper to execute shell commands
-const executeShellCommand = (command: string): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        reject(`Command failed: ${command}\nError: ${stderr}`);
-      } else {
-        resolve(stdout || stderr || `Command executed successfully: ${command}`);
-      }
-    });
-  });
-};
+import { executeShellCommand, commandExists, shellEscape } from "@utils/command.js";
 
 export const createScheduledTaskTool: Tool = {
   type: "function",
@@ -45,17 +32,49 @@ export const createScheduledTaskTool: Tool = {
 
 export async function executeCreateScheduledTaskTool(args: { name: string; command: string; schedule: string }): Promise<string> {
   let cmd: string;
-  if (os.platform() === 'linux' || os.platform() === 'darwin') {
-    // For Linux/macOS, use cron
-    cmd = `(crontab -l 2>/dev/null; echo "${args.schedule} ${args.command}") | crontab -`;
+  if (os.platform() === "linux" || os.platform() === "darwin") {
+    if (!(await commandExists("crontab"))) {
+      return "crontab not found. Please install cron.";
+    }
+    if (/[:;&|]/.test(args.schedule)) {
+      return "Invalid characters in schedule string.";
+    }
+    const safeCmd = shellEscape(args.command);
+    const entry = `${args.schedule} ${safeCmd} # ${args.name}`;
+    const safeEntry = entry.replace(/"/g, '\"');
+    cmd = `(crontab -l 2>/dev/null | grep -v -F '# ${args.name}' ; echo "${safeEntry}") | crontab -`;
   } else if (os.platform() === 'win32') {
-    // For Windows, use schtasks
-    // This is a simplified example; schtasks is complex.
-    cmd = `schtasks /create /tn "${args.name}" /tr "${args.command}" /sc ${args.schedule}`;
+    if (!(await commandExists("schtasks"))) {
+      return "schtasks not found. This tool requires Windows Task Scheduler.";
+    }
+    // Parse schedule like "DAILY 09:00" or just "09:00" for daily
+    const parts = args.schedule.trim().split(/\s+/);
+    let sc = parts[0];
+    let st: string | undefined;
+    let sd: string | undefined;
+    if (/^\d{1,2}:\d{2}$/.test(sc)) {
+      st = sc;
+      sc = "DAILY";
+    } else {
+      sc = sc.toUpperCase();
+      st = parts[1];
+      sd = parts[2];
+    }
+    if (sc.match(/[^A-Z]/)) return "Invalid schedule type";
+    if (st && !/^\d{1,2}:\d{2}$/.test(st)) return "Invalid start time";
+    const safeName = shellEscape(args.name);
+    const safeCommand = shellEscape(args.command);
+    cmd = `schtasks /create /tn ${safeName} /tr ${safeCommand} /sc ${sc}`;
+    if (st) cmd += ` /st ${st}`;
+    if (sd) {
+      if (!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(sd)) return "Invalid start date";
+      cmd += ` /sd ${sd}`;
+    }
   } else {
     return "Error: Scheduled tasks are not supported on this operating system.";
   }
-  return executeShellCommand(cmd);
+  await executeShellCommand(cmd);
+  return "Scheduled task created.";
 }
 
 export const listScheduledTasksTool: Tool = {
@@ -74,13 +93,24 @@ export const listScheduledTasksTool: Tool = {
 export async function executeListScheduledTasksTool(): Promise<string> {
   let cmd: string;
   if (os.platform() === 'linux' || os.platform() === 'darwin') {
+    if (!(await commandExists('crontab'))) {
+      return 'crontab not found. Please install cron.';
+    }
     cmd = `crontab -l`;
   } else if (os.platform() === 'win32') {
+    if (!(await commandExists('schtasks'))) {
+      return 'schtasks not found. This tool requires Windows Task Scheduler.';
+    }
     cmd = `schtasks /query /fo LIST /v`;
   } else {
     return "Error: Listing scheduled tasks is not supported on this operating system.";
   }
-  return executeShellCommand(cmd);
+  try {
+    const output = await executeShellCommand(cmd);
+    return output.trim() || "No scheduled tasks found.";
+  } catch (error: any) {
+    return `Error listing scheduled tasks: ${error.message}`;
+  }
 }
 
 export const deleteScheduledTaskTool: Tool = {
@@ -104,14 +134,22 @@ export const deleteScheduledTaskTool: Tool = {
 export async function executeDeleteScheduledTaskTool(args: { name: string }): Promise<string> {
   let cmd: string;
   if (os.platform() === 'linux' || os.platform() === 'darwin') {
-    // Deleting cron jobs by content is tricky. This is a conceptual approach.
-    return "Error: Deleting cron jobs by name is complex and not directly supported by this tool. Manual intervention may be required.";
+    if (!(await commandExists('crontab'))) {
+      return 'crontab not found. Please install cron.';
+    }
+    // Remove lines containing the identifier comment added during creation
+    cmd = `crontab -l | grep -v -F '# ${args.name}' | crontab -`;
   } else if (os.platform() === 'win32') {
-    cmd = `schtasks /delete /tn "${args.name}" /f`; // /f to force delete
+    if (!(await commandExists('schtasks'))) {
+      return 'schtasks not found. This tool requires Windows Task Scheduler.';
+    }
+    const safeName = shellEscape(args.name);
+    cmd = `schtasks /delete /tn ${safeName} /f`; // /f to force delete
   }
   else {
     return "Error: Deleting scheduled tasks is not supported on this operating system.";
   }
-  return executeShellCommand(cmd);
+  await executeShellCommand(cmd);
+  return "Scheduled task deleted.";
 }
 

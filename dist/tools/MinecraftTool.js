@@ -8,6 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { createClient } from 'minecraft-protocol';
+import { Rcon } from 'rcon-client';
 export const minecraftPingTool = {
     type: "function",
     function: {
@@ -52,5 +53,52 @@ export function executeMinecraftPingTool(args) {
             // The client needs to be connected to send a ping request
             // The library handles the ping request automatically on connection for status
         });
+    });
+}
+export const sendMinecraftRconCommandTool = {
+    type: "function",
+    function: {
+        name: "sendMinecraftRconCommand",
+        description: "Sends an RCON command to a Minecraft server. Requires RCON to be enabled on the server.",
+        parameters: {
+            type: "object",
+            properties: {
+                host: {
+                    type: "string",
+                    description: "The hostname or IP address of the Minecraft server.",
+                },
+                port: {
+                    type: "number",
+                    description: "Optional: The RCON port of the Minecraft server. Defaults to 25575.",
+                    default: 25575,
+                },
+                password: {
+                    type: "string",
+                    description: "The RCON password for the Minecraft server.",
+                },
+                command: {
+                    type: "string",
+                    description: "The command to send to the Minecraft server (e.g., 'say Hello World').",
+                },
+            },
+            required: ["host", "password", "command"],
+        },
+    },
+};
+export function executeSendMinecraftRconCommandTool(args) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const rcon = yield Rcon.connect({
+                host: args.host,
+                port: args.port || 25575,
+                password: args.password,
+            });
+            const response = yield rcon.send(args.command);
+            rcon.end();
+            return `RCON command executed. Response: ${response}`;
+        }
+        catch (err) {
+            return `Error sending RCON command: ${err.message}`;
+        }
     });
 }

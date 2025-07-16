@@ -1,19 +1,7 @@
 import { Tool } from "../core/types.js";
-import { exec } from "child_process";
 import * as os from "os";
-
-// Helper to execute shell commands
-const executeShellCommand = (command: string): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        reject(`Command failed: ${command}\nError: ${stderr}`);
-      } else {
-        resolve(stdout || stderr || `Command executed successfully: ${command}`);
-      }
-    });
-  });
-};
+import { spawn } from "child_process";
+import { executeShellCommand } from "@utils/command.js";
 
 export const terminateProcessTool: Tool = {
   type: "function",
@@ -74,9 +62,16 @@ export const startProcessTool: Tool = {
 
 export async function executeStartProcessTool(args: { command: string; args?: string[]; detached?: boolean }): Promise<string> {
   return new Promise((resolve, reject) => {
-    const child = exec(args.command + (args.args ? ' ' + args.args.join(' ') : ''));
-    if (args.detached) child.unref();
-    resolve(`Process started with PID: ${child.pid}. Command: ${args.command} ${args.args ? args.args.join(' ') : ''}`);
+    const child = spawn(args.command, args.args ?? [], { shell: true, detached: !!args.detached, stdio: args.detached ? 'ignore' : 'inherit' });
+    child.on('error', (err) => reject(`Error starting process: ${err.message}`));
+    if (args.detached) {
+      child.unref();
+      resolve(`Process started in background with PID ${child.pid}.`);
+    } else {
+      child.on('close', (code) => {
+        resolve(`Process exited with code ${code ?? 0}.`);
+      });
+    }
   });
 }
 

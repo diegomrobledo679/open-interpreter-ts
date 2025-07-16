@@ -1,21 +1,8 @@
 import { Tool } from "../core/types.js";
-import { exec } from "child_process";
 import * as os from "os";
 import * as path from "path"; // Added import
 import * as fs from "fs";   // Added import
-
-// Helper to execute shell commands
-const executeShellCommand = (command: string): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        reject(`Command failed: ${command}\nError: ${stderr}`);
-      } else {
-        resolve(stdout || stderr || `Command executed successfully: ${command}`);
-      }
-    });
-  });
-};
+import { executeShellCommand } from "@utils/command.js";
 
 export const npmInstallTool: Tool = {
   type: "function",
@@ -787,7 +774,7 @@ export const manageCronJobTool: Tool = {
         },
         jobIdentifier: {
           type: "string",
-          description: "A unique identifier for the cron job to delete. Required for 'delete' operation.",
+          description: "An optional identifier comment for the cron job. Required when deleting and recommended when adding for easy removal.",
           nullable: true,
         },
       },
@@ -807,7 +794,10 @@ export async function executeManageCronJobTool(args: { operation: "add" | "list"
       if (!args.schedule || !args.command) {
         return "Error: 'schedule' and 'command' are required for adding a cron job.";
       }
-      cmd = `(crontab -l 2>/dev/null; echo "${args.schedule} ${args.command}") | crontab -`;
+      const entry = args.jobIdentifier
+        ? `${args.schedule} ${args.command} # ${args.jobIdentifier}`
+        : `${args.schedule} ${args.command}`;
+      cmd = `(crontab -l 2>/dev/null; echo "${entry}") | crontab -`;
       break;
     case "list":
       cmd = `crontab -l`;
@@ -816,8 +806,8 @@ export async function executeManageCronJobTool(args: { operation: "add" | "list"
       if (!args.jobIdentifier) {
         return "Error: 'jobIdentifier' is required for deleting a cron job.";
       }
-      // This is a simplified delete. A robust solution would parse crontab and remove the specific line.
-      return "Error: Deleting cron jobs by identifier is complex and not directly supported by this tool. Please list cron jobs and manually remove the entry if necessary.";
+      cmd = `crontab -l | grep -v '${args.jobIdentifier}' | crontab -`;
+      break;
     default:
       return `Error: Invalid operation: ${args.operation}`;
   }

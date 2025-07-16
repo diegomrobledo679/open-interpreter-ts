@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { exec } from "child_process";
 import * as os from "os";
+import * as dns from "dns";
 export const pingTool = {
     type: "function",
     function: {
@@ -87,6 +88,43 @@ export function executeTracerouteTool(args) {
                 }
                 else {
                     resolve(stdout);
+                }
+            });
+        });
+    });
+}
+export const dnsLookupTool = {
+    type: "function",
+    function: {
+        name: "dnsLookup",
+        description: "Performs a DNS lookup for a given hostname and record type.",
+        parameters: {
+            type: "object",
+            properties: {
+                hostname: {
+                    type: "string",
+                    description: "The hostname to look up (e.g., 'google.com').",
+                },
+                recordType: {
+                    type: "string",
+                    enum: ["A", "AAAA", "CNAME", "MX", "NS", "PTR", "SOA", "SRV", "TXT"],
+                    description: "The type of DNS record to query. Defaults to 'A' (IPv4 address).",
+                    default: "A",
+                },
+            },
+            required: ["hostname"],
+        },
+    },
+};
+export function executeDnsLookupTool(args) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise((resolve, reject) => {
+            dns.resolve(args.hostname, args.recordType || 'A', (err, records) => {
+                if (err) {
+                    reject(`DNS lookup failed for ${args.hostname} (${args.recordType || 'A'}): ${err.message}`);
+                }
+                else {
+                    resolve(`DNS records for ${args.hostname} (${args.recordType || 'A'}):\n${JSON.stringify(records, null, 2)}`);
                 }
             });
         });

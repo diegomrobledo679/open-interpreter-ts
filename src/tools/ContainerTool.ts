@@ -1,19 +1,12 @@
-
 import { Tool } from "../core/types.js";
-import { exec } from "child_process";
+import { executeShellCommand, commandExists } from "@utils/command.js";
 
-// Helper to execute shell commands
-const executeShellCommand = (command: string): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        reject(`Command failed: ${command}\nError: ${stderr}`);
-      } else {
-        resolve(stdout || stderr || `Command executed successfully: ${command}`);
-      }
-    });
-  });
-};
+async function ensureDocker(): Promise<string | null> {
+  if (await commandExists("docker")) {
+    return null;
+  }
+  return "Docker CLI not found. Please install Docker to use container tools.";
+}
 
 export const listContainersTool: Tool = {
   type: "function",
@@ -25,7 +18,8 @@ export const listContainersTool: Tool = {
       properties: {
         all: {
           type: "boolean",
-          description: "Optional: If true, lists all containers (running and stopped). Defaults to false (only running).",
+          description:
+            "Optional: If true, lists all containers (running and stopped). Defaults to false (only running).",
           nullable: true,
         },
       },
@@ -34,8 +28,12 @@ export const listContainersTool: Tool = {
   },
 };
 
-export async function executeListContainersTool(args: { all?: boolean }): Promise<string> {
-  const command = args.all ? 'docker ps -a' : 'docker ps';
+export async function executeListContainersTool(args: {
+  all?: boolean;
+}): Promise<string> {
+  const missing = await ensureDocker();
+  if (missing) return missing;
+  const command = args.all ? "docker ps -a" : "docker ps";
   try {
     const output = await executeShellCommand(command);
     return `Docker Containers:\n${output}`;
@@ -62,7 +60,11 @@ export const startContainerTool: Tool = {
   },
 };
 
-export async function executeStartContainerTool(args: { containerId: string }): Promise<string> {
+export async function executeStartContainerTool(args: {
+  containerId: string;
+}): Promise<string> {
+  const missing = await ensureDocker();
+  if (missing) return missing;
   const command = `docker start ${args.containerId}`;
   try {
     const output = await executeShellCommand(command);
@@ -90,7 +92,11 @@ export const stopContainerTool: Tool = {
   },
 };
 
-export async function executeStopContainerTool(args: { containerId: string }): Promise<string> {
+export async function executeStopContainerTool(args: {
+  containerId: string;
+}): Promise<string> {
+  const missing = await ensureDocker();
+  if (missing) return missing;
   const command = `docker stop ${args.containerId}`;
   try {
     const output = await executeShellCommand(command);
@@ -114,7 +120,9 @@ export const listContainerImagesTool: Tool = {
 };
 
 export async function executeListContainerImagesTool(): Promise<string> {
-  const command = 'docker images';
+  const missing = await ensureDocker();
+  if (missing) return missing;
+  const command = "docker images";
   try {
     const output = await executeShellCommand(command);
     return `Docker Images:\n${output}`;
@@ -137,7 +145,8 @@ export const buildContainerImageTool: Tool = {
         },
         tagName: {
           type: "string",
-          description: "Optional: The name and optionally a tag in the 'name:tag' format.",
+          description:
+            "Optional: The name and optionally a tag in the 'name:tag' format.",
           nullable: true,
         },
       },
@@ -146,8 +155,13 @@ export const buildContainerImageTool: Tool = {
   },
 };
 
-export async function executeBuildContainerImageTool(args: { path: string; tagName?: string }): Promise<string> {
-  const tag = args.tagName ? `-t ${args.tagName}` : '';
+export async function executeBuildContainerImageTool(args: {
+  path: string;
+  tagName?: string;
+}): Promise<string> {
+  const missing = await ensureDocker();
+  if (missing) return missing;
+  const tag = args.tagName ? `-t ${args.tagName}` : "";
   const command = `docker build ${tag} ${args.path}`;
   try {
     const output = await executeShellCommand(command);
@@ -167,7 +181,8 @@ export const pushContainerImageTool: Tool = {
       properties: {
         imageName: {
           type: "string",
-          description: "The name of the image to push (e.g., 'myrepo/myimage:latest').",
+          description:
+            "The name of the image to push (e.g., 'myrepo/myimage:latest').",
         },
       },
       required: ["imageName"],
@@ -175,7 +190,11 @@ export const pushContainerImageTool: Tool = {
   },
 };
 
-export async function executePushContainerImageTool(args: { imageName: string }): Promise<string> {
+export async function executePushContainerImageTool(args: {
+  imageName: string;
+}): Promise<string> {
+  const missing = await ensureDocker();
+  if (missing) return missing;
   const command = `docker push ${args.imageName}`;
   try {
     const output = await executeShellCommand(command);
@@ -203,7 +222,11 @@ export const pullContainerImageTool: Tool = {
   },
 };
 
-export async function executePullContainerImageTool(args: { imageName: string }): Promise<string> {
+export async function executePullContainerImageTool(args: {
+  imageName: string;
+}): Promise<string> {
+  const missing = await ensureDocker();
+  if (missing) return missing;
   const command = `docker pull ${args.imageName}`;
   try {
     const output = await executeShellCommand(command);
@@ -231,7 +254,11 @@ export const removeContainerImageTool: Tool = {
   },
 };
 
-export async function executeRemoveContainerImageTool(args: { imageId: string }): Promise<string> {
+export async function executeRemoveContainerImageTool(args: {
+  imageId: string;
+}): Promise<string> {
+  const missing = await ensureDocker();
+  if (missing) return missing;
   const command = `docker rmi ${args.imageId}`;
   try {
     const output = await executeShellCommand(command);
