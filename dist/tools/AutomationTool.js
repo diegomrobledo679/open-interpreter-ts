@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import * as fs from "fs";
 import * as os from "os";
-import { executeShellCommand } from "@utils/command.js";
+import { executeShellCommand, commandExists, shellEscape } from "@utils/command.js";
 export const createScriptFileTool = {
     type: "function",
     function: {
@@ -83,15 +83,17 @@ export const executeScriptFileTool = {
 };
 export function executeExecuteScriptFileTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
+        const file = shellEscape(args.filePath);
         let command;
         if (args.interpreter) {
-            command = `${args.interpreter} ${args.filePath}`;
+            command = `${shellEscape(args.interpreter)} ${file}`;
         }
         else {
-            command = args.filePath;
+            command = file;
         }
         if (args.args && args.args.length > 0) {
-            command += ` ${args.args.join(" ")}`;
+            const escaped = args.args.map((a) => shellEscape(a)).join(" ");
+            command += ` ${escaped}`;
         }
         try {
             const output = yield executeShellCommand(command);
@@ -129,12 +131,22 @@ export const scheduleScriptTool = {
 };
 export function executeScheduleScriptTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
+        const file = shellEscape(args.scriptPath);
+        const name = shellEscape(args.name);
         let command;
         if (os.platform() === "win32") {
-            command = `schtasks /create /tn "${args.name}" /tr "${args.scriptPath}" /sc ONCE /st ${args.schedule}`;
+            if (!(yield commandExists("schtasks"))) {
+                return "schtasks not found. This tool requires Windows Task Scheduler.";
+            }
+            command = `schtasks /create /tn ${name} /tr ${file} /sc ONCE /st ${args.schedule}`;
         }
         else if (os.platform() === "linux" || os.platform() === "darwin") {
-            command = `(crontab -l 2>/dev/null; echo "${args.schedule} ${args.scriptPath}") | crontab -`;
+            if (!(yield commandExists("crontab"))) {
+                return "crontab not found. Please install cron.";
+            }
+            const entry = `${args.schedule} ${args.scriptPath} # ${args.name}`;
+            const safeEntry = entry.replace(/"/g, '\"');
+            command = `(crontab -l 2>/dev/null | grep -v -F '# ${args.name}' ; echo "${safeEntry}") | crontab -`;
         }
         else {
             return "Error: Scheduling scripts is not supported on this operating system.";

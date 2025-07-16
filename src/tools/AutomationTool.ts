@@ -2,7 +2,7 @@ import { Tool } from "../core/types.js";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
-import { executeShellCommand } from "@utils/command.js";
+import { executeShellCommand, commandExists, shellEscape } from "@utils/command.js";
 export const createScriptFileTool: Tool = {
   type: "function",
   function: {
@@ -83,14 +83,16 @@ export async function executeExecuteScriptFileTool(args: {
   interpreter?: string;
   args?: string[];
 }): Promise<string> {
+  const file = shellEscape(args.filePath);
   let command: string;
   if (args.interpreter) {
-    command = `${args.interpreter} ${args.filePath}`;
+    command = `${shellEscape(args.interpreter)} ${file}`;
   } else {
-    command = args.filePath;
+    command = file;
   }
   if (args.args && args.args.length > 0) {
-    command += ` ${args.args.join(" ")}`;
+    const escaped = args.args.map((a) => shellEscape(a)).join(" ");
+    command += ` ${escaped}`;
   }
   try {
     const output = await executeShellCommand(command);
@@ -131,11 +133,21 @@ export async function executeScheduleScriptTool(args: {
   schedule: string;
   name: string;
 }): Promise<string> {
+  const file = shellEscape(args.scriptPath);
+  const name = shellEscape(args.name);
   let command: string;
   if (os.platform() === "win32") {
-    command = `schtasks /create /tn "${args.name}" /tr "${args.scriptPath}" /sc ONCE /st ${args.schedule}`;
+    if (!(await commandExists("schtasks"))) {
+      return "schtasks not found. This tool requires Windows Task Scheduler.";
+    }
+    command = `schtasks /create /tn ${name} /tr ${file} /sc ONCE /st ${args.schedule}`;
   } else if (os.platform() === "linux" || os.platform() === "darwin") {
-    command = `(crontab -l 2>/dev/null; echo "${args.schedule} ${args.scriptPath}") | crontab -`;
+    if (!(await commandExists("crontab"))) {
+      return "crontab not found. Please install cron.";
+    }
+    const entry = `${args.schedule} ${args.scriptPath} # ${args.name}`;
+    const safeEntry = entry.replace(/"/g, '\"');
+    command = `(crontab -l 2>/dev/null | grep -v -F '# ${args.name}' ; echo "${safeEntry}") | crontab -`;
   } else {
     return "Error: Scheduling scripts is not supported on this operating system.";
   }
