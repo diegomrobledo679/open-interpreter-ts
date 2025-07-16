@@ -803,8 +803,8 @@ export async function executeManageCronJobTool(args: { operation: "add" | "list"
       if (!args.jobIdentifier) {
         return "Error: 'jobIdentifier' is required for deleting a cron job.";
       }
-      // This is a simplified delete. A robust solution would parse crontab and remove the specific line.
-      return "Error: Deleting cron jobs by identifier is complex and not directly supported by this tool. Please list cron jobs and manually remove the entry if necessary.";
+      cmd = `crontab -l | grep -v '${args.jobIdentifier}' | crontab -`;
+      break;
     default:
       return `Error: Invalid operation: ${args.operation}`;
   }

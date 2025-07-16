@@ -38,8 +38,9 @@ export function executeCreateScheduledTaskTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
         let cmd;
         if (os.platform() === 'linux' || os.platform() === 'darwin') {
-            // For Linux/macOS, use cron
-            cmd = `(crontab -l 2>/dev/null; echo "${args.schedule} ${args.command}") | crontab -`;
+            // For Linux/macOS, append the job with a comment so we can identify it later
+            const entry = `${args.schedule} ${args.command} # ${args.name}`;
+            cmd = `(crontab -l 2>/dev/null; echo "${entry}") | crontab -`;
         }
         else if (os.platform() === 'win32') {
             // For Windows, use schtasks
@@ -100,8 +101,8 @@ export function executeDeleteScheduledTaskTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
         let cmd;
         if (os.platform() === 'linux' || os.platform() === 'darwin') {
-            // Deleting cron jobs by content is tricky. This is a conceptual approach.
-            return "Error: Deleting cron jobs by name is complex and not directly supported by this tool. Manual intervention may be required.";
+            // Remove lines containing the identifier comment added during creation
+            cmd = `crontab -l | grep -v '# ${args.name}$' | crontab -`;
         }
         else if (os.platform() === 'win32') {
             cmd = `schtasks /delete /tn "${args.name}" /f`; // /f to force delete
