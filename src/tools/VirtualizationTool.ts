@@ -13,6 +13,15 @@ const executeShellCommand = (command: string): Promise<string> => {
   });
 };
 
+const checkCliExists = async (cli: string): Promise<boolean> => {
+  try {
+    await executeShellCommand(`which ${cli}`);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export const listVirtualMachinesTool: Tool = {
   type: "function",
   function: {
@@ -35,12 +44,19 @@ export const listVirtualMachinesTool: Tool = {
 export async function executeListVirtualMachinesTool(args: { hypervisor?: string }): Promise<string> {
   const hv = (args.hypervisor || 'virtualbox').toLowerCase();
   let command: string;
+  let cli: string;
   if (hv === 'vmware') {
     command = 'vmrun list';
+    cli = 'vmrun';
   } else if (hv === 'kvm' || hv === 'libvirt') {
     command = 'virsh list --all';
+    cli = 'virsh';
   } else {
     command = 'VBoxManage list vms';
+    cli = 'VBoxManage';
+  }
+  if (!(await checkCliExists(cli))) {
+    return `${cli} not found. Please install it first.`;
   }
   try {
     const output = await executeShellCommand(command);
@@ -81,6 +97,7 @@ export const manageVirtualMachineLifecycleTool: Tool = {
 export async function executeManageVirtualMachineLifecycleTool(args: { vmName: string; operation: "create" | "delete" | "start" | "stop" | "pause" | "resume" | "snapshot"; hypervisor?: string }): Promise<string> {
   const hv = (args.hypervisor || 'virtualbox').toLowerCase();
   let command: string | null = null;
+  let cli: string;
   switch (hv) {
     case 'vmware':
       switch (args.operation) {
@@ -103,6 +120,7 @@ export async function executeManageVirtualMachineLifecycleTool(args: { vmName: s
           command = `vmrun snapshot ${args.vmName} snapshot-${Date.now()}`;
           break;
       }
+      cli = 'vmrun';
       break;
     case 'kvm':
     case 'libvirt':
@@ -126,6 +144,7 @@ export async function executeManageVirtualMachineLifecycleTool(args: { vmName: s
           command = `virsh snapshot-create-as ${args.vmName} snapshot-${Date.now()}`;
           break;
       }
+      cli = 'virsh';
       break;
     default:
       switch (args.operation) {
@@ -148,10 +167,15 @@ export async function executeManageVirtualMachineLifecycleTool(args: { vmName: s
           command = `VBoxManage snapshot ${args.vmName} take snapshot-${Date.now()}`;
           break;
       }
+      cli = 'VBoxManage';
   }
 
   if (!command) {
     return `Operation '${args.operation}' is not supported by this tool.`;
+  }
+
+  if (!(await checkCliExists(cli))) {
+    return `${cli} not found. Please install it first.`;
   }
 
   try {
