@@ -1,12 +1,12 @@
-export const executeShellCommand = (command) => {
+import { exec } from "child_process";
+export const executeShellCommand = (command, options = {}) => {
     return new Promise((resolve, reject) => {
-        const { exec } = require('child_process');
-        exec(command, (error, stdout, stderr) => {
+        exec(command, { cwd: options.cwd, shell: options.shell, timeout: options.timeout }, (error, stdout, stderr) => {
             if (error) {
-                reject(`Command failed: ${command}\nError: ${stderr}`);
+                reject(new Error(stderr || error.message));
             }
             else {
-                resolve(stdout || stderr || `Command executed successfully: ${command}`);
+                resolve((stdout || stderr).trim());
             }
         });
     });
