@@ -41,8 +41,11 @@ export function executeCreateScheduledTaskTool(args) {
             if (!(yield commandExists("crontab"))) {
                 return "crontab not found. Please install cron.";
             }
-            // Replace any existing entry with the same name and then append the new one
-            const entry = `${args.schedule} ${args.command} # ${args.name}`;
+            if (/[:;&|]/.test(args.schedule)) {
+                return "Invalid characters in schedule string.";
+            }
+            const safeCmd = shellEscape(args.command);
+            const entry = `${args.schedule} ${safeCmd} # ${args.name}`;
             const safeEntry = entry.replace(/"/g, '\"');
             cmd = `(crontab -l 2>/dev/null | grep -v -F '# ${args.name}' ; echo "${safeEntry}") | crontab -`;
         }
@@ -51,7 +54,7 @@ export function executeCreateScheduledTaskTool(args) {
                 return "schtasks not found. This tool requires Windows Task Scheduler.";
             }
             // Parse schedule like "DAILY 09:00" or just "09:00" for daily
-            const parts = args.schedule.split(/\s+/);
+            const parts = args.schedule.trim().split(/\s+/);
             let sc = parts[0];
             let st;
             let sd;
@@ -64,13 +67,20 @@ export function executeCreateScheduledTaskTool(args) {
                 st = parts[1];
                 sd = parts[2];
             }
+            if (sc.match(/[^A-Z]/))
+                return "Invalid schedule type";
+            if (st && !/^\d{1,2}:\d{2}$/.test(st))
+                return "Invalid start time";
             const safeName = shellEscape(args.name);
             const safeCommand = shellEscape(args.command);
             cmd = `schtasks /create /tn ${safeName} /tr ${safeCommand} /sc ${sc}`;
             if (st)
                 cmd += ` /st ${st}`;
-            if (sd)
+            if (sd) {
+                if (!/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(sd))
+                    return "Invalid start date";
                 cmd += ` /sd ${sd}`;
+            }
         }
         else {
             return "Error: Scheduled tasks are not supported on this operating system.";
