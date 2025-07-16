@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import * as os from "os";
-import { executeShellCommand } from "@utils/command.js";
+import { executeShellCommand, commandExists } from "@utils/command.js";
 export const createScheduledTaskTool = {
     type: "function",
     function: {
@@ -38,14 +38,36 @@ export function executeCreateScheduledTaskTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
         let cmd;
         if (os.platform() === "linux" || os.platform() === "darwin") {
-            // For Linux/macOS, replace any existing entry with the same name and then append the new one
+            if (!(yield commandExists("crontab"))) {
+                return "crontab not found. Please install cron.";
+            }
+            // Replace any existing entry with the same name and then append the new one
             const entry = `${args.schedule} ${args.command} # ${args.name}`;
             cmd = `(crontab -l 2>/dev/null | grep -v '# ${args.name}$'; echo "${entry}") | crontab -`;
         }
         else if (os.platform() === 'win32') {
-            // For Windows, use schtasks
-            // This is a simplified example; schtasks is complex.
-            cmd = `schtasks /create /tn "${args.name}" /tr "${args.command}" /sc ${args.schedule}`;
+            if (!(yield commandExists("schtasks"))) {
+                return "schtasks not found. This tool requires Windows Task Scheduler.";
+            }
+            // Parse schedule like "DAILY 09:00" or just "09:00" for daily
+            const parts = args.schedule.split(/\s+/);
+            let sc = parts[0];
+            let st;
+            let sd;
+            if (/^\d{1,2}:\d{2}$/.test(sc)) {
+                st = sc;
+                sc = "DAILY";
+            }
+            else {
+                sc = sc.toUpperCase();
+                st = parts[1];
+                sd = parts[2];
+            }
+            cmd = `schtasks /create /tn "${args.name}" /tr "${args.command}" /sc ${sc}`;
+            if (st)
+                cmd += ` /st ${st}`;
+            if (sd)
+                cmd += ` /sd ${sd}`;
         }
         else {
             return "Error: Scheduled tasks are not supported on this operating system.";
@@ -70,9 +92,15 @@ export function executeListScheduledTasksTool() {
     return __awaiter(this, void 0, void 0, function* () {
         let cmd;
         if (os.platform() === 'linux' || os.platform() === 'darwin') {
+            if (!(yield commandExists('crontab'))) {
+                return 'crontab not found. Please install cron.';
+            }
             cmd = `crontab -l`;
         }
         else if (os.platform() === 'win32') {
+            if (!(yield commandExists('schtasks'))) {
+                return 'schtasks not found. This tool requires Windows Task Scheduler.';
+            }
             cmd = `schtasks /query /fo LIST /v`;
         }
         else {
@@ -108,10 +136,16 @@ export function executeDeleteScheduledTaskTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
         let cmd;
         if (os.platform() === 'linux' || os.platform() === 'darwin') {
+            if (!(yield commandExists('crontab'))) {
+                return 'crontab not found. Please install cron.';
+            }
             // Remove lines containing the identifier comment added during creation
             cmd = `crontab -l | grep -v '# ${args.name}$' | crontab -`;
         }
         else if (os.platform() === 'win32') {
+            if (!(yield commandExists('schtasks'))) {
+                return 'schtasks not found. This tool requires Windows Task Scheduler.';
+            }
             cmd = `schtasks /delete /tn "${args.name}" /f`; // /f to force delete
         }
         else {
