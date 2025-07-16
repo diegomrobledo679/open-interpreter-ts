@@ -24,7 +24,7 @@ export const listCloudResourcesTool = {
     type: "function",
     function: {
         name: "listCloudResources",
-        description: "Conceptually lists cloud resources (e.g., VMs, storage buckets, databases) from a specified cloud provider. A real implementation would require integration with cloud provider APIs (AWS, Azure, GCP) and valid credentials.",
+        description: "Lists cloud resources (VMs, storage buckets, databases) using the provider CLI. Requires the corresponding CLI installed and configured.",
         parameters: {
             type: "object",
             properties: {
@@ -110,7 +110,7 @@ export const manageVirtualMachineTool = {
     type: "function",
     function: {
         name: "manageVirtualMachine",
-        description: "Conceptually manages a virtual machine (e.g., start, stop, restart, get status). A real implementation would interact with cloud provider APIs.",
+        description: "Manages a virtual machine (start, stop, restart, get status) using the provider CLI.",
         parameters: {
             type: "object",
             properties: {
@@ -207,7 +207,7 @@ export const manageStorageBucketTool = {
     type: "function",
     function: {
         name: "manageStorageBucket",
-        description: "Conceptually manages a cloud storage bucket (e.g., create, delete, list contents, upload file, download file). A real implementation would interact with cloud provider APIs.",
+        description: "Manages a cloud storage bucket (create, delete, list contents, upload, download) using the provider CLI.",
         parameters: {
             type: "object",
             properties: {

@@ -143,7 +143,8 @@ export const scanForMalwareTool: Tool = {
   type: "function",
   function: {
     name: "scanForMalware",
-    description: "Conceptually scans the system or a specified path for malware/viruses. A real implementation would integrate with an antivirus engine (e.g., ClamAV, Windows Defender CLI).",
+    description:
+      "Scans the system or a specified path for malware using available antivirus tools.",
     parameters: {
       type: "object",
       properties: {
@@ -193,7 +194,8 @@ export const analyzeSecurityLogsTool: Tool = {
   type: "function",
   function: {
     name: "analyzeSecurityLogs",
-    description: "Conceptually analyzes security-related logs for suspicious activities or anomalies. A real implementation would involve parsing and interpreting logs from various sources (e.g., system logs, firewall logs, application logs) and applying security analytics.",
+    description:
+      "Analyzes security-related logs for suspicious activities or anomalies.",
     parameters: {
       type: "object",
       properties: {
@@ -230,7 +232,8 @@ export const manageCryptographicKeysTool: Tool = {
   type: "function",
   function: {
     name: "manageCryptographicKeys",
-    description: "Conceptually manages cryptographic keys (e.g., generate, store, retrieve, delete). A real implementation would interact with a secure key store or a cryptographic library.",
+    description:
+      "Generates, stores, retrieves, and deletes simple RSA keys on disk.",
     parameters: {
       type: "object",
       properties: {
@@ -248,13 +251,18 @@ export const manageCryptographicKeysTool: Tool = {
           description: "Optional: The type of key (e.g., 'RSA', 'AES').",
           nullable: true,
         },
+        keyData: {
+          type: "string",
+          description: "Optional: Key material for the 'store' operation.",
+          nullable: true,
+        },
       },
       required: ["operation", "keyName"],
     },
   },
 };
 
-export async function executeManageCryptographicKeysTool(args: { operation: "generate" | "store" | "retrieve" | "delete"; keyName: string; keyType?: string }): Promise<string> {
+export async function executeManageCryptographicKeysTool(args: { operation: "generate" | "store" | "retrieve" | "delete"; keyName: string; keyType?: string; keyData?: string }): Promise<string> {
   const keyDir = path.resolve(process.cwd(), 'keys');
   if (!fs.existsSync(keyDir)) fs.mkdirSync(keyDir);
   const baseName = path.join(keyDir, args.keyName);
@@ -273,6 +281,28 @@ export async function executeManageCryptographicKeysTool(args: { operation: "gen
         });
       });
     }
+    case 'store': {
+      if (!args.keyType) {
+        return 'keyType is required when storing a key';
+      }
+      if (!args.keyData) {
+        return 'keyData is required for storing a key';
+      }
+      const file = `${baseName}.${args.keyType === 'public' ? 'pub' : 'pem'}`;
+      fs.writeFileSync(file, args.keyData);
+      return `Stored key at ${file}`;
+    }
+    case 'retrieve': {
+      let file = `${baseName}.pem`;
+      if (args.keyType === 'public') {
+        file = `${baseName}.pub`;
+      }
+      if (!fs.existsSync(file)) {
+        return `Key not found for ${args.keyName}`;
+      }
+      const content = fs.readFileSync(file, 'utf-8');
+      return content;
+    }
     case 'delete': {
       try {
         fs.unlinkSync(`${baseName}.pem`);
@@ -283,6 +313,6 @@ export async function executeManageCryptographicKeysTool(args: { operation: "gen
       }
     }
     default:
-      return 'Only generate and delete operations are supported in this implementation.';
+      return `Unsupported operation: ${args.operation}`;
   }
 }

@@ -24,7 +24,7 @@ export const createBranchTool = {
     type: "function",
     function: {
         name: "createBranch",
-        description: "Conceptually creates a new version control branch. A real implementation would interact with Git or other VCS CLI/APIs.",
+        description: "Creates a new version control branch using the Git CLI.",
         parameters: {
             type: "object",
             properties: {
@@ -61,7 +61,7 @@ export const mergeBranchTool = {
     type: "function",
     function: {
         name: "mergeBranch",
-        description: "Conceptually merges a source branch into a target branch. A real implementation would interact with Git or other VCS CLI/APIs.",
+        description: "Merges a source branch into a target branch using Git.",
         parameters: {
             type: "object",
             properties: {
@@ -97,7 +97,7 @@ export const triggerCIBuildTool = {
     type: "function",
     function: {
         name: "triggerCIBuild",
-        description: "Conceptually triggers a Continuous Integration (CI) build for a project. A real implementation would interact with CI/CD platform APIs (e.g., Jenkins, GitLab CI, GitHub Actions, CircleCI).",
+        description: "Runs tests and builds the project, mimicking a CI build step.",
         parameters: {
             type: "object",
             properties: {
@@ -132,7 +132,7 @@ export const deployProjectTool = {
     type: "function",
     function: {
         name: "deployProject",
-        description: "Conceptually deploys a project to a specified environment. A real implementation would interact with CI/CD platform APIs or deployment tools.",
+        description: "Runs the build script and reports deployment completion.",
         parameters: {
             type: "object",
             properties: {
@@ -171,7 +171,7 @@ export const runStaticAnalysisTool = {
     type: "function",
     function: {
         name: "runStaticAnalysis",
-        description: "Conceptually runs static code analysis on a project. A real implementation would integrate with static analysis tools (e.g., SonarQube, ESLint, Pylint).",
+        description: "Runs ESLint for JavaScript/TypeScript or Pylint for Python projects.",
         parameters: {
             type: "object",
             properties: {
