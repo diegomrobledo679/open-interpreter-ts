@@ -7,19 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { exec } from "child_process";
-const executeShellCommand = (command) => {
-    return new Promise((resolve, reject) => {
-        exec(command, (error, stdout, stderr) => {
-            if (error) {
-                reject(`Command failed: ${command}\nError: ${stderr}`);
-            }
-            else {
-                resolve(stdout || stderr || `Command executed successfully: ${command}`);
-            }
-        });
-    });
-};
+import { executeShellCommand } from "@utils/command.js";
 const checkCliExists = (cli) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield executeShellCommand(`which ${cli}`);

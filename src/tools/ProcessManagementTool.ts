@@ -1,19 +1,7 @@
 import { Tool } from "../core/types.js";
-import { exec } from "child_process";
 import * as os from "os";
-
-// Helper to execute shell commands
-const executeShellCommand = (command: string): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        reject(`Command failed: ${command}\nError: ${stderr}`);
-      } else {
-        resolve(stdout || stderr || `Command executed successfully: ${command}`);
-      }
-    });
-  });
-};
+import { exec } from "child_process";
+import { executeShellCommand } from "@utils/command.js";
 
 export const terminateProcessTool: Tool = {
   type: "function",

@@ -7,20 +7,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { exec } from "child_process";
 import * as os from "os";
-const executeShellCommand = (command) => {
-    return new Promise((resolve, reject) => {
-        exec(command, (error, stdout, stderr) => {
-            if (error) {
-                reject(`Command failed: ${stderr || error.message}`);
-            }
-            else {
-                resolve(stdout || stderr || `Command executed successfully: ${command}`);
-            }
-        });
-    });
-};
+import { exec } from "child_process";
+import { executeShellCommand } from "@utils/command.js";
 export const systemInfoTool = {
     type: "function",
     function: {
