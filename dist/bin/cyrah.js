@@ -61,14 +61,15 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const argv = minimist(process.argv.slice(2), {
             string: ['env'],
-            boolean: ['menu', 'help'],
-            alias: { e: 'env', h: 'help' }
+            boolean: ['menu', 'help', 'web'],
+            alias: { e: 'env', h: 'help', w: 'web' }
         });
         if (argv.help) {
             console.log(`Usage: cyrah [options]
 
 Options:
   --menu, -m          Show interactive menu
+  --web,  -w          Start the web interface alongside the CLI
   --env,  -e KEY=VAL  Set environment variable (repeatable)
   --help, -h          Show this help message
 
@@ -87,6 +88,10 @@ Any other options are forwarded to the interpreter.`);
         if (argv.menu) {
             yield showMenu();
             return;
+        }
+        if (argv.web) {
+            yield import('../server.js');
+            console.log('Web interface started. Open http://localhost:3000 in your browser.');
         }
         yield main();
     });
