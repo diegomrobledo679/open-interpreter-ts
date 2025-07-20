@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import * as os from "os";
 import * as path from "path"; // Added import
 import * as fs from "fs"; // Added import
-import { executeShellCommand } from "@utils/command.js";
+import { executeShellCommand } from "../utils/command.js";
 export const npmInstallTool = {
     type: "function",
     function: {

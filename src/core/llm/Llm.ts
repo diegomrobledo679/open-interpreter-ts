@@ -1,6 +1,6 @@
 
 import { Models } from "../../const.js";
-import { Interpreter } from "@core/Interpreter.js";
+import { Interpreter } from "../Interpreter.js";
 import { logger } from "../../utils/logger.js";
 import { assert } from "console";
 import { Message, Role, MessageType, ToolCall } from "../types.js";

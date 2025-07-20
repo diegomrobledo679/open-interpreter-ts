@@ -1,5 +1,5 @@
 import { Tool } from "../core/types.js";
-import { executeShellCommand, commandExists } from "@utils/command.js";
+import { executeShellCommand, commandExists } from "../utils/command.js";
 
 export const listCloudResourcesTool: Tool = {
   type: "function",

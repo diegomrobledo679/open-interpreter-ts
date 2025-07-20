@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import * as fs from "fs";
 import * as os from "os";
-import { executeShellCommand, commandExists, shellEscape } from "@utils/command.js";
+import { executeShellCommand, commandExists, shellEscape } from "../utils/command.js";
 export const createScriptFileTool = {
     type: "function",
     function: {

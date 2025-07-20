@@ -2,7 +2,7 @@
 
 import { Tool } from "../core/types.js";
 import * as os from "os";
-import { executeShellCommand, commandExists, shellEscape } from "@utils/command.js";
+import { executeShellCommand, commandExists, shellEscape } from "../utils/command.js";
 
 export const createScheduledTaskTool: Tool = {
   type: "function",

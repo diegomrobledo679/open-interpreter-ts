@@ -5,7 +5,7 @@ import * as yaml from "js-yaml";
 import { parseStringPromise } from "xml2js";
 import Ajv from "ajv";
 import * as os from "os";
-import { executeShellCommand } from "@utils/command.js";
+import { executeShellCommand } from "../utils/command.js";
 
 export const readConfigFileTool: Tool = {
   type: "function",

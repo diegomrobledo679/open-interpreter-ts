@@ -2,7 +2,7 @@ import { Tool } from "../core/types.js";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
-import { executeShellCommand, commandExists, shellEscape } from "@utils/command.js";
+import { executeShellCommand, commandExists, shellEscape } from "../utils/command.js";
 export const createScriptFileTool: Tool = {
   type: "function",
   function: {

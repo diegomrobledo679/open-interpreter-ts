@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import * as fs from "fs";
-import { executeShellCommand } from "@utils/command.js";
+import { executeShellCommand } from "../utils/command.js";
 export const zipCompressTool = {
     type: "function",
     function: {

@@ -84,15 +84,28 @@ This CLI agent now supports a wide range of functionalities, including:
    node dist/index.js
    ```
 
-After installation you can also launch **Cyrah**, an interactive menu that lets
-you start the interpreter in different modes:
+After installation you can launch **Cyrah** directly from the terminal:
 
 ```bash
 npx cyrah
 ```
 
-Choose **Launch UI** to open the browser interface or **Start CLI Interpreter**
-to run completely in the terminal.
+You can also launch a simple web interface:
+```bash
+npm run start-web
+```
+Then open http://localhost:3000 in your browser to chat. The interactive menu
+now includes an option to start this server as well, or you can launch it
+alongside the CLI with the `--web` flag.
+
+This command now starts the CLI interpreter immediately. If you prefer the
+previous interactive menu, run `npx cyrah --menu`. Use `npx cyrah --web` to
+start the web interface alongside the CLI.
+
+You can pass interpreter options directly on the command line or via
+environment variables. Use `--env KEY=VALUE` to set an environment variable for
+the current run, or choose **Set Environment Variables** in the interactive
+menu to enter them interactively. A `--help` flag shows the available options.
 
 ## Configuration via Environment Variables
 
@@ -126,4 +139,5 @@ The interpreter reads various settings from environment variables if correspondi
   `DISPLAY_MODE` is set to `gui`.
 - `DISPLAY_MODE` – Set to `gui` to automatically open the UI when the interpreter starts.
 
-Create a `.env` file with these values to avoid passing them as flags.
+Create a `.env` file with these values to avoid passing them as flags. You can
+also provide temporary overrides on the command line using `--env KEY=VALUE`.

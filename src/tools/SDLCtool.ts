@@ -1,5 +1,5 @@
 import { Tool } from "../core/types.js";
-import { executeShellCommand } from "@utils/command.js";
+import { executeShellCommand } from "../utils/command.js";
 
 export const createBranchTool: Tool = {
   type: "function",

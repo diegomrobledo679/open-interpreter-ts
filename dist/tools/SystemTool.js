@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import * as os from "os";
 import { exec } from "child_process";
-import { executeShellCommand } from "@utils/command.js";
+import { executeShellCommand } from "../utils/command.js";
 export const systemInfoTool = {
     type: "function",
     function: {
