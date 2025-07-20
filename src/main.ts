@@ -11,6 +11,7 @@ import { readFileTool, writeFileTool, executeReadFileTool, executeWriteFileTool,
 import { listDirectoryTool, executeListDirectoryTool } from "./tools/DirectoryTool.js";
 import { webFetchTool, executeWebFetchTool, httpRequestTool, executeHttpRequestTool } from "./tools/WebTool.js";
 import { searchTool, executeSearchTool } from "./tools/SearchTool.js";
+import { webResearchTool, executeWebResearchTool } from "./tools/WebResearchTool.js";
 import { sqlTool, executeSqlTool } from "./tools/SqlTool.js";
 import { jsonTool, executeJsonTool } from "./tools/JsonTool.js";
 import { pingTool, executePingTool, tracerouteTool, executeTracerouteTool, dnsLookupTool, executeDnsLookupTool } from "./tools/NetworkTool.js";
@@ -117,6 +118,7 @@ export async function main() {
   interpreter.registerTool(webFetchTool, executeWebFetchTool);
   interpreter.registerTool(httpRequestTool, executeHttpRequestTool);
   interpreter.registerTool(searchTool, executeSearchTool);
+  interpreter.registerTool(webResearchTool, executeWebResearchTool);
   interpreter.registerTool(sqlTool, executeSqlTool);
   interpreter.registerTool(jsonTool, executeJsonTool);
   interpreter.registerTool(pingTool, executePingTool);
