@@ -20,21 +20,26 @@ function showMenu() {
         const ask = (query) => new Promise((res) => rl.question(query, res));
         while (true) {
             console.log('Cyrah Menu');
-            console.log('1) Launch UI');
-            console.log('2) Start CLI Interpreter');
-            console.log('3) Set Environment Variables');
-            console.log('4) Exit');
+            console.log('1) Start Web Interface');
+            console.log('2) Launch UI');
+            console.log('3) Start CLI Interpreter');
+            console.log('4) Set Environment Variables');
+            console.log('5) Exit');
             const choice = (yield ask('Choose an option: ')).trim();
             if (choice === '1') {
+                yield import('../server.js');
+                console.log('Web interface started. Open http://localhost:3000 in your browser.');
+            }
+            else if (choice === '2') {
                 const msg = yield executeLaunchUITool({ uiName: process.env.UI_NAME || 'cyrah' });
                 console.log(msg);
             }
-            else if (choice === '2') {
+            else if (choice === '3') {
                 rl.close();
                 yield main();
                 return;
             }
-            else if (choice === '3') {
+            else if (choice === '4') {
                 while (true) {
                     const pair = (yield ask('Enter KEY=VALUE (blank to finish): ')).trim();
                     if (!pair)
@@ -45,7 +50,7 @@ function showMenu() {
                     }
                 }
             }
-            else if (choice === '4') {
+            else if (choice === '5') {
                 rl.close();
                 return;
             }
