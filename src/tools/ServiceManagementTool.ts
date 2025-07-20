@@ -1,6 +1,6 @@
 import { Tool } from "../core/types.js";
 import * as os from "os";
-import { executeShellCommand } from "@utils/command.js";
+import { executeShellCommand } from "../utils/command.js";
 export const startServiceTool: Tool = {
   type: "function",
   function: {

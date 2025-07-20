@@ -1,7 +1,7 @@
 import { Tool } from "../core/types.js";
 import * as os from "os";
 import { exec } from "child_process";
-import { executeShellCommand } from "@utils/command.js";
+import { executeShellCommand } from "../utils/command.js";
 
 export const systemInfoTool: Tool = {
   type: "function",

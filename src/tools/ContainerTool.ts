@@ -1,5 +1,5 @@
 import { Tool } from "../core/types.js";
-import { executeShellCommand, commandExists } from "@utils/command.js";
+import { executeShellCommand, commandExists } from "../utils/command.js";
 
 async function ensureDocker(): Promise<string | null> {
   if (await commandExists("docker")) {

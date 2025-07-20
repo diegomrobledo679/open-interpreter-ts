@@ -1,7 +1,7 @@
 import { Tool } from "../core/types.js";
 import * as fs from "fs";
 import * as path from "path";
-import { executeShellCommand } from "@utils/command.js";
+import { executeShellCommand } from "../utils/command.js";
 export const zipCompressTool: Tool = {
   type: "function",
   function: {

@@ -2,7 +2,7 @@ import { Tool } from "../core/types.js";
 import * as os from "os";
 import * as path from "path"; // Added import
 import * as fs from "fs";   // Added import
-import { executeShellCommand } from "@utils/command.js";
+import { executeShellCommand } from "../utils/command.js";
 
 export const npmInstallTool: Tool = {
   type: "function",

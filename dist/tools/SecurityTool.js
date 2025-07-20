@@ -12,7 +12,7 @@ import * as fs from "fs";
 import { exec } from "child_process";
 import * as crypto from "crypto";
 import * as path from "path";
-import { executeShellCommand, commandExists } from "@utils/command.js";
+import { executeShellCommand, commandExists } from "../utils/command.js";
 export const scanOpenPortsTool = {
     type: "function",
     function: {
