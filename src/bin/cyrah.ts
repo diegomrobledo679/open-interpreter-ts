@@ -7,6 +7,37 @@ import { main } from '../main.js';
 
 dotenv.config();
 
+const RELEVANT_ENV_VARS = [
+  'LLM_PROVIDER', 'LLM_MODEL', 'LLM_API_KEY', 'LLM_BASE_URL',
+  'OPENAI_API_KEY', 'OLLAMA_API_KEY',
+  'AUTO_RUN', 'LOOP', 'OFFLINE', 'VERBOSE', 'DEBUG',
+  'SAFE_MODE', 'MAX_OUTPUT', 'DISPLAY_MODE', 'UI_NAME'
+];
+
+async function manageEnvVariables(ask: (q: string) => Promise<string>): Promise<void> {
+  console.log('\nCurrent environment variables:');
+  for (const key of RELEVANT_ENV_VARS) {
+    if (process.env[key]) {
+      console.log(`${key}=${process.env[key]}`);
+    }
+  }
+
+  while (true) {
+    const pair = (await ask('Enter KEY=VALUE to set, KEY to unset (blank to finish): ')).trim();
+    if (!pair) break;
+    if (!pair.includes('=')) {
+      delete process.env[pair];
+      console.log(`Unset ${pair}`);
+    } else {
+      const [key, ...rest] = pair.split('=');
+      if (key && rest.length > 0) {
+        process.env[key] = rest.join('=');
+        console.log(`Set ${key}=${process.env[key]}`);
+      }
+    }
+  }
+}
+
 async function showMenu(): Promise<void> {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
@@ -14,34 +45,34 @@ async function showMenu(): Promise<void> {
 
   while (true) {
     console.log('Cyrah Menu');
-    console.log('1) Start Web Interface');
-    console.log('2) Launch UI');
-    console.log('3) Start CLI Interpreter');
-    console.log('4) Set Environment Variables');
-    console.log('5) Exit');
+    console.log('1) Start CLI Interpreter');
+    console.log('2) Start Web Interface');
+    console.log('3) Start CLI and Web Interface');
+    console.log('4) Launch UI');
+    console.log('5) Set Environment Variables');
+    console.log('6) Exit');
 
     const choice = (await ask('Choose an option: ')).trim();
 
     if (choice === '1') {
+      rl.close();
+      await main();
+      return;
+    } else if (choice === '2') {
       await import('../server.js');
       console.log('Web interface started. Open http://localhost:3000 in your browser.');
-    } else if (choice === '2') {
-      const msg = await executeLaunchUITool({ uiName: process.env.UI_NAME || 'cyrah' });
-      console.log(msg);
     } else if (choice === '3') {
+      await import('../server.js');
+      console.log('Web interface started. Open http://localhost:3000 in your browser.');
       rl.close();
       await main();
       return;
     } else if (choice === '4') {
-      while (true) {
-        const pair = (await ask('Enter KEY=VALUE (blank to finish): ')).trim();
-        if (!pair) break;
-        const [key, ...rest] = pair.split('=');
-        if (key && rest.length > 0) {
-          process.env[key] = rest.join('=');
-        }
-      }
+      const msg = await executeLaunchUITool({ uiName: process.env.UI_NAME || 'cyrah' });
+      console.log(msg);
     } else if (choice === '5') {
+      await manageEnvVariables(ask);
+    } else if (choice === '6') {
       rl.close();
       return;
     }
@@ -51,8 +82,8 @@ async function showMenu(): Promise<void> {
 async function run(): Promise<void> {
   const argv = minimist(process.argv.slice(2), {
     string: ['env'],
-    boolean: ['menu', 'help', 'web'],
-    alias: { e: 'env', h: 'help', w: 'web' }
+    boolean: ['menu', 'help', 'web', 'no-menu'],
+    alias: { e: 'env', h: 'help', w: 'web', n: 'no-menu' }
   });
 
   if (argv.help) {
@@ -60,6 +91,7 @@ async function run(): Promise<void> {
 
 Options:
   --menu, -m          Show interactive menu
+  --no-menu, -n       Skip the menu and run the CLI directly
   --web,  -w          Start the web interface alongside the CLI
   --env,  -e KEY=VAL  Set environment variable (repeatable)
   --help, -h          Show this help message
@@ -78,7 +110,8 @@ Any other options are forwarded to the interpreter.`);
     }
   }
 
-  if (argv.menu) {
+  const noArgs = process.argv.slice(2).length === 0;
+  if (argv.menu || (noArgs && !argv['no-menu'])) {
     await showMenu();
     return;
   }
