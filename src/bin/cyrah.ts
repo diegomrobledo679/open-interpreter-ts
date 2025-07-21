@@ -14,25 +14,32 @@ async function showMenu(): Promise<void> {
 
   while (true) {
     console.log('Cyrah Menu');
-    console.log('1) Start Web Interface');
-    console.log('2) Launch UI');
-    console.log('3) Start CLI Interpreter');
-    console.log('4) Set Environment Variables');
-    console.log('5) Exit');
+    console.log('1) Start CLI Interpreter');
+    console.log('2) Start Web Interface');
+    console.log('3) Start CLI and Web Interface');
+    console.log('4) Launch UI');
+    console.log('5) Set Environment Variables');
+    console.log('6) Exit');
 
     const choice = (await ask('Choose an option: ')).trim();
 
     if (choice === '1') {
+      rl.close();
+      await main();
+      return;
+    } else if (choice === '2') {
       await import('../server.js');
       console.log('Web interface started. Open http://localhost:3000 in your browser.');
-    } else if (choice === '2') {
-      const msg = await executeLaunchUITool({ uiName: process.env.UI_NAME || 'cyrah' });
-      console.log(msg);
     } else if (choice === '3') {
+      await import('../server.js');
+      console.log('Web interface started. Open http://localhost:3000 in your browser.');
       rl.close();
       await main();
       return;
     } else if (choice === '4') {
+      const msg = await executeLaunchUITool({ uiName: process.env.UI_NAME || 'cyrah' });
+      console.log(msg);
+    } else if (choice === '5') {
       while (true) {
         const pair = (await ask('Enter KEY=VALUE (blank to finish): ')).trim();
         if (!pair) break;
@@ -41,7 +48,7 @@ async function showMenu(): Promise<void> {
           process.env[key] = rest.join('=');
         }
       }
-    } else if (choice === '5') {
+    } else if (choice === '6') {
       rl.close();
       return;
     }

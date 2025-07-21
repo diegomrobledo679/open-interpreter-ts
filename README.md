@@ -96,8 +96,9 @@ You can also launch a simple web interface:
 npm run start-web
 ```
 Then open http://localhost:3000 in your browser to chat. The interactive menu
-now includes an option to start this server as well, or you can launch it
-alongside the CLI with the `--web` flag.
+includes options to start just the web server or start it alongside the CLI.
+You can also launch both together with the `--web` flag or choose "Start CLI and
+Web Interface" from the menu.
 
 This command now starts the CLI interpreter immediately. If you prefer the
 previous interactive menu, run `npx cyrah --menu`. Use `npx cyrah --web` to
