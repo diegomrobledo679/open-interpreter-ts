@@ -17,4 +17,6 @@ export default {
     '/node_modules/(?!.*(env-paths|sql.js))',
   ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  forceExit: true,
+  detectOpenHandles: true,
 };
