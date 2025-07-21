@@ -11,7 +11,8 @@
     "start-web": "node dist/server.js"
   },
   "bin": {
-    "cyrah": "./dist/bin/cyrah.js"
+    "cyrah": "./dist/bin/cyrah.js",
+    "cyrah-auto": "./dist/bin/cyrah-auto.js"
   },
   "keywords": [],
   "author": "",

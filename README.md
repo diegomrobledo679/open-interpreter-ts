@@ -98,16 +98,18 @@ npm run start-web
 Then open http://localhost:3000 in your browser to chat. The interactive menu
 includes options to start just the web server or start it alongside the CLI.
 You can also launch both together with the `--web` flag or choose "Start CLI and
-Web Interface" from the menu.
+Web Interface" from the menu. A "Start All" menu option starts the CLI, web
+interface, and GUI in one step.
 
 Running `npx cyrah` with no arguments now opens an interactive menu by default.
 Pass `--no-menu` (or set the `NO_MENU=true` environment variable) to jump
 straight into the CLI. Use `--web` to start the web interface alongside the CLI
 or choose "Start CLI and Web Interface" from the menu. The `--gui` flag opens
-the graphical interface on startup and `--auto` combines `--web` and `--gui` to
-launch everything at once. These flags can also be enabled through environment
-variables: set `START_WEB=true`, `START_GUI=true`, or `AUTO_START=true` to
-replicate the respective command-line options.
+the graphical interface on startup and `--auto` (or the new `cyrah-auto`
+command) launches the CLI, web interface, and GUI all at once. These flags can
+also be enabled through environment variables: set `START_WEB=true`,
+`START_GUI=true`, or `AUTO_START=true` to replicate the respective
+command-line options.
 
 You can pass interpreter options directly on the command line or via
 environment variables. Use `--env KEY=VALUE` to set a variable for

@@ -49,8 +49,9 @@ async function showMenu(): Promise<void> {
     console.log('2) Start Web Interface');
     console.log('3) Start CLI and Web Interface');
     console.log('4) Launch UI');
-    console.log('5) Set Environment Variables');
-    console.log('6) Exit');
+    console.log('5) Start All (CLI, Web, UI)');
+    console.log('6) Set Environment Variables');
+    console.log('7) Exit');
 
     const choice = (await ask('Choose an option: ')).trim();
 
@@ -71,8 +72,15 @@ async function showMenu(): Promise<void> {
       const msg = await executeLaunchUITool({ uiName: process.env.UI_NAME || 'cyrah' });
       console.log(msg);
     } else if (choice === '5') {
-      await manageEnvVariables(ask);
+      await import('../server.js');
+      console.log('Web interface started. Open http://localhost:3000 in your browser.');
+      process.env.DISPLAY_MODE = 'gui';
+      rl.close();
+      await main();
+      return;
     } else if (choice === '6') {
+      await manageEnvVariables(ask);
+    } else if (choice === '7') {
       rl.close();
       return;
     }

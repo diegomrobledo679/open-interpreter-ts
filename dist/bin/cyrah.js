@@ -56,8 +56,9 @@ function showMenu() {
             console.log('2) Start Web Interface');
             console.log('3) Start CLI and Web Interface');
             console.log('4) Launch UI');
-            console.log('5) Set Environment Variables');
-            console.log('6) Exit');
+            console.log('5) Start All (CLI, Web, UI)');
+            console.log('6) Set Environment Variables');
+            console.log('7) Exit');
             const choice = (yield ask('Choose an option: ')).trim();
             if (choice === '1') {
                 rl.close();
@@ -80,9 +81,17 @@ function showMenu() {
                 console.log(msg);
             }
             else if (choice === '5') {
-                yield manageEnvVariables(ask);
+                yield import('../server.js');
+                console.log('Web interface started. Open http://localhost:3000 in your browser.');
+                process.env.DISPLAY_MODE = 'gui';
+                rl.close();
+                yield main();
+                return;
             }
             else if (choice === '6') {
+                yield manageEnvVariables(ask);
+            }
+            else if (choice === '7') {
                 rl.close();
                 return;
             }
