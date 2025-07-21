@@ -122,6 +122,8 @@ There's also a **Send Email** menu option which uses the `sendEmail` tool. You
 may provide the recipient, subject, and message interactively or trigger it
 directly with the `--send-email` flag. The `EMAIL_TO`, `EMAIL_SUBJECT`, and
 `EMAIL_TEXT` variables can automate the process.
+There's also a **Load Environment File** option to import variables from a
+`.env` file on demand.
 There's also **List Available Tools** to print all registered tool names with
 descriptions.
 
@@ -129,7 +131,8 @@ You can list all available tools with `--list-tools` or by setting `LIST_TOOLS=t
 You can pass interpreter options directly on the command line or via
 environment variables. Use `--env KEY=VALUE` to set a variable for
 the current run, or choose **Set Environment Variables** in the interactive
-menu to review, update, or unset variables. A `--help` flag shows the available options.
+menu to review, update, or unset variables. You can also load many variables at once with
+`--env-file path/to/.env`. A `--help` flag shows the available options.
 
 ## Configuration via Environment Variables
 
@@ -179,6 +182,7 @@ The interpreter reads various settings from environment variables if correspondi
 - `EMAIL_TEXT` – Message body used when auto-sending email.
 These variables (EMAIL_HOST, EMAIL_USER, EMAIL_PASS) must be set for the email tool to work.
 - `LIST_TOOLS` – Set to `true` to print all available tools on startup.
+- `ENV_FILE` – Path to a `.env` file loaded on startup or with `--env-file`.
 
 Create a `.env` file with these values to avoid passing them as flags. You can
 also provide temporary overrides on the command line using `--env KEY=VALUE`.

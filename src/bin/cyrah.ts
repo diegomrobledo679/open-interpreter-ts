@@ -2,6 +2,8 @@
 import dotenv from 'dotenv';
 import readline from 'readline';
 import minimist from 'minimist';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { executeLaunchUITool, executePlaySpotifyTool } from '../tools/SystemIntegrationTool.js';
 import { executeSendEmailTool } from '../tools/EmailTool.js';
 import { Interpreter } from "../core/Interpreter.js";
@@ -19,7 +21,8 @@ const RELEVANT_ENV_VARS = [
   'SPOTIFY_URI', 'LIST_TOOLS',
   'EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_SECURE',
   'EMAIL_USER', 'EMAIL_PASS', 'EMAIL_FROM',
-  'EMAIL_TO', 'EMAIL_SUBJECT', 'EMAIL_TEXT'
+  'EMAIL_TO', 'EMAIL_SUBJECT', 'EMAIL_TEXT',
+  'ENV_FILE'
 ];
 
 async function manageEnvVariables(ask: (q: string) => Promise<string>): Promise<void> {
@@ -59,10 +62,11 @@ async function showMenu(cliPort?: string): Promise<void> {
     console.log('4) Launch UI');
     console.log('5) Start All (CLI, Web, UI)');
     console.log('6) Set Environment Variables');
-    console.log('7) Play Spotify Track/Playlist');
-    console.log('8) Send Email');
-    console.log('9) List Available Tools');
-    console.log('10) Exit');
+    console.log('7) Load Environment File');
+    console.log('8) Play Spotify Track/Playlist');
+    console.log('9) Send Email');
+    console.log('10) List Available Tools');
+    console.log('11) Exit');
 
     const choice = (await ask('Choose an option: ')).trim();
 
@@ -95,31 +99,47 @@ async function showMenu(cliPort?: string): Promise<void> {
     } else if (choice === '6') {
       await manageEnvVariables(ask);
     } else if (choice === '7') {
-      const uri = await ask('Enter Spotify URI or URL: ');
-      const msg = await executePlaySpotifyTool({ uri });
-      console.log(msg);
+      const file = await ask('Path to .env file: ');
+      try {
+        dotenv.config({ path: path.resolve(file) });
+        console.log(`Loaded environment variables from ${file}`);
+      } catch (err: any) {
+        console.error(`Failed to load env file: ${err.message}`);
+      }
     } else if (choice === '8') {
-      const to = await ask('Recipient: ');
-      const subject = await ask('Subject: ');
-      const text = await ask('Message: ');
-      const msg = await executeSendEmailTool({ to, subject, text });
-      console.log(msg);
+      try {
+        const uri = await ask('Enter Spotify URI or URL: ');
+        const msg = await executePlaySpotifyTool({ uri });
+        console.log(msg);
+      } catch (err: any) {
+        console.error(err.message);
+      }
     } else if (choice === '9') {
+      try {
+        const to = await ask('Recipient: ');
+        const subject = await ask('Subject: ');
+        const text = await ask('Message: ');
+        const msg = await executeSendEmailTool({ to, subject, text });
+        console.log(msg);
+      } catch (err: any) {
+        console.error(err.message);
+      }
+    } else if (choice === '10') {
       const interpreter = new Interpreter();
       registerAllTools(interpreter);
       interpreter.tools.forEach(t =>
         console.log(`${t.function.name} - ${t.function.description}`)
       );
-    } else if (choice === '10') {
+    } else if (choice === '11') {
       rl.close();
       return;
     }
   }
 }
 
-async function run(): Promise<void> {
+export async function run(): Promise<void> {
   const argv = minimist(process.argv.slice(2), {
-    string: ['env', 'spotify', 'send-email', 'port'],
+    string: ['env', 'spotify', 'send-email', 'port', 'env-file'],
     boolean: ['menu', 'help', 'web', 'gui', 'auto', 'list-tools'],
     alias: {
       e: 'env',
@@ -130,9 +150,19 @@ async function run(): Promise<void> {
       s: 'spotify',
       E: 'send-email',
       l: 'list-tools',
-      p: 'port'
+      p: 'port',
+      f: 'env-file'
     }
   });
+
+  const envFile = argv['env-file'] || process.env.ENV_FILE;
+  if (envFile) {
+    try {
+      dotenv.config({ path: path.resolve(envFile) });
+    } catch (err: any) {
+      console.error(`Failed to load env file ${envFile}: ${err.message}`);
+    }
+  }
 
   if (argv.help) {
     console.log(`Usage: cyrah [options]
@@ -146,6 +176,7 @@ Options:
   --spotify, -s URI   Play a Spotify URI or URL
   --send-email, -E STR Send an email (format: to;subject;text)
   --port, -p NUM      Port for the web interface
+  --env-file, -f PATH Load environment variables from file
   --env,  -e KEY=VAL  Set environment variable (repeatable)
   --help, -h          Show this help message
   --list-tools, -l    List all available tools and exit
@@ -245,6 +276,8 @@ Any other options are forwarded to the interpreter.`);
   await main();
 }
 
-run().catch(err => {
-  console.error(`Error: ${err.message}`);
-});
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  run().catch(err => {
+    console.error(`Error: ${err.message}`);
+  });
+}

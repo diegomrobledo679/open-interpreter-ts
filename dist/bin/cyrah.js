@@ -11,6 +11,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import dotenv from 'dotenv';
 import readline from 'readline';
 import minimist from 'minimist';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { executeLaunchUITool, executePlaySpotifyTool } from '../tools/SystemIntegrationTool.js';
 import { executeSendEmailTool } from '../tools/EmailTool.js';
 import { Interpreter } from "../core/Interpreter.js";
@@ -26,7 +28,8 @@ const RELEVANT_ENV_VARS = [
     'SPOTIFY_URI', 'LIST_TOOLS',
     'EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_SECURE',
     'EMAIL_USER', 'EMAIL_PASS', 'EMAIL_FROM',
-    'EMAIL_TO', 'EMAIL_SUBJECT', 'EMAIL_TEXT'
+    'EMAIL_TO', 'EMAIL_SUBJECT', 'EMAIL_TEXT',
+    'ENV_FILE'
 ];
 function manageEnvVariables(ask) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -66,10 +69,11 @@ function showMenu(cliPort) {
             console.log('4) Launch UI');
             console.log('5) Start All (CLI, Web, UI)');
             console.log('6) Set Environment Variables');
-            console.log('7) Play Spotify Track/Playlist');
-            console.log('8) Send Email');
-            console.log('9) List Available Tools');
-            console.log('10) Exit');
+            console.log('7) Load Environment File');
+            console.log('8) Play Spotify Track/Playlist');
+            console.log('9) Send Email');
+            console.log('10) List Available Tools');
+            console.log('11) Exit');
             const choice = (yield ask('Choose an option: ')).trim();
             if (choice === '1') {
                 rl.close();
@@ -109,33 +113,53 @@ function showMenu(cliPort) {
                 yield manageEnvVariables(ask);
             }
             else if (choice === '7') {
-                const uri = yield ask('Enter Spotify URI or URL: ');
-                const msg = yield executePlaySpotifyTool({ uri });
-                console.log(msg);
+                const file = yield ask('Path to .env file: ');
+                try {
+                    dotenv.config({ path: path.resolve(file) });
+                    console.log(`Loaded environment variables from ${file}`);
+                }
+                catch (err) {
+                    console.error(`Failed to load env file: ${err.message}`);
+                }
             }
             else if (choice === '8') {
-                const to = yield ask('Recipient: ');
-                const subject = yield ask('Subject: ');
-                const text = yield ask('Message: ');
-                const msg = yield executeSendEmailTool({ to, subject, text });
-                console.log(msg);
+                try {
+                    const uri = yield ask('Enter Spotify URI or URL: ');
+                    const msg = yield executePlaySpotifyTool({ uri });
+                    console.log(msg);
+                }
+                catch (err) {
+                    console.error(err.message);
+                }
             }
             else if (choice === '9') {
+                try {
+                    const to = yield ask('Recipient: ');
+                    const subject = yield ask('Subject: ');
+                    const text = yield ask('Message: ');
+                    const msg = yield executeSendEmailTool({ to, subject, text });
+                    console.log(msg);
+                }
+                catch (err) {
+                    console.error(err.message);
+                }
+            }
+            else if (choice === '10') {
                 const interpreter = new Interpreter();
                 registerAllTools(interpreter);
                 interpreter.tools.forEach(t => console.log(`${t.function.name} - ${t.function.description}`));
             }
-            else if (choice === '10') {
+            else if (choice === '11') {
                 rl.close();
                 return;
             }
         }
     });
 }
-function run() {
+export function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const argv = minimist(process.argv.slice(2), {
-            string: ['env', 'spotify', 'send-email', 'port'],
+            string: ['env', 'spotify', 'send-email', 'port', 'env-file'],
             boolean: ['menu', 'help', 'web', 'gui', 'auto', 'list-tools'],
             alias: {
                 e: 'env',
@@ -146,9 +170,19 @@ function run() {
                 s: 'spotify',
                 E: 'send-email',
                 l: 'list-tools',
-                p: 'port'
+                p: 'port',
+                f: 'env-file'
             }
         });
+        const envFile = argv['env-file'] || process.env.ENV_FILE;
+        if (envFile) {
+            try {
+                dotenv.config({ path: path.resolve(envFile) });
+            }
+            catch (err) {
+                console.error(`Failed to load env file ${envFile}: ${err.message}`);
+            }
+        }
         if (argv.help) {
             console.log(`Usage: cyrah [options]
 
@@ -161,6 +195,7 @@ Options:
   --spotify, -s URI   Play a Spotify URI or URL
   --send-email, -E STR Send an email (format: to;subject;text)
   --port, -p NUM      Port for the web interface
+  --env-file, -f PATH Load environment variables from file
   --env,  -e KEY=VAL  Set environment variable (repeatable)
   --help, -h          Show this help message
   --list-tools, -l    List all available tools and exit
@@ -249,6 +284,8 @@ Any other options are forwarded to the interpreter.`);
         yield main();
     });
 }
-run().catch(err => {
-    console.error(`Error: ${err.message}`);
-});
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+    run().catch(err => {
+        console.error(`Error: ${err.message}`);
+    });
+}
