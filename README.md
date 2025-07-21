@@ -113,7 +113,8 @@ command) launches the CLI, web interface, and GUI all at once. These flags can
 also be enabled through environment variables: set `START_WEB=true`,
 `START_GUI=true`, or `AUTO_START=true` to replicate the respective
 command-line options.
-Use `--version` to print the installed package version.
+Use `--version` to print the installed package version. Set
+`PRINT_VERSION=true` to automatically show the version on startup.
 
 The menu includes a **Play Spotify Track/Playlist** option that opens any
 provided URI using the new `playSpotify` tool. You can also trigger playback
@@ -187,6 +188,7 @@ These variables (EMAIL_HOST, EMAIL_USER, EMAIL_PASS) must be set for the email t
 - `LIST_TOOLS` – Set to `true` to print all available tools on startup.
 - `LIST_LANGUAGES` – Set to `true` to print supported languages on startup.
 - `ENV_FILE` – Path to a `.env` file loaded on startup or with `--env-file`.
+- `PRINT_VERSION` – Set to `true` to print the package version on startup.
 
 Create a `.env` file with these values to avoid passing them as flags. You can
 also provide temporary overrides on the command line using `--env KEY=VALUE`.
