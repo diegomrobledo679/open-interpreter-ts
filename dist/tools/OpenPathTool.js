@@ -8,6 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { exec } from "child_process";
+import fs from "fs";
 import os from "os";
 export const openPathTool = {
     type: "function",
@@ -25,6 +26,9 @@ export const openPathTool = {
 };
 export function executeOpenPathTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!fs.existsSync(args.path)) {
+            return `Path not found: ${args.path}`;
+        }
         if (process.env.NODE_ENV === 'test' || process.env.TEST_MODE === 'true') {
             return `Opened ${args.path}`;
         }

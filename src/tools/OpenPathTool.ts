@@ -1,5 +1,6 @@
 import { Tool } from "../core/types.js";
 import { exec } from "child_process";
+import fs from "fs";
 import os from "os";
 
 export const openPathTool: Tool = {
@@ -18,6 +19,9 @@ export const openPathTool: Tool = {
 };
 
 export async function executeOpenPathTool(args: { path: string }): Promise<string> {
+  if (!fs.existsSync(args.path)) {
+    return `Path not found: ${args.path}`;
+  }
   if (process.env.NODE_ENV === 'test' || process.env.TEST_MODE === 'true') {
     return `Opened ${args.path}`;
   }

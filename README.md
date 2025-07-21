@@ -132,8 +132,9 @@ There's also an **Open URL in Browser** option that launches any URL in your
 default browser via the `openUrl` tool. Trigger it with the `--open-url` flag or
 by setting `OPEN_URL`.
 There's also an **Open File or Folder** option that opens a specified path using
-the new `openPath` tool. Trigger it with the `--open-path` flag or by setting
-`OPEN_PATH`.
+the new `openPath` tool. The command validates that the path exists before
+attempting to launch it. Trigger this tool with the `--open-path` flag or by
+setting `OPEN_PATH`.
 There's also a **Send Email** menu option which uses the `sendEmail` tool. You
 may provide the recipient, subject, and message interactively or trigger it
 directly with the `--send-email` flag. The `EMAIL_TO`, `EMAIL_SUBJECT`, and
