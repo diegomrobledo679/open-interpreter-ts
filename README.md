@@ -129,6 +129,9 @@ environment.
 There's also an **Open URL in Browser** option that launches any URL in your
 default browser via the `openUrl` tool. Trigger it with the `--open-url` flag or
 by setting `OPEN_URL`.
+There's also an **Open File or Folder** option that opens a specified path using
+the new `openPath` tool. Trigger it with the `--open-path` flag or by setting
+`OPEN_PATH`.
 There's also a **Send Email** menu option which uses the `sendEmail` tool. You
 may provide the recipient, subject, and message interactively or trigger it
 directly with the `--send-email` flag. The `EMAIL_TO`, `EMAIL_SUBJECT`, and
@@ -185,6 +188,7 @@ The interpreter reads various settings from environment variables if correspondi
 - `PORT` – Port used by the web interface when starting with `--web` or `START_WEB`.
 - `SPOTIFY_URI` – If set, automatically play this Spotify URI on startup or when using the menu option.
 - `OPEN_URL` – If set, automatically open this URL in the default browser on startup.
+- `OPEN_PATH` – If set, automatically open this file or folder on startup.
 - `EMAIL_HOST` – SMTP server host used by the `sendEmail` tool.
 - `EMAIL_PORT` – SMTP server port (defaults to 587 if not set).
 - `EMAIL_SECURE` – Set to `true` to use TLS/SSL for SMTP.

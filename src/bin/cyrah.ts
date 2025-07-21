@@ -7,6 +7,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { executeLaunchUITool, executePlaySpotifyTool } from '../tools/SystemIntegrationTool.js';
 import { executeOpenUrlTool } from '../tools/OpenUrlTool.js';
+import { executeOpenPathTool } from '../tools/OpenPathTool.js';
 import { executeSendEmailTool } from '../tools/EmailTool.js';
 import { executeListLanguagesTool } from '../tools/LanguageTool.js';
 import { Interpreter } from "../core/Interpreter.js";
@@ -22,7 +23,7 @@ const RELEVANT_ENV_VARS = [
   'SAFE_MODE', 'MAX_OUTPUT', 'DISPLAY_MODE', 'UI_NAME',
   'NO_MENU', 'START_WEB', 'START_GUI', 'AUTO_START', 'PORT',
   'SPOTIFY_URI', 'OPEN_URL', 'LIST_TOOLS',
-  'LIST_LANGUAGES',
+  'LIST_LANGUAGES', 'OPEN_PATH',
   'EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_SECURE',
   'EMAIL_USER', 'EMAIL_PASS', 'EMAIL_FROM',
   'EMAIL_TO', 'EMAIL_SUBJECT', 'EMAIL_TEXT',
@@ -69,11 +70,12 @@ async function showMenu(cliPort?: string): Promise<void> {
     console.log('6) Set Environment Variables');
     console.log('7) Load Environment File');
     console.log('8) Open URL in Browser');
-    console.log('9) Play Spotify Track/Playlist');
-    console.log('10) Send Email');
-    console.log('11) List Available Tools');
-    console.log('12) List Supported Languages');
-    console.log('13) Exit');
+    console.log('9) Open File or Folder');
+    console.log('10) Play Spotify Track/Playlist');
+    console.log('11) Send Email');
+    console.log('12) List Available Tools');
+    console.log('13) List Supported Languages');
+    console.log('14) Exit');
 
     const choice = (await ask('Choose an option: ')).trim();
 
@@ -123,13 +125,21 @@ async function showMenu(cliPort?: string): Promise<void> {
       }
     } else if (choice === '9') {
       try {
+        const p = await ask('Enter file or folder path: ');
+        const msg = await executeOpenPathTool({ path: p });
+        console.log(msg);
+      } catch (err: any) {
+        console.error(err.message);
+      }
+    } else if (choice === '10') {
+      try {
         const uri = await ask('Enter Spotify URI or URL: ');
         const msg = await executePlaySpotifyTool({ uri });
         console.log(msg);
       } catch (err: any) {
         console.error(err.message);
       }
-    } else if (choice === '10') {
+    } else if (choice === '11') {
       try {
         const to = await ask('Recipient: ');
         const subject = await ask('Subject: ');
@@ -139,16 +149,16 @@ async function showMenu(cliPort?: string): Promise<void> {
       } catch (err: any) {
         console.error(err.message);
       }
-    } else if (choice === '11') {
+    } else if (choice === '12') {
       const interpreter = new Interpreter();
       registerAllTools(interpreter);
       interpreter.tools.forEach(t =>
         console.log(`${t.function.name} - ${t.function.description}`)
       );
-    } else if (choice === '12') {
+    } else if (choice === '13') {
       const langs = await executeListLanguagesTool();
       console.log(langs);
-    } else if (choice === '13') {
+    } else if (choice === '14') {
       rl.close();
       return;
     }
@@ -157,7 +167,7 @@ async function showMenu(cliPort?: string): Promise<void> {
 
 export async function run(): Promise<void> {
   const argv = minimist(process.argv.slice(2), {
-    string: ['env', 'spotify', 'send-email', 'open-url', 'port', 'env-file'],
+    string: ['env', 'spotify', 'send-email', 'open-url', 'open-path', 'port', 'env-file'],
     boolean: ['menu', 'help', 'web', 'gui', 'auto', 'list-tools', 'list-languages', 'version'],
     alias: {
       e: 'env',
@@ -168,6 +178,7 @@ export async function run(): Promise<void> {
       s: 'spotify',
       E: 'send-email',
       o: 'open-url',
+      P: 'open-path',
       l: 'list-tools',
       L: 'list-languages',
       p: 'port',
@@ -197,6 +208,7 @@ Options:
   --spotify, -s URI   Play a Spotify URI or URL
   --send-email, -E STR Send an email (format: to;subject;text)
   --open-url, -o URL  Open a URL in the default browser
+  --open-path, -P PTH Open a file or folder with the default app
   --port, -p NUM      Port for the web interface
   --env-file, -f PATH Load environment variables from file
   --env,  -e KEY=VAL  Set environment variable (repeatable)
@@ -228,6 +240,7 @@ Any other options are forwarded to the interpreter.`);
 
   const spotifyEnv = process.env.SPOTIFY_URI;
   const openUrlEnv = process.env.OPEN_URL;
+  const openPathEnv = process.env.OPEN_PATH;
   const emailToEnv = process.env.EMAIL_TO;
   const emailSubjectEnv = process.env.EMAIL_SUBJECT;
   const emailTextEnv = process.env.EMAIL_TEXT;
@@ -248,6 +261,9 @@ Any other options are forwarded to the interpreter.`);
   }
   if (!argv['open-url'] && openUrlEnv) {
     argv['open-url'] = openUrlEnv;
+  }
+  if (!argv['open-path'] && openPathEnv) {
+    argv['open-path'] = openPathEnv;
   }
   if (!argv['send-email'] && emailToEnv && emailSubjectEnv && emailTextEnv) {
     argv['send-email'] = `${emailToEnv};${emailSubjectEnv};${emailTextEnv}`;
@@ -302,6 +318,11 @@ Any other options are forwarded to the interpreter.`);
 
   if (argv['open-url']) {
     const msg = await executeOpenUrlTool({ url: argv['open-url'] as string });
+    console.log(msg);
+  }
+
+  if (argv['open-path']) {
+    const msg = await executeOpenPathTool({ path: argv['open-path'] as string });
     console.log(msg);
   }
 

@@ -16,6 +16,7 @@ import { countLinesInFileTool, executeCountLinesInFileTool, findTextInFileTool, 
 import { minecraftPingTool, executeMinecraftPingTool, sendMinecraftRconCommandTool, executeSendMinecraftRconCommandTool } from "./MinecraftTool.js";
 import { launchUITool, executeLaunchUITool, launchVirtualTerminalTool, executeLaunchVirtualTerminalTool, playSpotifyTool, executePlaySpotifyTool } from "./SystemIntegrationTool.js";
 import { openUrlTool, executeOpenUrlTool } from "./OpenUrlTool.js";
+import { openPathTool, executeOpenPathTool } from "./OpenPathTool.js";
 import { sendEmailTool, executeSendEmailTool } from "./EmailTool.js";
 import { terminateProcessTool, executeTerminateProcessTool, startProcessTool, executeStartProcessTool, getProcessInfoTool, executeGetProcessInfoTool } from "./ProcessManagementTool.js";
 import { npmInstallTool, executeNpmInstallTool, pipInstallTool, executePipInstallTool, aptInstallTool, executeAptInstallTool, brewInstallTool, executeBrewInstallTool, chocoInstallTool, executeChocoInstallTool, checkMissingDependenciesTool, executeCheckMissingDependenciesTool, listInstalledPackagesTool, executeListInstalledPackagesTool, npmUninstallTool, executeNpmUninstallTool, pipUninstallTool, executePipUninstallTool, aptRemoveTool, executeAptRemoveTool, brewUninstallTool, executeBrewUninstallTool, chocoUninstallTool, executeChocoUninstallTool, npmUpdateTool, executeNpmUpdateTool, pipUpdateTool, executePipUpdateTool, aptUpdateTool, executeAptUpdateTool, brewUpdateTool, executeBrewUpdateTool, chocoUpdateTool, executeChocoUpdateTool } from "./PackageManagerTool.js";
@@ -105,6 +106,7 @@ export function registerAllTools(interpreter) {
     interpreter.registerTool(launchVirtualTerminalTool, executeLaunchVirtualTerminalTool);
     interpreter.registerTool(playSpotifyTool, executePlaySpotifyTool);
     interpreter.registerTool(openUrlTool, executeOpenUrlTool);
+    interpreter.registerTool(openPathTool, executeOpenPathTool);
     interpreter.registerTool(sendEmailTool, executeSendEmailTool);
     interpreter.registerTool(terminateProcessTool, executeTerminateProcessTool);
     interpreter.registerTool(startProcessTool, executeStartProcessTool);
