@@ -57,6 +57,7 @@ This CLI agent now supports a wide range of functionalities, including:
 *   **Image Generation Tool:** Use the `generateImage` tool to create images from text prompts. When `OPENAI_API_KEY` is configured, the tool generates real images using OpenAI; otherwise it falls back to a placeholder image.
 *   **Web Research Tool:** The `webResearch` tool performs a search and summarizes the top results for quick reference.
 *   **Virtual Terminal Tool:** The `launchVirtualTerminal` tool uses `node-pty` to provide an interactive shell session when available and falls back to a regular shell spawn if pseudo-terminals are unsupported.
+*   **Spotify Playback Tool:** The `playSpotify` tool opens a Spotify track or playlist in your default player using a provided URI or URL.
 *   **Conceptual GUI Integration:** Includes conceptual methods for display updates and input event handling, laying the groundwork for future graphical user interface implementations.
 
 ## Installation and Usage:
