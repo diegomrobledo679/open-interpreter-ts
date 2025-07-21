@@ -124,6 +124,3 @@ export async function main() {
   }
 }
 
-main().catch((error: Error) => {
-  logger.error(`An error occurred: ${error.message}`);
-});

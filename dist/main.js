@@ -97,6 +97,3 @@ export function main() {
         }
     });
 }
-main().catch((error) => {
-    logger.error(`An error occurred: ${error.message}`);
-});
