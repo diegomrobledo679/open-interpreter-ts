@@ -120,6 +120,9 @@ The menu includes a **Play Spotify Track/Playlist** option that opens any
 provided URI using the new `playSpotify` tool. You can also trigger playback
 directly with the `--spotify` flag or by setting `SPOTIFY_URI` in the
 environment.
+There's also an **Open URL in Browser** option that launches any URL in your
+default browser via the `openUrl` tool. Trigger it with the `--open-url` flag or
+by setting `OPEN_URL`.
 There's also a **Send Email** menu option which uses the `sendEmail` tool. You
 may provide the recipient, subject, and message interactively or trigger it
 directly with the `--send-email` flag. The `EMAIL_TO`, `EMAIL_SUBJECT`, and
@@ -175,6 +178,7 @@ The interpreter reads various settings from environment variables if correspondi
 - `AUTO_START` – Set to `true` to start the CLI, web interface, and GUI together.
 - `PORT` – Port used by the web interface when starting with `--web` or `START_WEB`.
 - `SPOTIFY_URI` – If set, automatically play this Spotify URI on startup or when using the menu option.
+- `OPEN_URL` – If set, automatically open this URL in the default browser on startup.
 - `EMAIL_HOST` – SMTP server host used by the `sendEmail` tool.
 - `EMAIL_PORT` – SMTP server port (defaults to 587 if not set).
 - `EMAIL_SECURE` – Set to `true` to use TLS/SSL for SMTP.

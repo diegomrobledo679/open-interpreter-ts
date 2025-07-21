@@ -16,6 +16,7 @@ import { resizeImageTool, executeResizeImageTool, cropImageTool, executeCropImag
 import { countLinesInFileTool, executeCountLinesInFileTool, findTextInFileTool, executeFindTextInFileTool, getDirectoryStructureTool, executeGetDirectoryStructureTool, listFileTypesTool, executeListFileTypesTool, deepSearchTool, executeDeepSearchTool, getFileContentTypeTool, executeGetFileContentTypeTool } from "./AnalysisTool.js";
 import { minecraftPingTool, executeMinecraftPingTool, sendMinecraftRconCommandTool, executeSendMinecraftRconCommandTool } from "./MinecraftTool.js";
 import { launchUITool, executeLaunchUITool, launchVirtualTerminalTool, executeLaunchVirtualTerminalTool, playSpotifyTool, executePlaySpotifyTool } from "./SystemIntegrationTool.js";
+import { openUrlTool, executeOpenUrlTool } from "./OpenUrlTool.js";
 import { sendEmailTool, executeSendEmailTool } from "./EmailTool.js";
 import { terminateProcessTool, executeTerminateProcessTool, startProcessTool, executeStartProcessTool, getProcessInfoTool, executeGetProcessInfoTool } from "./ProcessManagementTool.js";
 import { npmInstallTool, executeNpmInstallTool, pipInstallTool, executePipInstallTool, aptInstallTool, executeAptInstallTool, brewInstallTool, executeBrewInstallTool, chocoInstallTool, executeChocoInstallTool, checkMissingDependenciesTool, executeCheckMissingDependenciesTool, listInstalledPackagesTool, executeListInstalledPackagesTool, npmUninstallTool, executeNpmUninstallTool, pipUninstallTool, executePipUninstallTool, aptRemoveTool, executeAptRemoveTool, brewUninstallTool, executeBrewUninstallTool, chocoUninstallTool, executeChocoUninstallTool, npmUpdateTool, executeNpmUpdateTool, pipUpdateTool, executePipUpdateTool, aptUpdateTool, executeAptUpdateTool, brewUpdateTool, executeBrewUpdateTool, chocoUpdateTool, executeChocoUpdateTool } from "./PackageManagerTool.js";
@@ -104,6 +105,7 @@ interpreter.registerTool(sendMinecraftRconCommandTool, executeSendMinecraftRconC
 interpreter.registerTool(launchUITool, executeLaunchUITool);
 interpreter.registerTool(launchVirtualTerminalTool, executeLaunchVirtualTerminalTool);
 interpreter.registerTool(playSpotifyTool, executePlaySpotifyTool);
+interpreter.registerTool(openUrlTool, executeOpenUrlTool);
 interpreter.registerTool(sendEmailTool, executeSendEmailTool);
 interpreter.registerTool(terminateProcessTool, executeTerminateProcessTool);
 interpreter.registerTool(startProcessTool, executeStartProcessTool);

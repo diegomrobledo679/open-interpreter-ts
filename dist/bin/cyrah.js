@@ -15,6 +15,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { executeLaunchUITool, executePlaySpotifyTool } from '../tools/SystemIntegrationTool.js';
+import { executeOpenUrlTool } from '../tools/OpenUrlTool.js';
 import { executeSendEmailTool } from '../tools/EmailTool.js';
 import { executeListLanguagesTool } from '../tools/LanguageTool.js';
 import { Interpreter } from "../core/Interpreter.js";
@@ -27,7 +28,7 @@ const RELEVANT_ENV_VARS = [
     'AUTO_RUN', 'LOOP', 'OFFLINE', 'VERBOSE', 'DEBUG',
     'SAFE_MODE', 'MAX_OUTPUT', 'DISPLAY_MODE', 'UI_NAME',
     'NO_MENU', 'START_WEB', 'START_GUI', 'AUTO_START', 'PORT',
-    'SPOTIFY_URI', 'LIST_TOOLS',
+    'SPOTIFY_URI', 'OPEN_URL', 'LIST_TOOLS',
     'LIST_LANGUAGES',
     'EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_SECURE',
     'EMAIL_USER', 'EMAIL_PASS', 'EMAIL_FROM',
@@ -74,11 +75,12 @@ function showMenu(cliPort) {
             console.log('5) Start All (CLI, Web, UI)');
             console.log('6) Set Environment Variables');
             console.log('7) Load Environment File');
-            console.log('8) Play Spotify Track/Playlist');
-            console.log('9) Send Email');
-            console.log('10) List Available Tools');
-            console.log('11) List Supported Languages');
-            console.log('12) Exit');
+            console.log('8) Open URL in Browser');
+            console.log('9) Play Spotify Track/Playlist');
+            console.log('10) Send Email');
+            console.log('11) List Available Tools');
+            console.log('12) List Supported Languages');
+            console.log('13) Exit');
             const choice = (yield ask('Choose an option: ')).trim();
             if (choice === '1') {
                 rl.close();
@@ -129,6 +131,16 @@ function showMenu(cliPort) {
             }
             else if (choice === '8') {
                 try {
+                    const url = yield ask('Enter URL: ');
+                    const msg = yield executeOpenUrlTool({ url });
+                    console.log(msg);
+                }
+                catch (err) {
+                    console.error(err.message);
+                }
+            }
+            else if (choice === '9') {
+                try {
                     const uri = yield ask('Enter Spotify URI or URL: ');
                     const msg = yield executePlaySpotifyTool({ uri });
                     console.log(msg);
@@ -137,7 +149,7 @@ function showMenu(cliPort) {
                     console.error(err.message);
                 }
             }
-            else if (choice === '9') {
+            else if (choice === '10') {
                 try {
                     const to = yield ask('Recipient: ');
                     const subject = yield ask('Subject: ');
@@ -149,16 +161,16 @@ function showMenu(cliPort) {
                     console.error(err.message);
                 }
             }
-            else if (choice === '10') {
+            else if (choice === '11') {
                 const interpreter = new Interpreter();
                 registerAllTools(interpreter);
                 interpreter.tools.forEach(t => console.log(`${t.function.name} - ${t.function.description}`));
             }
-            else if (choice === '11') {
+            else if (choice === '12') {
                 const langs = yield executeListLanguagesTool();
                 console.log(langs);
             }
-            else if (choice === '12') {
+            else if (choice === '13') {
                 rl.close();
                 return;
             }
@@ -168,7 +180,7 @@ function showMenu(cliPort) {
 export function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const argv = minimist(process.argv.slice(2), {
-            string: ['env', 'spotify', 'send-email', 'port', 'env-file'],
+            string: ['env', 'spotify', 'send-email', 'open-url', 'port', 'env-file'],
             boolean: ['menu', 'help', 'web', 'gui', 'auto', 'list-tools', 'list-languages', 'version'],
             alias: {
                 e: 'env',
@@ -178,6 +190,7 @@ export function run() {
                 a: 'auto',
                 s: 'spotify',
                 E: 'send-email',
+                o: 'open-url',
                 l: 'list-tools',
                 L: 'list-languages',
                 p: 'port',
@@ -205,6 +218,7 @@ Options:
   --auto, -a          Start CLI, web, and GUI automatically
   --spotify, -s URI   Play a Spotify URI or URL
   --send-email, -E STR Send an email (format: to;subject;text)
+  --open-url, -o URL  Open a URL in the default browser
   --port, -p NUM      Port for the web interface
   --env-file, -f PATH Load environment variables from file
   --env,  -e KEY=VAL  Set environment variable (repeatable)
@@ -232,6 +246,7 @@ Any other options are forwarded to the interpreter.`);
             }
         }
         const spotifyEnv = process.env.SPOTIFY_URI;
+        const openUrlEnv = process.env.OPEN_URL;
         const emailToEnv = process.env.EMAIL_TO;
         const emailSubjectEnv = process.env.EMAIL_SUBJECT;
         const emailTextEnv = process.env.EMAIL_TEXT;
@@ -247,6 +262,9 @@ Any other options are forwarded to the interpreter.`);
         }
         if (!argv.spotify && spotifyEnv) {
             argv.spotify = spotifyEnv;
+        }
+        if (!argv['open-url'] && openUrlEnv) {
+            argv['open-url'] = openUrlEnv;
         }
         if (!argv['send-email'] && emailToEnv && emailSubjectEnv && emailTextEnv) {
             argv['send-email'] = `${emailToEnv};${emailSubjectEnv};${emailTextEnv}`;
@@ -290,6 +308,10 @@ Any other options are forwarded to the interpreter.`);
         }
         if (argv.spotify) {
             const msg = yield executePlaySpotifyTool({ uri: argv.spotify });
+            console.log(msg);
+        }
+        if (argv['open-url']) {
+            const msg = yield executeOpenUrlTool({ url: argv['open-url'] });
             console.log(msg);
         }
         if (argv['send-email']) {
