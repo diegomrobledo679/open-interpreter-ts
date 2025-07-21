@@ -126,8 +126,10 @@ There's also a **Load Environment File** option to import variables from a
 `.env` file on demand.
 There's also **List Available Tools** to print all registered tool names with
 descriptions.
+There's also **List Supported Languages** to see which programming languages the interpreter can execute.
 
 You can list all available tools with `--list-tools` or by setting `LIST_TOOLS=true`.
+You can list supported languages with `--list-languages` or `LIST_LANGUAGES=true`.
 You can pass interpreter options directly on the command line or via
 environment variables. Use `--env KEY=VALUE` to set a variable for
 the current run, or choose **Set Environment Variables** in the interactive
@@ -182,6 +184,7 @@ The interpreter reads various settings from environment variables if correspondi
 - `EMAIL_TEXT` – Message body used when auto-sending email.
 These variables (EMAIL_HOST, EMAIL_USER, EMAIL_PASS) must be set for the email tool to work.
 - `LIST_TOOLS` – Set to `true` to print all available tools on startup.
+- `LIST_LANGUAGES` – Set to `true` to print supported languages on startup.
 - `ENV_FILE` – Path to a `.env` file loaded on startup or with `--env-file`.
 
 Create a `.env` file with these values to avoid passing them as flags. You can

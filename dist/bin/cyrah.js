@@ -15,6 +15,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { executeLaunchUITool, executePlaySpotifyTool } from '../tools/SystemIntegrationTool.js';
 import { executeSendEmailTool } from '../tools/EmailTool.js';
+import { executeListLanguagesTool } from '../tools/LanguageTool.js';
 import { Interpreter } from "../core/Interpreter.js";
 import { registerAllTools } from "../tools/register.js";
 import { main } from '../main.js';
@@ -26,6 +27,7 @@ const RELEVANT_ENV_VARS = [
     'SAFE_MODE', 'MAX_OUTPUT', 'DISPLAY_MODE', 'UI_NAME',
     'NO_MENU', 'START_WEB', 'START_GUI', 'AUTO_START', 'PORT',
     'SPOTIFY_URI', 'LIST_TOOLS',
+    'LIST_LANGUAGES',
     'EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_SECURE',
     'EMAIL_USER', 'EMAIL_PASS', 'EMAIL_FROM',
     'EMAIL_TO', 'EMAIL_SUBJECT', 'EMAIL_TEXT',
@@ -73,7 +75,8 @@ function showMenu(cliPort) {
             console.log('8) Play Spotify Track/Playlist');
             console.log('9) Send Email');
             console.log('10) List Available Tools');
-            console.log('11) Exit');
+            console.log('11) List Supported Languages');
+            console.log('12) Exit');
             const choice = (yield ask('Choose an option: ')).trim();
             if (choice === '1') {
                 rl.close();
@@ -150,6 +153,10 @@ function showMenu(cliPort) {
                 interpreter.tools.forEach(t => console.log(`${t.function.name} - ${t.function.description}`));
             }
             else if (choice === '11') {
+                const langs = yield executeListLanguagesTool();
+                console.log(langs);
+            }
+            else if (choice === '12') {
                 rl.close();
                 return;
             }
@@ -160,7 +167,7 @@ export function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const argv = minimist(process.argv.slice(2), {
             string: ['env', 'spotify', 'send-email', 'port', 'env-file'],
-            boolean: ['menu', 'help', 'web', 'gui', 'auto', 'list-tools'],
+            boolean: ['menu', 'help', 'web', 'gui', 'auto', 'list-tools', 'list-languages'],
             alias: {
                 e: 'env',
                 h: 'help',
@@ -170,6 +177,7 @@ export function run() {
                 s: 'spotify',
                 E: 'send-email',
                 l: 'list-tools',
+                L: 'list-languages',
                 p: 'port',
                 f: 'env-file'
             }
@@ -199,6 +207,7 @@ Options:
   --env,  -e KEY=VAL  Set environment variable (repeatable)
   --help, -h          Show this help message
   --list-tools, -l    List all available tools and exit
+  --list-languages, -L List supported programming languages and exit
 
 Any other options are forwarded to the interpreter.`);
             return;
@@ -221,6 +230,7 @@ Any other options are forwarded to the interpreter.`);
         const webEnv = process.env.START_WEB === 'true';
         const guiEnv = process.env.START_GUI === 'true';
         const listToolsEnv = process.env.LIST_TOOLS === "true";
+        const listLanguagesEnv = process.env.LIST_LANGUAGES === "true";
         if (!argv.spotify && spotifyEnv) {
             argv.spotify = spotifyEnv;
         }
@@ -244,6 +254,9 @@ Any other options are forwarded to the interpreter.`);
         }
         if (!argv["list-tools"] && listToolsEnv) {
             argv["list-tools"] = true;
+        }
+        if (!argv["list-languages"] && listLanguagesEnv) {
+            argv["list-languages"] = true;
         }
         if (argv.auto || autoEnv) {
             argv.web = true;
@@ -279,6 +292,11 @@ Any other options are forwarded to the interpreter.`);
             const interpreter = new Interpreter();
             registerAllTools(interpreter);
             interpreter.tools.forEach(t => console.log(`${t.function.name} - ${t.function.description}`));
+            return;
+        }
+        if (argv["list-languages"]) {
+            const langs = yield executeListLanguagesTool();
+            console.log(langs);
             return;
         }
         yield main();

@@ -43,6 +43,7 @@ import { listVirtualMachinesTool, executeListVirtualMachinesTool, manageVirtualM
 import { checkNetworkConnectivityTool, executeCheckNetworkConnectivityTool, performNetworkSpeedTestTool, executePerformNetworkSpeedTestTool } from "./NetworkDiagnosticsTool.js";
 import { createScriptFileTool, executeCreateScriptFileTool, executeScriptFileTool, executeExecuteScriptFileTool, scheduleScriptTool, executeScheduleScriptTool } from "./AutomationTool.js";
 import { checkSystemHealthTool, executeCheckSystemHealthTool, generateSystemReportTool, executeGenerateSystemReportTool, troubleshootIssueTool, executeTroubleshootIssueTool } from "./SystemDiagnosticsTool.js";
+import { listLanguagesTool, executeListLanguagesTool } from "./LanguageTool.js";
 export function registerAllTools(interpreter: Interpreter) {
 interpreter.registerTool(calculatorTool, executeCalculatorTool);
 interpreter.registerTool(readFileTool, executeReadFileTool);
@@ -194,4 +195,5 @@ interpreter.registerTool(scheduleScriptTool, executeScheduleScriptTool);
 interpreter.registerTool(checkSystemHealthTool, executeCheckSystemHealthTool);
 interpreter.registerTool(generateSystemReportTool, executeGenerateSystemReportTool);
 interpreter.registerTool(troubleshootIssueTool, executeTroubleshootIssueTool);
+interpreter.registerTool(listLanguagesTool, executeListLanguagesTool);
 }
