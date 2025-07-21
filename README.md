@@ -107,7 +107,9 @@ to launch the web interface alongside the CLI.
 You can pass interpreter options directly on the command line or via
 environment variables. Use `--env KEY=VALUE` to set a variable for
 the current run, or choose **Set Environment Variables** in the interactive
-menu to review, update, or unset variables. A `--help` flag shows the available options.
+menu to review, update, or unset variables. Environment values can also be
+loaded from or saved to a file using `--env-file path` or the **Load Env File**
+and **Save Env File** options in the menu. A `--help` flag shows the available options.
 
 ## Configuration via Environment Variables
 

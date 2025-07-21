@@ -10,7 +10,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import dotenv from 'dotenv';
 import readline from 'readline';
+import fs from 'fs';
 import minimist from 'minimist';
+import { parse } from 'dotenv';
 import { executeLaunchUITool } from '../tools/SystemIntegrationTool.js';
 import { main } from '../main.js';
 dotenv.config();
@@ -20,6 +22,24 @@ const RELEVANT_ENV_VARS = [
     'AUTO_RUN', 'LOOP', 'OFFLINE', 'VERBOSE', 'DEBUG',
     'SAFE_MODE', 'MAX_OUTPUT', 'DISPLAY_MODE', 'UI_NAME'
 ];
+function loadEnvFile(filePath) {
+    if (!fs.existsSync(filePath))
+        return;
+    const data = fs.readFileSync(filePath, 'utf-8');
+    const parsed = parse(data);
+    for (const [k, v] of Object.entries(parsed)) {
+        process.env[k] = v;
+    }
+}
+function saveEnvFile(filePath) {
+    const lines = [];
+    for (const key of RELEVANT_ENV_VARS) {
+        if (process.env[key]) {
+            lines.push(`${key}=${process.env[key]}`);
+        }
+    }
+    fs.writeFileSync(filePath, lines.join('\n'), 'utf-8');
+}
 function manageEnvVariables(ask) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('\nCurrent environment variables:');
@@ -29,15 +49,25 @@ function manageEnvVariables(ask) {
             }
         }
         while (true) {
-            const pair = (yield ask('Enter KEY=VALUE to set, KEY to unset (blank to finish): ')).trim();
-            if (!pair)
+            const input = (yield ask('Enter KEY=VALUE, KEY to unset, :load FILE, :save FILE (blank to finish): ')).trim();
+            if (!input)
                 break;
-            if (!pair.includes('=')) {
-                delete process.env[pair];
-                console.log(`Unset ${pair}`);
+            if (input.startsWith(':load ')) {
+                loadEnvFile(input.slice(6));
+                console.log('Loaded variables from file.');
+                continue;
+            }
+            if (input.startsWith(':save ')) {
+                saveEnvFile(input.slice(6));
+                console.log('Saved variables to file.');
+                continue;
+            }
+            if (!input.includes('=')) {
+                delete process.env[input];
+                console.log(`Unset ${input}`);
             }
             else {
-                const [key, ...rest] = pair.split('=');
+                const [key, ...rest] = input.split('=');
                 if (key && rest.length > 0) {
                     process.env[key] = rest.join('=');
                     console.log(`Set ${key}=${process.env[key]}`);
@@ -57,7 +87,9 @@ function showMenu() {
             console.log('3) Start CLI and Web Interface');
             console.log('4) Launch UI');
             console.log('5) Set Environment Variables');
-            console.log('6) Exit');
+            console.log('6) Load Env File');
+            console.log('7) Save Env File');
+            console.log('8) Exit');
             const choice = (yield ask('Choose an option: ')).trim();
             if (choice === '1') {
                 rl.close();
@@ -83,6 +115,14 @@ function showMenu() {
                 yield manageEnvVariables(ask);
             }
             else if (choice === '6') {
+                const file = yield ask('Path to env file: ');
+                loadEnvFile(file.trim());
+            }
+            else if (choice === '7') {
+                const file = yield ask('Path to save env file: ');
+                saveEnvFile(file.trim());
+            }
+            else if (choice === '8') {
                 rl.close();
                 return;
             }
@@ -92,9 +132,9 @@ function showMenu() {
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const argv = minimist(process.argv.slice(2), {
-            string: ['env'],
+            string: ['env', 'env-file'],
             boolean: ['menu', 'help', 'web', 'no-menu'],
-            alias: { e: 'env', h: 'help', w: 'web', n: 'no-menu' }
+            alias: { e: 'env', F: 'env-file', h: 'help', w: 'web', n: 'no-menu' }
         });
         if (argv.help) {
             console.log(`Usage: cyrah [options]
@@ -104,10 +144,14 @@ Options:
   --no-menu, -n       Skip the menu and run the CLI directly
   --web,  -w          Start the web interface alongside the CLI
   --env,  -e KEY=VAL  Set environment variable (repeatable)
+  --env-file, -F FILE Load environment variables from file
   --help, -h          Show this help message
 
 Any other options are forwarded to the interpreter.`);
             return;
+        }
+        if (argv['env-file']) {
+            loadEnvFile(argv['env-file']);
         }
         if (argv.env) {
             const envs = Array.isArray(argv.env) ? argv.env : [argv.env];

@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 import dotenv from 'dotenv';
 import readline from 'readline';
+import fs from 'fs';
 import minimist from 'minimist';
+import { parse } from 'dotenv';
 import { executeLaunchUITool } from '../tools/SystemIntegrationTool.js';
 import { main } from '../main.js';
 
@@ -14,6 +16,25 @@ const RELEVANT_ENV_VARS = [
   'SAFE_MODE', 'MAX_OUTPUT', 'DISPLAY_MODE', 'UI_NAME'
 ];
 
+function loadEnvFile(filePath: string): void {
+  if (!fs.existsSync(filePath)) return;
+  const data = fs.readFileSync(filePath, 'utf-8');
+  const parsed = parse(data);
+  for (const [k, v] of Object.entries(parsed)) {
+    process.env[k] = v;
+  }
+}
+
+function saveEnvFile(filePath: string): void {
+  const lines: string[] = [];
+  for (const key of RELEVANT_ENV_VARS) {
+    if (process.env[key]) {
+      lines.push(`${key}=${process.env[key]}`);
+    }
+  }
+  fs.writeFileSync(filePath, lines.join('\n'), 'utf-8');
+}
+
 async function manageEnvVariables(ask: (q: string) => Promise<string>): Promise<void> {
   console.log('\nCurrent environment variables:');
   for (const key of RELEVANT_ENV_VARS) {
@@ -23,13 +44,23 @@ async function manageEnvVariables(ask: (q: string) => Promise<string>): Promise<
   }
 
   while (true) {
-    const pair = (await ask('Enter KEY=VALUE to set, KEY to unset (blank to finish): ')).trim();
-    if (!pair) break;
-    if (!pair.includes('=')) {
-      delete process.env[pair];
-      console.log(`Unset ${pair}`);
+    const input = (await ask('Enter KEY=VALUE, KEY to unset, :load FILE, :save FILE (blank to finish): ')).trim();
+    if (!input) break;
+    if (input.startsWith(':load ')) {
+      loadEnvFile(input.slice(6));
+      console.log('Loaded variables from file.');
+      continue;
+    }
+    if (input.startsWith(':save ')) {
+      saveEnvFile(input.slice(6));
+      console.log('Saved variables to file.');
+      continue;
+    }
+    if (!input.includes('=')) {
+      delete process.env[input];
+      console.log(`Unset ${input}`);
     } else {
-      const [key, ...rest] = pair.split('=');
+      const [key, ...rest] = input.split('=');
       if (key && rest.length > 0) {
         process.env[key] = rest.join('=');
         console.log(`Set ${key}=${process.env[key]}`);
@@ -50,7 +81,9 @@ async function showMenu(): Promise<void> {
     console.log('3) Start CLI and Web Interface');
     console.log('4) Launch UI');
     console.log('5) Set Environment Variables');
-    console.log('6) Exit');
+    console.log('6) Load Env File');
+    console.log('7) Save Env File');
+    console.log('8) Exit');
 
     const choice = (await ask('Choose an option: ')).trim();
 
@@ -73,6 +106,12 @@ async function showMenu(): Promise<void> {
     } else if (choice === '5') {
       await manageEnvVariables(ask);
     } else if (choice === '6') {
+      const file = await ask('Path to env file: ');
+      loadEnvFile(file.trim());
+    } else if (choice === '7') {
+      const file = await ask('Path to save env file: ');
+      saveEnvFile(file.trim());
+    } else if (choice === '8') {
       rl.close();
       return;
     }
@@ -81,9 +120,9 @@ async function showMenu(): Promise<void> {
 
 async function run(): Promise<void> {
   const argv = minimist(process.argv.slice(2), {
-    string: ['env'],
+    string: ['env', 'env-file'],
     boolean: ['menu', 'help', 'web', 'no-menu'],
-    alias: { e: 'env', h: 'help', w: 'web', n: 'no-menu' }
+    alias: { e: 'env', F: 'env-file', h: 'help', w: 'web', n: 'no-menu' }
   });
 
   if (argv.help) {
@@ -94,10 +133,15 @@ Options:
   --no-menu, -n       Skip the menu and run the CLI directly
   --web,  -w          Start the web interface alongside the CLI
   --env,  -e KEY=VAL  Set environment variable (repeatable)
+  --env-file, -F FILE Load environment variables from file
   --help, -h          Show this help message
 
 Any other options are forwarded to the interpreter.`);
     return;
+  }
+
+  if (argv['env-file']) {
+    loadEnvFile(argv['env-file']);
   }
 
   if (argv.env) {
