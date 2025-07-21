@@ -105,7 +105,7 @@ async function showMenu(): Promise<void> {
 async function run(): Promise<void> {
   const argv = minimist(process.argv.slice(2), {
     string: ['env', 'spotify', 'send-email'],
-    boolean: ['menu', 'help', 'web', 'noMenu', 'gui', 'auto', 'list-tools'],
+    boolean: ['menu', 'help', 'web', 'gui', 'auto', 'list-tools'],
     alias: { e: 'env', h: 'help', w: 'web', g: 'gui', a: 'auto', s: 'spotify', E: 'send-email', l: 'list-tools' }
   });
 
@@ -178,8 +178,9 @@ Any other options are forwarded to the interpreter.`);
 
   const skipMenu = process.env.NO_MENU === 'true';
   const hasNoArgs = process.argv.slice(2).length === 0;
+  const showMenuFlag = argv.menu === true || (hasNoArgs && argv.menu !== false && !skipMenu);
 
-  if (argv.menu || (hasNoArgs && !argv.noMenu && !skipMenu)) {
+  if (showMenuFlag) {
     await showMenu();
     return;
   }

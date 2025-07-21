@@ -119,7 +119,7 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const argv = minimist(process.argv.slice(2), {
             string: ['env', 'spotify', 'send-email'],
-            boolean: ['menu', 'help', 'web', 'noMenu', 'gui', 'auto', 'list-tools'],
+            boolean: ['menu', 'help', 'web', 'gui', 'auto', 'list-tools'],
             alias: { e: 'env', h: 'help', w: 'web', g: 'gui', a: 'auto', s: 'spotify', E: 'send-email', l: 'list-tools' }
         });
         if (argv.help) {
@@ -183,7 +183,8 @@ Any other options are forwarded to the interpreter.`);
         }
         const skipMenu = process.env.NO_MENU === 'true';
         const hasNoArgs = process.argv.slice(2).length === 0;
-        if (argv.menu || (hasNoArgs && !argv.noMenu && !skipMenu)) {
+        const showMenuFlag = argv.menu === true || (hasNoArgs && argv.menu !== false && !skipMenu);
+        if (showMenuFlag) {
             yield showMenu();
             return;
         }
