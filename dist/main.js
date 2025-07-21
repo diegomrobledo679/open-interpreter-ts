@@ -30,6 +30,7 @@ import { resizeImageTool, executeResizeImageTool, cropImageTool, executeCropImag
 import { countLinesInFileTool, executeCountLinesInFileTool, findTextInFileTool, executeFindTextInFileTool, getDirectoryStructureTool, executeGetDirectoryStructureTool, listFileTypesTool, executeListFileTypesTool, deepSearchTool, executeDeepSearchTool, getFileContentTypeTool, executeGetFileContentTypeTool } from "./tools/AnalysisTool.js";
 import { minecraftPingTool, executeMinecraftPingTool, sendMinecraftRconCommandTool, executeSendMinecraftRconCommandTool } from "./tools/MinecraftTool.js";
 import { launchUITool, executeLaunchUITool, launchVirtualTerminalTool, executeLaunchVirtualTerminalTool, playSpotifyTool, executePlaySpotifyTool } from "./tools/SystemIntegrationTool.js";
+import { sendEmailTool, executeSendEmailTool } from "./tools/EmailTool.js";
 import { terminateProcessTool, executeTerminateProcessTool, startProcessTool, executeStartProcessTool, getProcessInfoTool, executeGetProcessInfoTool } from "./tools/ProcessManagementTool.js";
 import { npmInstallTool, executeNpmInstallTool, pipInstallTool, executePipInstallTool, aptInstallTool, executeAptInstallTool, brewInstallTool, executeBrewInstallTool, chocoInstallTool, executeChocoInstallTool, checkMissingDependenciesTool, executeCheckMissingDependenciesTool, listInstalledPackagesTool, executeListInstalledPackagesTool, npmUninstallTool, executeNpmUninstallTool, pipUninstallTool, executePipUninstallTool, aptRemoveTool, executeAptRemoveTool, brewUninstallTool, executeBrewUninstallTool, chocoUninstallTool, executeChocoUninstallTool, npmUpdateTool, executeNpmUpdateTool, pipUpdateTool, executePipUpdateTool, aptUpdateTool, executeAptUpdateTool, brewUpdateTool, executeBrewUpdateTool, chocoUpdateTool, executeChocoUpdateTool } from "./tools/PackageManagerTool.js";
 import { zipCompressTool, executeZipCompressTool, zipDecompressTool, executeZipDecompressTool, tarCompressTool, executeTarCompressTool, tarDecompressTool, executeTarDecompressTool } from "./tools/CompressionTool.js";
@@ -141,6 +142,7 @@ export function main() {
         interpreter.registerTool(launchUITool, executeLaunchUITool);
         interpreter.registerTool(launchVirtualTerminalTool, executeLaunchVirtualTerminalTool);
         interpreter.registerTool(playSpotifyTool, executePlaySpotifyTool);
+        interpreter.registerTool(sendEmailTool, executeSendEmailTool);
         interpreter.registerTool(terminateProcessTool, executeTerminateProcessTool);
         interpreter.registerTool(startProcessTool, executeStartProcessTool);
         interpreter.registerTool(getProcessInfoTool, executeGetProcessInfoTool);

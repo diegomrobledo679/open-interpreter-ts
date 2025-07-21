@@ -12,6 +12,7 @@ import dotenv from 'dotenv';
 import readline from 'readline';
 import minimist from 'minimist';
 import { executeLaunchUITool, executePlaySpotifyTool } from '../tools/SystemIntegrationTool.js';
+import { executeSendEmailTool } from '../tools/EmailTool.js';
 import { main } from '../main.js';
 dotenv.config();
 const RELEVANT_ENV_VARS = [
@@ -59,7 +60,8 @@ function showMenu() {
             console.log('5) Start All (CLI, Web, UI)');
             console.log('6) Set Environment Variables');
             console.log('7) Play Spotify Track/Playlist');
-            console.log('8) Exit');
+            console.log('8) Send Email');
+            console.log('9) Exit');
             const choice = (yield ask('Choose an option: ')).trim();
             if (choice === '1') {
                 rl.close();
@@ -98,6 +100,13 @@ function showMenu() {
                 console.log(msg);
             }
             else if (choice === '8') {
+                const to = yield ask('Recipient: ');
+                const subject = yield ask('Subject: ');
+                const text = yield ask('Message: ');
+                const msg = yield executeSendEmailTool({ to, subject, text });
+                console.log(msg);
+            }
+            else if (choice === '9') {
                 rl.close();
                 return;
             }
@@ -107,9 +116,9 @@ function showMenu() {
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const argv = minimist(process.argv.slice(2), {
-            string: ['env', 'spotify'],
+            string: ['env', 'spotify', 'send-email'],
             boolean: ['menu', 'help', 'web', 'noMenu', 'gui', 'auto'],
-            alias: { e: 'env', h: 'help', w: 'web', g: 'gui', a: 'auto', s: 'spotify' }
+            alias: { e: 'env', h: 'help', w: 'web', g: 'gui', a: 'auto', s: 'spotify', E: 'send-email' }
         });
         if (argv.help) {
             console.log(`Usage: cyrah [options]
@@ -121,6 +130,7 @@ Options:
   --no-menu           Skip automatic menu when no arguments are passed
   --auto, -a          Start CLI, web, and GUI automatically
   --spotify, -s URI   Play a Spotify URI or URL
+  --send-email, -E STR Send an email (format: to;subject;text)
   --env,  -e KEY=VAL  Set environment variable (repeatable)
   --help, -h          Show this help message
 
@@ -137,11 +147,17 @@ Any other options are forwarded to the interpreter.`);
             }
         }
         const spotifyEnv = process.env.SPOTIFY_URI;
+        const emailToEnv = process.env.EMAIL_TO;
+        const emailSubjectEnv = process.env.EMAIL_SUBJECT;
+        const emailTextEnv = process.env.EMAIL_TEXT;
         const autoEnv = process.env.AUTO_START === 'true';
         const webEnv = process.env.START_WEB === 'true';
         const guiEnv = process.env.START_GUI === 'true';
         if (!argv.spotify && spotifyEnv) {
             argv.spotify = spotifyEnv;
+        }
+        if (!argv['send-email'] && emailToEnv && emailSubjectEnv && emailTextEnv) {
+            argv['send-email'] = `${emailToEnv};${emailSubjectEnv};${emailTextEnv}`;
         }
         if (autoEnv) {
             argv.auto = true;
@@ -171,6 +187,16 @@ Any other options are forwarded to the interpreter.`);
         if (argv.spotify) {
             const msg = yield executePlaySpotifyTool({ uri: argv.spotify });
             console.log(msg);
+        }
+        if (argv['send-email']) {
+            const [to, subject, text] = argv['send-email'].split(';');
+            if (to && subject && text) {
+                const msg = yield executeSendEmailTool({ to, subject, text });
+                console.log(msg);
+            }
+            else {
+                console.error('Invalid --send-email format. Use "to;subject;text"');
+            }
         }
         yield main();
     });

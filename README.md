@@ -58,6 +58,7 @@ This CLI agent now supports a wide range of functionalities, including:
 *   **Web Research Tool:** The `webResearch` tool performs a search and summarizes the top results for quick reference.
 *   **Virtual Terminal Tool:** The `launchVirtualTerminal` tool uses `node-pty` to provide an interactive shell session when available and falls back to a regular shell spawn if pseudo-terminals are unsupported.
 *   **Spotify Playback Tool:** The `playSpotify` tool opens a Spotify track or playlist in your default player using a provided URI or URL.
+*   **Email Sending Tool:** The `sendEmail` tool dispatches a plain-text email using SMTP credentials defined in environment variables.
 *   **Conceptual GUI Integration:** Includes conceptual methods for display updates and input event handling, laying the groundwork for future graphical user interface implementations.
 
 ## Installation and Usage:
@@ -116,6 +117,10 @@ The menu includes a **Play Spotify Track/Playlist** option that opens any
 provided URI using the new `playSpotify` tool. You can also trigger playback
 directly with the `--spotify` flag or by setting `SPOTIFY_URI` in the
 environment.
+There's also a **Send Email** menu option which uses the `sendEmail` tool. You
+may provide the recipient, subject, and message interactively or trigger it
+directly with the `--send-email` flag. The `EMAIL_TO`, `EMAIL_SUBJECT`, and
+`EMAIL_TEXT` variables can automate the process.
 
 You can pass interpreter options directly on the command line or via
 environment variables. Use `--env KEY=VALUE` to set a variable for
@@ -158,6 +163,15 @@ The interpreter reads various settings from environment variables if correspondi
 - `START_GUI` – Set to `true` to automatically open the graphical interface.
 - `AUTO_START` – Set to `true` to start the CLI, web interface, and GUI together.
 - `SPOTIFY_URI` – If set, automatically play this Spotify URI on startup or when using the menu option.
+- `EMAIL_HOST` – SMTP server host used by the `sendEmail` tool.
+- `EMAIL_PORT` – SMTP server port (defaults to 587 if not set).
+- `EMAIL_SECURE` – Set to `true` to use TLS/SSL for SMTP.
+- `EMAIL_USER` – SMTP username for authentication.
+- `EMAIL_PASS` – SMTP password for authentication.
+- `EMAIL_FROM` – Optional sender address for outgoing mail.
+- `EMAIL_TO` – Recipient address used when auto-sending email.
+- `EMAIL_SUBJECT` – Subject used when auto-sending email.
+- `EMAIL_TEXT` – Message body used when auto-sending email.
 
 Create a `.env` file with these values to avoid passing them as flags. You can
 also provide temporary overrides on the command line using `--env KEY=VALUE`.
