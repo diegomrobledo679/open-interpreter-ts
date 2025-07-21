@@ -14,43 +14,75 @@ import minimist from 'minimist';
 import { executeLaunchUITool } from '../tools/SystemIntegrationTool.js';
 import { main } from '../main.js';
 dotenv.config();
+const RELEVANT_ENV_VARS = [
+    'LLM_PROVIDER', 'LLM_MODEL', 'LLM_API_KEY', 'LLM_BASE_URL',
+    'OPENAI_API_KEY', 'OLLAMA_API_KEY',
+    'AUTO_RUN', 'LOOP', 'OFFLINE', 'VERBOSE', 'DEBUG',
+    'SAFE_MODE', 'MAX_OUTPUT', 'DISPLAY_MODE', 'UI_NAME'
+];
+function manageEnvVariables(ask) {
+    return __awaiter(this, void 0, void 0, function* () {
+        console.log('\nCurrent environment variables:');
+        for (const key of RELEVANT_ENV_VARS) {
+            if (process.env[key]) {
+                console.log(`${key}=${process.env[key]}`);
+            }
+        }
+        while (true) {
+            const pair = (yield ask('Enter KEY=VALUE to set, KEY to unset (blank to finish): ')).trim();
+            if (!pair)
+                break;
+            if (!pair.includes('=')) {
+                delete process.env[pair];
+                console.log(`Unset ${pair}`);
+            }
+            else {
+                const [key, ...rest] = pair.split('=');
+                if (key && rest.length > 0) {
+                    process.env[key] = rest.join('=');
+                    console.log(`Set ${key}=${process.env[key]}`);
+                }
+            }
+        }
+    });
+}
 function showMenu() {
     return __awaiter(this, void 0, void 0, function* () {
         const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
         const ask = (query) => new Promise((res) => rl.question(query, res));
         while (true) {
             console.log('Cyrah Menu');
-            console.log('1) Start Web Interface');
-            console.log('2) Launch UI');
-            console.log('3) Start CLI Interpreter');
-            console.log('4) Set Environment Variables');
-            console.log('5) Exit');
+            console.log('1) Start CLI Interpreter');
+            console.log('2) Start Web Interface');
+            console.log('3) Start CLI and Web Interface');
+            console.log('4) Launch UI');
+            console.log('5) Set Environment Variables');
+            console.log('6) Exit');
             const choice = (yield ask('Choose an option: ')).trim();
             if (choice === '1') {
+                rl.close();
+                yield main();
+                return;
+            }
+            else if (choice === '2') {
                 yield import('../server.js');
                 console.log('Web interface started. Open http://localhost:3000 in your browser.');
             }
-            else if (choice === '2') {
-                const msg = yield executeLaunchUITool({ uiName: process.env.UI_NAME || 'cyrah' });
-                console.log(msg);
-            }
             else if (choice === '3') {
+                yield import('../server.js');
+                console.log('Web interface started. Open http://localhost:3000 in your browser.');
                 rl.close();
                 yield main();
                 return;
             }
             else if (choice === '4') {
-                while (true) {
-                    const pair = (yield ask('Enter KEY=VALUE (blank to finish): ')).trim();
-                    if (!pair)
-                        break;
-                    const [key, ...rest] = pair.split('=');
-                    if (key && rest.length > 0) {
-                        process.env[key] = rest.join('=');
-                    }
-                }
+                const msg = yield executeLaunchUITool({ uiName: process.env.UI_NAME || 'cyrah' });
+                console.log(msg);
             }
             else if (choice === '5') {
+                yield manageEnvVariables(ask);
+            }
+            else if (choice === '6') {
                 rl.close();
                 return;
             }

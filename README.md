@@ -96,17 +96,18 @@ You can also launch a simple web interface:
 npm run start-web
 ```
 Then open http://localhost:3000 in your browser to chat. The interactive menu
-now includes an option to start this server as well, or you can launch it
-alongside the CLI with the `--web` flag.
+includes options to start just the web server or start it alongside the CLI.
+You can also launch both together with the `--web` flag or choose "Start CLI and
+Web Interface" from the menu.
 
 This command now starts the CLI interpreter immediately. If you prefer the
 previous interactive menu, run `npx cyrah --menu`. Use `npx cyrah --web` to
 start the web interface alongside the CLI.
 
 You can pass interpreter options directly on the command line or via
-environment variables. Use `--env KEY=VALUE` to set an environment variable for
+environment variables. Use `--env KEY=VALUE` to set a variable for
 the current run, or choose **Set Environment Variables** in the interactive
-menu to enter them interactively. A `--help` flag shows the available options.
+menu to review, update, or unset variables. A `--help` flag shows the available options.
 
 ## Configuration via Environment Variables
 
