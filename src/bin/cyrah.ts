@@ -82,8 +82,8 @@ async function showMenu(): Promise<void> {
 async function run(): Promise<void> {
   const argv = minimist(process.argv.slice(2), {
     string: ['env'],
-    boolean: ['menu', 'help', 'web'],
-    alias: { e: 'env', h: 'help', w: 'web' }
+    boolean: ['menu', 'help', 'web', 'noMenu', 'gui', 'auto'],
+    alias: { e: 'env', h: 'help', w: 'web', g: 'gui', a: 'auto' }
   });
 
   if (argv.help) {
@@ -92,6 +92,9 @@ async function run(): Promise<void> {
 Options:
   --menu, -m          Show interactive menu
   --web,  -w          Start the web interface alongside the CLI
+  --gui,  -g          Open the graphical interface on start
+  --no-menu           Skip automatic menu when no arguments are passed
+  --auto, -a          Start CLI, web, and GUI automatically
   --env,  -e KEY=VAL  Set environment variable (repeatable)
   --help, -h          Show this help message
 
@@ -109,7 +112,32 @@ Any other options are forwarded to the interpreter.`);
     }
   }
 
-  if (argv.menu) {
+  const autoEnv = process.env.AUTO_START === 'true';
+  const webEnv = process.env.START_WEB === 'true';
+  const guiEnv = process.env.START_GUI === 'true';
+
+  if (autoEnv) {
+    argv.auto = true;
+  }
+  if (webEnv) {
+    argv.web = true;
+  }
+  if (guiEnv) {
+    argv.gui = true;
+  }
+
+  if (argv.gui || argv.auto || guiEnv || autoEnv) {
+    process.env.DISPLAY_MODE = 'gui';
+  }
+
+  if (argv.auto || autoEnv) {
+    argv.web = true;
+  }
+
+  const skipMenu = process.env.NO_MENU === 'true';
+  const hasNoArgs = process.argv.slice(2).length === 0;
+
+  if (argv.menu || (hasNoArgs && !argv.noMenu && !skipMenu)) {
     await showMenu();
     return;
   }

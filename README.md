@@ -100,9 +100,14 @@ includes options to start just the web server or start it alongside the CLI.
 You can also launch both together with the `--web` flag or choose "Start CLI and
 Web Interface" from the menu.
 
-This command now starts the CLI interpreter immediately. If you prefer the
-previous interactive menu, run `npx cyrah --menu`. Use `npx cyrah --web` to
-start the web interface alongside the CLI.
+Running `npx cyrah` with no arguments now opens an interactive menu by default.
+Pass `--no-menu` (or set the `NO_MENU=true` environment variable) to jump
+straight into the CLI. Use `--web` to start the web interface alongside the CLI
+or choose "Start CLI and Web Interface" from the menu. The `--gui` flag opens
+the graphical interface on startup and `--auto` combines `--web` and `--gui` to
+launch everything at once. These flags can also be enabled through environment
+variables: set `START_WEB=true`, `START_GUI=true`, or `AUTO_START=true` to
+replicate the respective command-line options.
 
 You can pass interpreter options directly on the command line or via
 environment variables. Use `--env KEY=VALUE` to set a variable for
@@ -140,6 +145,10 @@ The interpreter reads various settings from environment variables if correspondi
 - `UI_NAME` – Name of the UI to launch when running the `cyrah` command or when
   `DISPLAY_MODE` is set to `gui`.
 - `DISPLAY_MODE` – Set to `gui` to automatically open the UI when the interpreter starts.
+- `NO_MENU` – Set to `true` to skip the interactive menu when no arguments are provided.
+- `START_WEB` – Set to `true` to automatically launch the web interface.
+- `START_GUI` – Set to `true` to automatically open the graphical interface.
+- `AUTO_START` – Set to `true` to start the CLI, web interface, and GUI together.
 
 Create a `.env` file with these values to avoid passing them as flags. You can
 also provide temporary overrides on the command line using `--env KEY=VALUE`.
