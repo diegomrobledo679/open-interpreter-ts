@@ -21,7 +21,12 @@ const RELEVANT_ENV_VARS = [
     'LLM_PROVIDER', 'LLM_MODEL', 'LLM_API_KEY', 'LLM_BASE_URL',
     'OPENAI_API_KEY', 'OLLAMA_API_KEY',
     'AUTO_RUN', 'LOOP', 'OFFLINE', 'VERBOSE', 'DEBUG',
-    'SAFE_MODE', 'MAX_OUTPUT', 'DISPLAY_MODE', 'UI_NAME'
+    'SAFE_MODE', 'MAX_OUTPUT', 'DISPLAY_MODE', 'UI_NAME',
+    'NO_MENU', 'START_WEB', 'START_GUI', 'AUTO_START',
+    'SPOTIFY_URI', 'LIST_TOOLS',
+    'EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_SECURE',
+    'EMAIL_USER', 'EMAIL_PASS', 'EMAIL_FROM',
+    'EMAIL_TO', 'EMAIL_SUBJECT', 'EMAIL_TEXT'
 ];
 function manageEnvVariables(ask) {
     return __awaiter(this, void 0, void 0, function* () {
