@@ -196,7 +196,18 @@ function showMenu(cliPort) {
 export function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const argv = minimist(process.argv.slice(2), {
-            string: ['env', 'spotify', 'send-email', 'open-url', 'open-path', 'port', 'env-file'],
+            string: [
+                'env',
+                'spotify',
+                'send-email',
+                'open-url',
+                'open-path',
+                'port',
+                'env-file',
+                'history-path',
+                'conversation-file',
+                'conversation-max'
+            ],
             boolean: ['menu', 'help', 'web', 'gui', 'auto', 'list-tools', 'list-languages', 'version', 'list-env', 'check-health'],
             alias: {
                 e: 'env',
@@ -214,7 +225,10 @@ export function run() {
                 f: 'env-file',
                 v: 'version',
                 n: 'list-env',
-                H: 'check-health'
+                H: 'check-health',
+                d: 'history-path',
+                c: 'conversation-file',
+                M: 'conversation-max'
             }
         });
         const envFile = argv['env-file'] || process.env.ENV_FILE;
@@ -240,6 +254,9 @@ Options:
   --open-url, -o URL  Open a URL in the default browser
   --open-path, -P PTH Open a file or folder with the default app
   --port, -p NUM      Port for the web interface
+  --history-path, -d  Directory for conversation logs
+  --conversation-file, -c Name of the conversation history file
+  --conversation-max, -M Max messages to keep in history
   --env-file, -f PATH Load environment variables from file
   --env,  -e KEY=VAL  Set environment variable (repeatable)
   --help, -h          Show this help message
@@ -274,6 +291,9 @@ Any other options are forwarded to the interpreter.`);
         const emailSubjectEnv = process.env.EMAIL_SUBJECT;
         const emailTextEnv = process.env.EMAIL_TEXT;
         const portEnv = process.env.PORT;
+        const historyPathEnv = process.env.CONVERSATION_HISTORY_PATH;
+        const convFileEnv = process.env.CONVERSATION_FILENAME;
+        const convMaxEnv = process.env.CONVERSATION_MAX_LENGTH;
         const printVersionEnv = process.env.PRINT_VERSION === 'true';
         const autoEnv = process.env.AUTO_START === 'true';
         const webEnv = process.env.START_WEB === 'true';
@@ -299,6 +319,15 @@ Any other options are forwarded to the interpreter.`);
         }
         if (!argv.port && portEnv) {
             argv.port = portEnv;
+        }
+        if (!argv['history-path'] && historyPathEnv) {
+            argv['history-path'] = historyPathEnv;
+        }
+        if (!argv['conversation-file'] && convFileEnv) {
+            argv['conversation-file'] = convFileEnv;
+        }
+        if (!argv['conversation-max'] && convMaxEnv) {
+            argv['conversation-max'] = convMaxEnv;
         }
         if (autoEnv) {
             argv.auto = true;

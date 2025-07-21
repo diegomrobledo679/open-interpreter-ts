@@ -108,7 +108,9 @@ includes options to start just the web server or start it alongside the CLI.
 You can also launch both together with the `--web` flag or choose "Start CLI and
 Web Interface" from the menu. Use the new `--port` option to specify the web
 server port (defaults to `3000`). A "Start All" menu option starts the CLI, web
-interface, and GUI in one step.
+interface, and GUI in one step. Additional flags let you control conversation
+history: `--history-path` sets the log directory, `--conversation-file` chooses
+the filename, and `--conversation-max` limits how many messages are retained.
 
 Running `npx cyrah` with no arguments now opens an interactive menu by default.
 Pass `--no-menu` (or set the `NO_MENU=true` environment variable) to jump
