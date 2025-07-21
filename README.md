@@ -105,9 +105,9 @@ previous interactive menu, run `npx cyrah --menu`. Use `npx cyrah --web` to
 start the web interface alongside the CLI.
 
 You can pass interpreter options directly on the command line or via
-environment variables. Use `--env KEY=VALUE` to set an environment variable for
+environment variables. Use `--env KEY=VALUE` to set a variable for
 the current run, or choose **Set Environment Variables** in the interactive
-menu to enter them interactively. A `--help` flag shows the available options.
+menu to review, update, or unset variables. A `--help` flag shows the available options.
 
 ## Configuration via Environment Variables
 
