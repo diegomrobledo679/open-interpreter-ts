@@ -6,10 +6,11 @@ import dotenv from 'dotenv';
 import { Interpreter } from './core/Interpreter.js';
 import { InterpreterOptions } from './core/InterpreterOptions.js';
 import { config } from './config.js';
+import { registerAllTools } from './tools/register.js';
 
 dotenv.config();
 
-function createInterpreter(): Interpreter {
+export function createInterpreter(): Interpreter {
   const envBool = (value: string | undefined, fallback: boolean) => {
     if (value === undefined) return fallback;
     return value.toLowerCase() === 'true';
@@ -48,6 +49,7 @@ function createInterpreter(): Interpreter {
 }
 
 const interpreter = createInterpreter();
+registerAllTools(interpreter);
 const app = express();
 const server = http.createServer(app);
 const io = new SocketIOServer(server);

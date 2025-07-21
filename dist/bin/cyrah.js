@@ -11,14 +11,31 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import dotenv from 'dotenv';
 import readline from 'readline';
 import minimist from 'minimist';
-import { executeLaunchUITool } from '../tools/SystemIntegrationTool.js';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { executeLaunchUITool, executePlaySpotifyTool } from '../tools/SystemIntegrationTool.js';
+import { executeOpenUrlTool } from '../tools/OpenUrlTool.js';
+import { executeOpenPathTool } from '../tools/OpenPathTool.js';
+import { executeSendEmailTool } from '../tools/EmailTool.js';
+import { executeListLanguagesTool } from '../tools/LanguageTool.js';
+import { Interpreter } from "../core/Interpreter.js";
+import { registerAllTools } from "../tools/register.js";
 import { main } from '../main.js';
 dotenv.config();
 const RELEVANT_ENV_VARS = [
     'LLM_PROVIDER', 'LLM_MODEL', 'LLM_API_KEY', 'LLM_BASE_URL',
     'OPENAI_API_KEY', 'OLLAMA_API_KEY',
     'AUTO_RUN', 'LOOP', 'OFFLINE', 'VERBOSE', 'DEBUG',
-    'SAFE_MODE', 'MAX_OUTPUT', 'DISPLAY_MODE', 'UI_NAME'
+    'SAFE_MODE', 'MAX_OUTPUT', 'DISPLAY_MODE', 'UI_NAME',
+    'NO_MENU', 'START_WEB', 'START_GUI', 'AUTO_START', 'PORT',
+    'SPOTIFY_URI', 'OPEN_URL', 'LIST_TOOLS',
+    'LIST_LANGUAGES', 'OPEN_PATH', 'LIST_ENV',
+    'EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_SECURE',
+    'EMAIL_USER', 'EMAIL_PASS', 'EMAIL_FROM',
+    'EMAIL_TO', 'EMAIL_SUBJECT', 'EMAIL_TEXT',
+    'ENV_FILE',
+    'PRINT_VERSION'
 ];
 function manageEnvVariables(ask) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -46,7 +63,7 @@ function manageEnvVariables(ask) {
         }
     });
 }
-function showMenu() {
+function showMenu(cliPort) {
     return __awaiter(this, void 0, void 0, function* () {
         const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
         const ask = (query) => new Promise((res) => rl.question(query, res));
@@ -56,8 +73,17 @@ function showMenu() {
             console.log('2) Start Web Interface');
             console.log('3) Start CLI and Web Interface');
             console.log('4) Launch UI');
-            console.log('5) Set Environment Variables');
-            console.log('6) Exit');
+            console.log('5) Start All (CLI, Web, UI)');
+            console.log('6) Set Environment Variables');
+            console.log('7) Load Environment File');
+            console.log('8) Open URL in Browser');
+            console.log('9) Open File or Folder');
+            console.log('10) Play Spotify Track/Playlist');
+            console.log('11) Send Email');
+            console.log('12) List Available Tools');
+            console.log('13) List Supported Languages');
+            console.log('14) List Environment Variables');
+            console.log('15) Exit');
             const choice = (yield ask('Choose an option: ')).trim();
             if (choice === '1') {
                 rl.close();
@@ -65,12 +91,16 @@ function showMenu() {
                 return;
             }
             else if (choice === '2') {
+                if (cliPort)
+                    process.env.PORT = String(cliPort);
                 yield import('../server.js');
-                console.log('Web interface started. Open http://localhost:3000 in your browser.');
+                console.log(`Web interface started. Open http://localhost:${process.env.PORT || 3000} in your browser.`);
             }
             else if (choice === '3') {
+                if (cliPort)
+                    process.env.PORT = String(cliPort);
                 yield import('../server.js');
-                console.log('Web interface started. Open http://localhost:3000 in your browser.');
+                console.log(`Web interface started. Open http://localhost:${process.env.PORT || 3000} in your browser.`);
                 rl.close();
                 yield main();
                 return;
@@ -80,32 +110,157 @@ function showMenu() {
                 console.log(msg);
             }
             else if (choice === '5') {
-                yield manageEnvVariables(ask);
+                if (cliPort)
+                    process.env.PORT = String(cliPort);
+                yield import('../server.js');
+                console.log(`Web interface started. Open http://localhost:${process.env.PORT || 3000} in your browser.`);
+                process.env.DISPLAY_MODE = 'gui';
+                rl.close();
+                yield main();
+                return;
             }
             else if (choice === '6') {
+                yield manageEnvVariables(ask);
+            }
+            else if (choice === '7') {
+                const file = yield ask('Path to .env file: ');
+                try {
+                    dotenv.config({ path: path.resolve(file) });
+                    console.log(`Loaded environment variables from ${file}`);
+                }
+                catch (err) {
+                    console.error(`Failed to load env file: ${err.message}`);
+                }
+            }
+            else if (choice === '8') {
+                try {
+                    const url = yield ask('Enter URL: ');
+                    const msg = yield executeOpenUrlTool({ url });
+                    console.log(msg);
+                }
+                catch (err) {
+                    console.error(err.message);
+                }
+            }
+            else if (choice === '9') {
+                try {
+                    const p = yield ask('Enter file or folder path: ');
+                    const msg = yield executeOpenPathTool({ path: p });
+                    console.log(msg);
+                }
+                catch (err) {
+                    console.error(err.message);
+                }
+            }
+            else if (choice === '10') {
+                try {
+                    const uri = yield ask('Enter Spotify URI or URL: ');
+                    const msg = yield executePlaySpotifyTool({ uri });
+                    console.log(msg);
+                }
+                catch (err) {
+                    console.error(err.message);
+                }
+            }
+            else if (choice === '11') {
+                try {
+                    const to = yield ask('Recipient: ');
+                    const subject = yield ask('Subject: ');
+                    const text = yield ask('Message: ');
+                    const msg = yield executeSendEmailTool({ to, subject, text });
+                    console.log(msg);
+                }
+                catch (err) {
+                    console.error(err.message);
+                }
+            }
+            else if (choice === '12') {
+                const interpreter = new Interpreter();
+                registerAllTools(interpreter);
+                interpreter.tools.forEach(t => console.log(`${t.function.name} - ${t.function.description}`));
+            }
+            else if (choice === '13') {
+                const langs = yield executeListLanguagesTool();
+                console.log(langs);
+            }
+            else if (choice === '14') {
+                for (const key of RELEVANT_ENV_VARS) {
+                    if (process.env[key]) {
+                        console.log(`${key}=${process.env[key]}`);
+                    }
+                    else {
+                        console.log(key);
+                    }
+                }
+            }
+            else if (choice === '15') {
                 rl.close();
                 return;
             }
         }
     });
 }
-function run() {
+export function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const argv = minimist(process.argv.slice(2), {
-            string: ['env'],
-            boolean: ['menu', 'help', 'web'],
-            alias: { e: 'env', h: 'help', w: 'web' }
+            string: ['env', 'spotify', 'send-email', 'open-url', 'open-path', 'port', 'env-file'],
+            boolean: ['menu', 'help', 'web', 'gui', 'auto', 'list-tools', 'list-languages', 'version', 'list-env'],
+            alias: {
+                e: 'env',
+                h: 'help',
+                w: 'web',
+                g: 'gui',
+                a: 'auto',
+                s: 'spotify',
+                E: 'send-email',
+                o: 'open-url',
+                P: 'open-path',
+                l: 'list-tools',
+                L: 'list-languages',
+                p: 'port',
+                f: 'env-file',
+                v: 'version',
+                n: 'list-env'
+            }
         });
+        const envFile = argv['env-file'] || process.env.ENV_FILE;
+        if (envFile) {
+            try {
+                dotenv.config({ path: path.resolve(envFile) });
+            }
+            catch (err) {
+                console.error(`Failed to load env file ${envFile}: ${err.message}`);
+            }
+        }
         if (argv.help) {
             console.log(`Usage: cyrah [options]
 
 Options:
   --menu, -m          Show interactive menu
   --web,  -w          Start the web interface alongside the CLI
+  --gui,  -g          Open the graphical interface on start
+  --no-menu           Skip automatic menu when no arguments are passed
+  --auto, -a          Start CLI, web, and GUI automatically
+  --spotify, -s URI   Play a Spotify URI or URL
+  --send-email, -E STR Send an email (format: to;subject;text)
+  --open-url, -o URL  Open a URL in the default browser
+  --open-path, -P PTH Open a file or folder with the default app
+  --port, -p NUM      Port for the web interface
+  --env-file, -f PATH Load environment variables from file
   --env,  -e KEY=VAL  Set environment variable (repeatable)
   --help, -h          Show this help message
+  --list-tools, -l    List all available tools and exit
+  --list-languages, -L List supported programming languages and exit
+  --list-env, -n      List relevant environment variables and exit
+  --version, -v       Show CLI version and exit
 
 Any other options are forwarded to the interpreter.`);
+            return;
+        }
+        if (argv.version) {
+            const pkgPath = path.resolve(fileURLToPath(new URL('../../package.json', import.meta.url)));
+            const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+            console.log(`cyrah version ${pkg.version}`);
             return;
         }
         if (argv.env) {
@@ -117,17 +272,124 @@ Any other options are forwarded to the interpreter.`);
                 }
             }
         }
-        if (argv.menu) {
-            yield showMenu();
+        const spotifyEnv = process.env.SPOTIFY_URI;
+        const openUrlEnv = process.env.OPEN_URL;
+        const openPathEnv = process.env.OPEN_PATH;
+        const emailToEnv = process.env.EMAIL_TO;
+        const emailSubjectEnv = process.env.EMAIL_SUBJECT;
+        const emailTextEnv = process.env.EMAIL_TEXT;
+        const portEnv = process.env.PORT;
+        const printVersionEnv = process.env.PRINT_VERSION === 'true';
+        const autoEnv = process.env.AUTO_START === 'true';
+        const webEnv = process.env.START_WEB === 'true';
+        const guiEnv = process.env.START_GUI === 'true';
+        const listToolsEnv = process.env.LIST_TOOLS === "true";
+        const listLanguagesEnv = process.env.LIST_LANGUAGES === "true";
+        const listEnvEnv = process.env.LIST_ENV === "true";
+        if (!argv.version && printVersionEnv) {
+            argv.version = true;
+        }
+        if (!argv.spotify && spotifyEnv) {
+            argv.spotify = spotifyEnv;
+        }
+        if (!argv['open-url'] && openUrlEnv) {
+            argv['open-url'] = openUrlEnv;
+        }
+        if (!argv['open-path'] && openPathEnv) {
+            argv['open-path'] = openPathEnv;
+        }
+        if (!argv['send-email'] && emailToEnv && emailSubjectEnv && emailTextEnv) {
+            argv['send-email'] = `${emailToEnv};${emailSubjectEnv};${emailTextEnv}`;
+        }
+        if (!argv.port && portEnv) {
+            argv.port = portEnv;
+        }
+        if (autoEnv) {
+            argv.auto = true;
+        }
+        if (webEnv) {
+            argv.web = true;
+        }
+        if (guiEnv) {
+            argv.gui = true;
+        }
+        if (argv.gui || argv.auto || guiEnv || autoEnv) {
+            process.env.DISPLAY_MODE = 'gui';
+        }
+        if (!argv["list-tools"] && listToolsEnv) {
+            argv["list-tools"] = true;
+        }
+        if (!argv["list-languages"] && listLanguagesEnv) {
+            argv["list-languages"] = true;
+        }
+        if (!argv["list-env"] && listEnvEnv) {
+            argv["list-env"] = true;
+        }
+        if (argv.auto || autoEnv) {
+            argv.web = true;
+        }
+        const skipMenu = process.env.NO_MENU === 'true';
+        const hasNoArgs = process.argv.slice(2).length === 0;
+        const showMenuFlag = argv.menu === true || (hasNoArgs && argv.menu !== false && !skipMenu);
+        if (showMenuFlag) {
+            yield showMenu(argv.port ? String(argv.port) : undefined);
             return;
         }
         if (argv.web) {
+            if (argv.port)
+                process.env.PORT = String(argv.port);
             yield import('../server.js');
-            console.log('Web interface started. Open http://localhost:3000 in your browser.');
+            console.log(`Web interface started. Open http://localhost:${process.env.PORT || 3000} in your browser.`);
+        }
+        if (argv.spotify) {
+            const msg = yield executePlaySpotifyTool({ uri: argv.spotify });
+            console.log(msg);
+        }
+        if (argv['open-url']) {
+            const msg = yield executeOpenUrlTool({ url: argv['open-url'] });
+            console.log(msg);
+        }
+        if (argv['open-path']) {
+            const msg = yield executeOpenPathTool({ path: argv['open-path'] });
+            console.log(msg);
+        }
+        if (argv['send-email']) {
+            const [to, subject, text] = argv['send-email'].split(';');
+            if (to && subject && text) {
+                const msg = yield executeSendEmailTool({ to, subject, text });
+                console.log(msg);
+            }
+            else {
+                console.error('Invalid --send-email format. Use "to;subject;text"');
+            }
+        }
+        if (argv["list-tools"]) {
+            const interpreter = new Interpreter();
+            registerAllTools(interpreter);
+            interpreter.tools.forEach(t => console.log(`${t.function.name} - ${t.function.description}`));
+            return;
+        }
+        if (argv["list-languages"]) {
+            const langs = yield executeListLanguagesTool();
+            console.log(langs);
+            return;
+        }
+        if (argv["list-env"]) {
+            for (const key of RELEVANT_ENV_VARS) {
+                if (process.env[key]) {
+                    console.log(`${key}=${process.env[key]}`);
+                }
+                else {
+                    console.log(key);
+                }
+            }
+            return;
         }
         yield main();
     });
 }
-run().catch(err => {
-    console.error(`Error: ${err.message}`);
-});
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+    run().catch(err => {
+        console.error(`Error: ${err.message}`);
+    });
+}
