@@ -121,6 +121,8 @@ There's also a **Send Email** menu option which uses the `sendEmail` tool. You
 may provide the recipient, subject, and message interactively or trigger it
 directly with the `--send-email` flag. The `EMAIL_TO`, `EMAIL_SUBJECT`, and
 `EMAIL_TEXT` variables can automate the process.
+There's also **List Available Tools** to print all registered tool names with
+descriptions.
 
 You can list all available tools with `--list-tools` or by setting `LIST_TOOLS=true`.
 You can pass interpreter options directly on the command line or via

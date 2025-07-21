@@ -68,7 +68,8 @@ function showMenu() {
             console.log('6) Set Environment Variables');
             console.log('7) Play Spotify Track/Playlist');
             console.log('8) Send Email');
-            console.log('9) Exit');
+            console.log('9) List Available Tools');
+            console.log('10) Exit');
             const choice = (yield ask('Choose an option: ')).trim();
             if (choice === '1') {
                 rl.close();
@@ -114,6 +115,11 @@ function showMenu() {
                 console.log(msg);
             }
             else if (choice === '9') {
+                const interpreter = new Interpreter();
+                registerAllTools(interpreter);
+                interpreter.tools.forEach(t => console.log(`${t.function.name} - ${t.function.description}`));
+            }
+            else if (choice === '10') {
                 rl.close();
                 return;
             }
