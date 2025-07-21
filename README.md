@@ -113,6 +113,7 @@ command) launches the CLI, web interface, and GUI all at once. These flags can
 also be enabled through environment variables: set `START_WEB=true`,
 `START_GUI=true`, or `AUTO_START=true` to replicate the respective
 command-line options.
+Use `--version` to print the installed package version.
 
 The menu includes a **Play Spotify Track/Playlist** option that opens any
 provided URI using the new `playSpotify` tool. You can also trigger playback

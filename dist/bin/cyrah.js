@@ -12,6 +12,7 @@ import dotenv from 'dotenv';
 import readline from 'readline';
 import minimist from 'minimist';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { executeLaunchUITool, executePlaySpotifyTool } from '../tools/SystemIntegrationTool.js';
 import { executeSendEmailTool } from '../tools/EmailTool.js';
@@ -31,7 +32,8 @@ const RELEVANT_ENV_VARS = [
     'EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_SECURE',
     'EMAIL_USER', 'EMAIL_PASS', 'EMAIL_FROM',
     'EMAIL_TO', 'EMAIL_SUBJECT', 'EMAIL_TEXT',
-    'ENV_FILE'
+    'ENV_FILE',
+    'PRINT_VERSION'
 ];
 function manageEnvVariables(ask) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -167,7 +169,7 @@ export function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const argv = minimist(process.argv.slice(2), {
             string: ['env', 'spotify', 'send-email', 'port', 'env-file'],
-            boolean: ['menu', 'help', 'web', 'gui', 'auto', 'list-tools', 'list-languages'],
+            boolean: ['menu', 'help', 'web', 'gui', 'auto', 'list-tools', 'list-languages', 'version'],
             alias: {
                 e: 'env',
                 h: 'help',
@@ -179,7 +181,8 @@ export function run() {
                 l: 'list-tools',
                 L: 'list-languages',
                 p: 'port',
-                f: 'env-file'
+                f: 'env-file',
+                v: 'version'
             }
         });
         const envFile = argv['env-file'] || process.env.ENV_FILE;
@@ -208,8 +211,15 @@ Options:
   --help, -h          Show this help message
   --list-tools, -l    List all available tools and exit
   --list-languages, -L List supported programming languages and exit
+  --version, -v       Show CLI version and exit
 
 Any other options are forwarded to the interpreter.`);
+            return;
+        }
+        if (argv.version) {
+            const pkgPath = path.resolve(fileURLToPath(new URL('../../package.json', import.meta.url)));
+            const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+            console.log(`cyrah version ${pkg.version}`);
             return;
         }
         if (argv.env) {
@@ -226,11 +236,15 @@ Any other options are forwarded to the interpreter.`);
         const emailSubjectEnv = process.env.EMAIL_SUBJECT;
         const emailTextEnv = process.env.EMAIL_TEXT;
         const portEnv = process.env.PORT;
+        const printVersionEnv = process.env.PRINT_VERSION === 'true';
         const autoEnv = process.env.AUTO_START === 'true';
         const webEnv = process.env.START_WEB === 'true';
         const guiEnv = process.env.START_GUI === 'true';
         const listToolsEnv = process.env.LIST_TOOLS === "true";
         const listLanguagesEnv = process.env.LIST_LANGUAGES === "true";
+        if (!argv.version && printVersionEnv) {
+            argv.version = true;
+        }
         if (!argv.spotify && spotifyEnv) {
             argv.spotify = spotifyEnv;
         }
