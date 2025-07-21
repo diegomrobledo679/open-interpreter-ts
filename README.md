@@ -93,6 +93,12 @@ After installation you can launch **Cyrah** directly from the terminal:
 npx cyrah
 ```
 
+To start the CLI, web interface, and GUI all at once run:
+
+```bash
+npx cyrah-auto
+```
+
 You can also launch a simple web interface:
 ```bash
 npm run start-web
