@@ -57,6 +57,8 @@ This CLI agent now supports a wide range of functionalities, including:
 *   **Image Generation Tool:** Use the `generateImage` tool to create images from text prompts. When `OPENAI_API_KEY` is configured, the tool generates real images using OpenAI; otherwise it falls back to a placeholder image.
 *   **Web Research Tool:** The `webResearch` tool performs a search and summarizes the top results for quick reference.
 *   **Virtual Terminal Tool:** The `launchVirtualTerminal` tool uses `node-pty` to provide an interactive shell session when available and falls back to a regular shell spawn if pseudo-terminals are unsupported.
+*   **Spotify Playback Tool:** The `playSpotify` tool opens a Spotify track or playlist in your default player using a provided URI or URL.
+*   **Email Sending Tool:** The `sendEmail` tool dispatches a plain-text email using SMTP credentials defined in environment variables.
 *   **Conceptual GUI Integration:** Includes conceptual methods for display updates and input event handling, laying the groundwork for future graphical user interface implementations.
 
 ## Installation and Usage:
@@ -91,6 +93,12 @@ After installation you can launch **Cyrah** directly from the terminal:
 npx cyrah
 ```
 
+To start the CLI, web interface, and GUI all at once run:
+
+```bash
+npx cyrah-auto
+```
+
 You can also launch a simple web interface:
 ```bash
 npm run start-web
@@ -98,16 +106,57 @@ npm run start-web
 Then open http://localhost:3000 in your browser to chat. The interactive menu
 includes options to start just the web server or start it alongside the CLI.
 You can also launch both together with the `--web` flag or choose "Start CLI and
-Web Interface" from the menu.
+Web Interface" from the menu. Use the new `--port` option to specify the web
+server port (defaults to `3000`). A "Start All" menu option starts the CLI, web
+interface, and GUI in one step. Additional flags let you control conversation
+history: `--history-path` sets the log directory, `--conversation-file` chooses
+the filename, and `--conversation-max` limits how many messages are retained.
 
-This command now starts the CLI interpreter immediately. If you prefer the
-previous interactive menu, run `npx cyrah --menu`. Use `npx cyrah --web` to
-start the web interface alongside the CLI.
+Running `npx cyrah` with no arguments now opens an interactive menu by default.
+Pass `--no-menu` (or set the `NO_MENU=true` environment variable) to jump
+straight into the CLI. Use `--web` to start the web interface alongside the CLI
+or choose "Start CLI and Web Interface" from the menu. The `--gui` flag opens
+the graphical interface on startup and `--auto` (or the new `cyrah-auto`
+command) launches the CLI, web interface, and GUI all at once. These flags can
+also be enabled through environment variables: set `START_WEB=true`,
+`START_GUI=true`, or `AUTO_START=true` to replicate the respective
+command-line options.
+Use `--version` to print the installed package version. Set
+`PRINT_VERSION=true` to automatically show the version on startup.
 
+The menu includes a **Play Spotify Track/Playlist** option that opens any
+provided URI using the new `playSpotify` tool. You can also trigger playback
+directly with the `--spotify` flag or by setting `SPOTIFY_URI` in the
+environment.
+There's also an **Open URL in Browser** option that launches any URL in your
+default browser via the `openUrl` tool. Trigger it with the `--open-url` flag or
+by setting `OPEN_URL`.
+There's also an **Open File or Folder** option that opens a specified path using
+the new `openPath` tool. The command validates that the path exists before
+attempting to launch it. Trigger this tool with the `--open-path` flag or by
+setting `OPEN_PATH`.
+There's also a **Send Email** menu option which uses the `sendEmail` tool. You
+may provide the recipient, subject, and message interactively or trigger it
+directly with the `--send-email` flag. The `EMAIL_TO`, `EMAIL_SUBJECT`, and
+`EMAIL_TEXT` variables can automate the process.
+There's also a **Check System Health** option that runs basic diagnostics via
+the `checkSystemHealth` tool. Trigger it with the `--check-health` flag or by
+setting `CHECK_HEALTH=true`.
+There's also a **Load Environment File** option to import variables from a
+`.env` file on demand.
+There's also **List Available Tools** to print all registered tool names with
+descriptions.
+There's also **List Supported Languages** to see which programming languages the interpreter can execute.
+There's also **List Environment Variables** to display relevant configuration values using the `listEnvironmentVariables` tool.
+
+You can list all available tools with `--list-tools` or by setting `LIST_TOOLS=true`.
+You can list supported languages with `--list-languages` or `LIST_LANGUAGES=true`.
+You can list relevant environment variables with `--list-env` or `LIST_ENV=true`.
 You can pass interpreter options directly on the command line or via
 environment variables. Use `--env KEY=VALUE` to set a variable for
 the current run, or choose **Set Environment Variables** in the interactive
-menu to review, update, or unset variables. A `--help` flag shows the available options.
+menu to review, update, or unset variables. You can also load many variables at once with
+`--env-file path/to/.env`. A `--help` flag shows the available options.
 
 ## Configuration via Environment Variables
 
@@ -140,6 +189,30 @@ The interpreter reads various settings from environment variables if correspondi
 - `UI_NAME` – Name of the UI to launch when running the `cyrah` command or when
   `DISPLAY_MODE` is set to `gui`.
 - `DISPLAY_MODE` – Set to `gui` to automatically open the UI when the interpreter starts.
+- `NO_MENU` – Set to `true` to skip the interactive menu when no arguments are provided.
+- `START_WEB` – Set to `true` to automatically launch the web interface.
+- `START_GUI` – Set to `true` to automatically open the graphical interface.
+- `AUTO_START` – Set to `true` to start the CLI, web interface, and GUI together.
+- `PORT` – Port used by the web interface when starting with `--web` or `START_WEB`.
+- `SPOTIFY_URI` – If set, automatically play this Spotify URI on startup or when using the menu option.
+- `OPEN_URL` – If set, automatically open this URL in the default browser on startup.
+- `OPEN_PATH` – If set, automatically open this file or folder on startup.
+- `EMAIL_HOST` – SMTP server host used by the `sendEmail` tool.
+- `EMAIL_PORT` – SMTP server port (defaults to 587 if not set).
+- `EMAIL_SECURE` – Set to `true` to use TLS/SSL for SMTP.
+- `EMAIL_USER` – SMTP username for authentication.
+- `EMAIL_PASS` – SMTP password for authentication.
+- `EMAIL_FROM` – Optional sender address for outgoing mail.
+- `EMAIL_TO` – Recipient address used when auto-sending email.
+- `EMAIL_SUBJECT` – Subject used when auto-sending email.
+- `EMAIL_TEXT` – Message body used when auto-sending email.
+- `CHECK_HEALTH` – Set to `true` to run system health checks on startup.
+These variables (EMAIL_HOST, EMAIL_USER, EMAIL_PASS) must be set for the email tool to work.
+- `LIST_TOOLS` – Set to `true` to print all available tools on startup.
+- `LIST_LANGUAGES` – Set to `true` to print supported languages on startup.
+- `LIST_ENV` – Set to `true` to print all relevant environment variables on startup.
+- `ENV_FILE` – Path to a `.env` file loaded on startup or with `--env-file`.
+- `PRINT_VERSION` – Set to `true` to print the package version on startup.
 
 Create a `.env` file with these values to avoid passing them as flags. You can
 also provide temporary overrides on the command line using `--env KEY=VALUE`.

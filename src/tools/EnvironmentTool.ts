@@ -1,6 +1,7 @@
 
 import { Tool } from "../core/types.js";
 import * as process from "process";
+import { RELEVANT_ENV_VARS } from "../envVars.js";
 
 export const getEnvironmentVariableTool: Tool = {
   type: "function",
@@ -77,4 +78,17 @@ export const unsetEnvironmentVariableTool: Tool = {
 export async function executeUnsetEnvironmentVariableTool(args: { name: string }): Promise<string> {
   delete process.env[args.name];
   return `Environment variable ${args.name} unset.`;
+}
+
+export const listEnvironmentVariablesTool: Tool = {
+  type: "function",
+  function: {
+    name: "listEnvironmentVariables",
+    description: "Lists relevant environment variables and their current values if set.",
+    parameters: { type: "object", properties: {} }
+  }
+};
+
+export async function executeListEnvironmentVariablesTool(): Promise<string> {
+  return RELEVANT_ENV_VARS.map(k => process.env[k] ? `${k}=${process.env[k]}` : k).join("\n");
 }

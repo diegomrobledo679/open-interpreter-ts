@@ -111,3 +111,39 @@ export async function executeLaunchVirtualTerminalTool(args: { terminalName: str
     });
   }
 }
+
+export const playSpotifyTool: Tool = {
+  type: "function",
+  function: {
+    name: "playSpotify",
+    description: "Opens a Spotify URI or URL in the default application.",
+    parameters: {
+      type: "object",
+      properties: {
+        uri: {
+          type: "string",
+          description: "Spotify URI or URL to open",
+        },
+      },
+      required: ["uri"],
+    },
+  },
+};
+
+export async function executePlaySpotifyTool(args: { uri: string }): Promise<string> {
+  const openCmd = os.platform() === 'win32'
+    ? `start "" "${args.uri}"`
+    : os.platform() === 'darwin'
+    ? `open "${args.uri}"`
+    : `xdg-open "${args.uri}"`;
+
+  return new Promise<string>((resolve) => {
+    exec(openCmd, (error) => {
+      if (error) {
+        resolve(`Failed to open Spotify URI: ${error.message}`);
+      } else {
+        resolve(`Opened Spotify URI ${args.uri}`);
+      }
+    });
+  });
+}

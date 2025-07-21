@@ -8,6 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import * as process from "process";
+import { RELEVANT_ENV_VARS } from "../envVars.js";
 export const getEnvironmentVariableTool = {
     type: "function",
     function: {
@@ -84,5 +85,18 @@ export function executeUnsetEnvironmentVariableTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
         delete process.env[args.name];
         return `Environment variable ${args.name} unset.`;
+    });
+}
+export const listEnvironmentVariablesTool = {
+    type: "function",
+    function: {
+        name: "listEnvironmentVariables",
+        description: "Lists relevant environment variables and their current values if set.",
+        parameters: { type: "object", properties: {} }
+    }
+};
+export function executeListEnvironmentVariablesTool() {
+    return __awaiter(this, void 0, void 0, function* () {
+        return RELEVANT_ENV_VARS.map(k => process.env[k] ? `${k}=${process.env[k]}` : k).join("\n");
     });
 }
