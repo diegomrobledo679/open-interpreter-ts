@@ -15,7 +15,7 @@ const RELEVANT_ENV_VARS = [
   'OPENAI_API_KEY', 'OLLAMA_API_KEY',
   'AUTO_RUN', 'LOOP', 'OFFLINE', 'VERBOSE', 'DEBUG',
   'SAFE_MODE', 'MAX_OUTPUT', 'DISPLAY_MODE', 'UI_NAME',
-  'NO_MENU', 'START_WEB', 'START_GUI', 'AUTO_START',
+  'NO_MENU', 'START_WEB', 'START_GUI', 'AUTO_START', 'PORT',
   'SPOTIFY_URI', 'LIST_TOOLS',
   'EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_SECURE',
   'EMAIL_USER', 'EMAIL_PASS', 'EMAIL_FROM',
@@ -46,7 +46,7 @@ async function manageEnvVariables(ask: (q: string) => Promise<string>): Promise<
   }
 }
 
-async function showMenu(): Promise<void> {
+async function showMenu(cliPort?: string): Promise<void> {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
   const ask = (query: string) => new Promise<string>((res) => rl.question(query, res));
@@ -71,11 +71,13 @@ async function showMenu(): Promise<void> {
       await main();
       return;
     } else if (choice === '2') {
+      if (cliPort) process.env.PORT = String(cliPort);
       await import('../server.js');
-      console.log('Web interface started. Open http://localhost:3000 in your browser.');
+      console.log(`Web interface started. Open http://localhost:${process.env.PORT || 3000} in your browser.`);
     } else if (choice === '3') {
+      if (cliPort) process.env.PORT = String(cliPort);
       await import('../server.js');
-      console.log('Web interface started. Open http://localhost:3000 in your browser.');
+      console.log(`Web interface started. Open http://localhost:${process.env.PORT || 3000} in your browser.`);
       rl.close();
       await main();
       return;
@@ -83,8 +85,9 @@ async function showMenu(): Promise<void> {
       const msg = await executeLaunchUITool({ uiName: process.env.UI_NAME || 'cyrah' });
       console.log(msg);
     } else if (choice === '5') {
+      if (cliPort) process.env.PORT = String(cliPort);
       await import('../server.js');
-      console.log('Web interface started. Open http://localhost:3000 in your browser.');
+      console.log(`Web interface started. Open http://localhost:${process.env.PORT || 3000} in your browser.`);
       process.env.DISPLAY_MODE = 'gui';
       rl.close();
       await main();
@@ -116,9 +119,19 @@ async function showMenu(): Promise<void> {
 
 async function run(): Promise<void> {
   const argv = minimist(process.argv.slice(2), {
-    string: ['env', 'spotify', 'send-email'],
+    string: ['env', 'spotify', 'send-email', 'port'],
     boolean: ['menu', 'help', 'web', 'gui', 'auto', 'list-tools'],
-    alias: { e: 'env', h: 'help', w: 'web', g: 'gui', a: 'auto', s: 'spotify', E: 'send-email', l: 'list-tools' }
+    alias: {
+      e: 'env',
+      h: 'help',
+      w: 'web',
+      g: 'gui',
+      a: 'auto',
+      s: 'spotify',
+      E: 'send-email',
+      l: 'list-tools',
+      p: 'port'
+    }
   });
 
   if (argv.help) {
@@ -132,6 +145,7 @@ Options:
   --auto, -a          Start CLI, web, and GUI automatically
   --spotify, -s URI   Play a Spotify URI or URL
   --send-email, -E STR Send an email (format: to;subject;text)
+  --port, -p NUM      Port for the web interface
   --env,  -e KEY=VAL  Set environment variable (repeatable)
   --help, -h          Show this help message
   --list-tools, -l    List all available tools and exit
@@ -154,6 +168,7 @@ Any other options are forwarded to the interpreter.`);
   const emailToEnv = process.env.EMAIL_TO;
   const emailSubjectEnv = process.env.EMAIL_SUBJECT;
   const emailTextEnv = process.env.EMAIL_TEXT;
+  const portEnv = process.env.PORT;
 
   const autoEnv = process.env.AUTO_START === 'true';
   const webEnv = process.env.START_WEB === 'true';
@@ -165,6 +180,9 @@ Any other options are forwarded to the interpreter.`);
   }
   if (!argv['send-email'] && emailToEnv && emailSubjectEnv && emailTextEnv) {
     argv['send-email'] = `${emailToEnv};${emailSubjectEnv};${emailTextEnv}`;
+  }
+  if (!argv.port && portEnv) {
+    argv.port = portEnv;
   }
 
   if (autoEnv) {
@@ -193,13 +211,14 @@ Any other options are forwarded to the interpreter.`);
   const showMenuFlag = argv.menu === true || (hasNoArgs && argv.menu !== false && !skipMenu);
 
   if (showMenuFlag) {
-    await showMenu();
+    await showMenu(argv.port ? String(argv.port) : undefined);
     return;
   }
 
   if (argv.web) {
+    if (argv.port) process.env.PORT = String(argv.port);
     await import('../server.js');
-    console.log('Web interface started. Open http://localhost:3000 in your browser.');
+    console.log(`Web interface started. Open http://localhost:${process.env.PORT || 3000} in your browser.`);
   }
 
   if (argv.spotify) {

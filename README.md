@@ -100,7 +100,8 @@ npm run start-web
 Then open http://localhost:3000 in your browser to chat. The interactive menu
 includes options to start just the web server or start it alongside the CLI.
 You can also launch both together with the `--web` flag or choose "Start CLI and
-Web Interface" from the menu. A "Start All" menu option starts the CLI, web
+Web Interface" from the menu. Use the new `--port` option to specify the web
+server port (defaults to `3000`). A "Start All" menu option starts the CLI, web
 interface, and GUI in one step.
 
 Running `npx cyrah` with no arguments now opens an interactive menu by default.
@@ -165,6 +166,7 @@ The interpreter reads various settings from environment variables if correspondi
 - `START_WEB` – Set to `true` to automatically launch the web interface.
 - `START_GUI` – Set to `true` to automatically open the graphical interface.
 - `AUTO_START` – Set to `true` to start the CLI, web interface, and GUI together.
+- `PORT` – Port used by the web interface when starting with `--web` or `START_WEB`.
 - `SPOTIFY_URI` – If set, automatically play this Spotify URI on startup or when using the menu option.
 - `EMAIL_HOST` – SMTP server host used by the `sendEmail` tool.
 - `EMAIL_PORT` – SMTP server port (defaults to 587 if not set).
