@@ -122,6 +122,7 @@ may provide the recipient, subject, and message interactively or trigger it
 directly with the `--send-email` flag. The `EMAIL_TO`, `EMAIL_SUBJECT`, and
 `EMAIL_TEXT` variables can automate the process.
 
+You can list all available tools with `--list-tools` or by setting `LIST_TOOLS=true`.
 You can pass interpreter options directly on the command line or via
 environment variables. Use `--env KEY=VALUE` to set a variable for
 the current run, or choose **Set Environment Variables** in the interactive
@@ -172,6 +173,8 @@ The interpreter reads various settings from environment variables if correspondi
 - `EMAIL_TO` – Recipient address used when auto-sending email.
 - `EMAIL_SUBJECT` – Subject used when auto-sending email.
 - `EMAIL_TEXT` – Message body used when auto-sending email.
+These variables (EMAIL_HOST, EMAIL_USER, EMAIL_PASS) must be set for the email tool to work.
+- `LIST_TOOLS` – Set to `true` to print all available tools on startup.
 
 Create a `.env` file with these values to avoid passing them as flags. You can
 also provide temporary overrides on the command line using `--env KEY=VALUE`.

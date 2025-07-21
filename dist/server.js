@@ -14,8 +14,9 @@ import path from 'path';
 import dotenv from 'dotenv';
 import { Interpreter } from './core/Interpreter.js';
 import { config } from './config.js';
+import { registerAllTools } from './tools/register.js';
 dotenv.config();
-function createInterpreter() {
+export function createInterpreter() {
     var _a;
     const envBool = (value, fallback) => {
         if (value === undefined)
@@ -55,6 +56,7 @@ function createInterpreter() {
     return new Interpreter(options);
 }
 const interpreter = createInterpreter();
+registerAllTools(interpreter);
 const app = express();
 const server = http.createServer(app);
 const io = new SocketIOServer(server);

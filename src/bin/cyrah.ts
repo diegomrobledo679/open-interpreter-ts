@@ -4,6 +4,8 @@ import readline from 'readline';
 import minimist from 'minimist';
 import { executeLaunchUITool, executePlaySpotifyTool } from '../tools/SystemIntegrationTool.js';
 import { executeSendEmailTool } from '../tools/EmailTool.js';
+import { Interpreter } from "../core/Interpreter.js";
+import { registerAllTools } from "../tools/register.js";
 import { main } from '../main.js';
 
 dotenv.config();
@@ -103,8 +105,8 @@ async function showMenu(): Promise<void> {
 async function run(): Promise<void> {
   const argv = minimist(process.argv.slice(2), {
     string: ['env', 'spotify', 'send-email'],
-    boolean: ['menu', 'help', 'web', 'noMenu', 'gui', 'auto'],
-    alias: { e: 'env', h: 'help', w: 'web', g: 'gui', a: 'auto', s: 'spotify', E: 'send-email' }
+    boolean: ['menu', 'help', 'web', 'noMenu', 'gui', 'auto', 'list-tools'],
+    alias: { e: 'env', h: 'help', w: 'web', g: 'gui', a: 'auto', s: 'spotify', E: 'send-email', l: 'list-tools' }
   });
 
   if (argv.help) {
@@ -120,6 +122,7 @@ Options:
   --send-email, -E STR Send an email (format: to;subject;text)
   --env,  -e KEY=VAL  Set environment variable (repeatable)
   --help, -h          Show this help message
+  --list-tools, -l    List all available tools and exit
 
 Any other options are forwarded to the interpreter.`);
     return;
@@ -144,6 +147,7 @@ Any other options are forwarded to the interpreter.`);
   const webEnv = process.env.START_WEB === 'true';
   const guiEnv = process.env.START_GUI === 'true';
 
+  const listToolsEnv = process.env.LIST_TOOLS === "true";
   if (!argv.spotify && spotifyEnv) {
     argv.spotify = spotifyEnv;
   }
@@ -163,6 +167,9 @@ Any other options are forwarded to the interpreter.`);
 
   if (argv.gui || argv.auto || guiEnv || autoEnv) {
     process.env.DISPLAY_MODE = 'gui';
+  }
+  if (!argv["list-tools"] && listToolsEnv) {
+    argv["list-tools"] = true;
   }
 
   if (argv.auto || autoEnv) {
@@ -195,6 +202,12 @@ Any other options are forwarded to the interpreter.`);
     } else {
       console.error('Invalid --send-email format. Use "to;subject;text"');
     }
+  }
+  if (argv["list-tools"]) {
+    const interpreter = new Interpreter();
+    registerAllTools(interpreter);
+    interpreter.tools.forEach(t => console.log(`${t.function.name} - ${t.function.description}`));
+    return;
   }
 
   await main();

@@ -22,6 +22,9 @@ export async function executeSendEmailTool(args: { to: string; subject: string; 
   if (process.env.NODE_ENV === 'test' || process.env.TEST_MODE === 'true') {
     return `Email sent to ${args.to}`;
   }
+  if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    throw new Error('Missing email configuration. Set EMAIL_HOST, EMAIL_USER, and EMAIL_PASS.');
+  }
   const transport = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: Number(process.env.EMAIL_PORT || 587),
