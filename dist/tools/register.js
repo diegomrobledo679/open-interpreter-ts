@@ -22,7 +22,7 @@ import { terminateProcessTool, executeTerminateProcessTool, startProcessTool, ex
 import { npmInstallTool, executeNpmInstallTool, pipInstallTool, executePipInstallTool, aptInstallTool, executeAptInstallTool, brewInstallTool, executeBrewInstallTool, chocoInstallTool, executeChocoInstallTool, checkMissingDependenciesTool, executeCheckMissingDependenciesTool, listInstalledPackagesTool, executeListInstalledPackagesTool, npmUninstallTool, executeNpmUninstallTool, pipUninstallTool, executePipUninstallTool, aptRemoveTool, executeAptRemoveTool, brewUninstallTool, executeBrewUninstallTool, chocoUninstallTool, executeChocoUninstallTool, npmUpdateTool, executeNpmUpdateTool, pipUpdateTool, executePipUpdateTool, aptUpdateTool, executeAptUpdateTool, brewUpdateTool, executeBrewUpdateTool, chocoUpdateTool, executeChocoUpdateTool } from "./PackageManagerTool.js";
 import { zipCompressTool, executeZipCompressTool, zipDecompressTool, executeZipDecompressTool, tarCompressTool, executeTarCompressTool, tarDecompressTool, executeTarDecompressTool } from "./CompressionTool.js";
 import { generateBoilerplateCodeTool, executeGenerateBoilerplateCodeTool } from "./CodeGenerationTool.js";
-import { getEnvironmentVariableTool, setEnvironmentVariableTool, unsetEnvironmentVariableTool, executeGetEnvironmentVariableTool, executeSetEnvironmentVariableTool, executeUnsetEnvironmentVariableTool } from "./EnvironmentTool.js";
+import { getEnvironmentVariableTool, setEnvironmentVariableTool, unsetEnvironmentVariableTool, listEnvironmentVariablesTool, executeGetEnvironmentVariableTool, executeSetEnvironmentVariableTool, executeUnsetEnvironmentVariableTool, executeListEnvironmentVariablesTool } from "./EnvironmentTool.js";
 import { changeFilePermissionsTool, executeChangeFilePermissionsTool } from "./FilePermissionsTool.js";
 import { createSymbolicLinkTool, readSymbolicLinkTool, deleteSymbolicLinkTool, executeCreateSymbolicLinkTool, executeReadSymbolicLinkTool, executeDeleteSymbolicLinkTool } from "./SymbolicLinkTool.js";
 import { createScheduledTaskTool, listScheduledTasksTool, deleteScheduledTaskTool, executeCreateScheduledTaskTool, executeListScheduledTasksTool, executeDeleteScheduledTaskTool } from "./SchedulerTool.js";
@@ -136,6 +136,7 @@ export function registerAllTools(interpreter) {
     interpreter.registerTool(getEnvironmentVariableTool, executeGetEnvironmentVariableTool);
     interpreter.registerTool(setEnvironmentVariableTool, executeSetEnvironmentVariableTool);
     interpreter.registerTool(unsetEnvironmentVariableTool, executeUnsetEnvironmentVariableTool);
+    interpreter.registerTool(listEnvironmentVariablesTool, executeListEnvironmentVariablesTool);
     interpreter.registerTool(changeFilePermissionsTool, executeChangeFilePermissionsTool);
     interpreter.registerTool(createSymbolicLinkTool, executeCreateSymbolicLinkTool);
     interpreter.registerTool(readSymbolicLinkTool, executeReadSymbolicLinkTool);

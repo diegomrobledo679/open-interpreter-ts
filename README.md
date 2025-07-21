@@ -141,6 +141,7 @@ There's also a **Load Environment File** option to import variables from a
 There's also **List Available Tools** to print all registered tool names with
 descriptions.
 There's also **List Supported Languages** to see which programming languages the interpreter can execute.
+There's also **List Environment Variables** to display relevant configuration values using the `listEnvironmentVariables` tool.
 
 You can list all available tools with `--list-tools` or by setting `LIST_TOOLS=true`.
 You can list supported languages with `--list-languages` or `LIST_LANGUAGES=true`.

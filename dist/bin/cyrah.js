@@ -22,21 +22,8 @@ import { executeListLanguagesTool } from '../tools/LanguageTool.js';
 import { Interpreter } from "../core/Interpreter.js";
 import { registerAllTools } from "../tools/register.js";
 import { main } from '../main.js';
+import { RELEVANT_ENV_VARS } from '../envVars.js';
 dotenv.config();
-const RELEVANT_ENV_VARS = [
-    'LLM_PROVIDER', 'LLM_MODEL', 'LLM_API_KEY', 'LLM_BASE_URL',
-    'OPENAI_API_KEY', 'OLLAMA_API_KEY',
-    'AUTO_RUN', 'LOOP', 'OFFLINE', 'VERBOSE', 'DEBUG',
-    'SAFE_MODE', 'MAX_OUTPUT', 'DISPLAY_MODE', 'UI_NAME',
-    'NO_MENU', 'START_WEB', 'START_GUI', 'AUTO_START', 'PORT',
-    'SPOTIFY_URI', 'OPEN_URL', 'LIST_TOOLS',
-    'LIST_LANGUAGES', 'OPEN_PATH', 'LIST_ENV',
-    'EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_SECURE',
-    'EMAIL_USER', 'EMAIL_PASS', 'EMAIL_FROM',
-    'EMAIL_TO', 'EMAIL_SUBJECT', 'EMAIL_TEXT',
-    'ENV_FILE',
-    'PRINT_VERSION'
-];
 function manageEnvVariables(ask) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('\nCurrent environment variables:');
