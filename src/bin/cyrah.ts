@@ -10,6 +10,7 @@ import { executeOpenUrlTool } from '../tools/OpenUrlTool.js';
 import { executeOpenPathTool } from '../tools/OpenPathTool.js';
 import { executeSendEmailTool } from '../tools/EmailTool.js';
 import { executeListLanguagesTool } from '../tools/LanguageTool.js';
+import { executeCheckSystemHealthTool } from '../tools/SystemDiagnosticsTool.js';
 import { Interpreter } from "../core/Interpreter.js";
 import { registerAllTools } from "../tools/register.js";
 import { main } from '../main.js';
@@ -59,10 +60,11 @@ async function showMenu(cliPort?: string): Promise<void> {
     console.log('9) Open File or Folder');
     console.log('10) Play Spotify Track/Playlist');
     console.log('11) Send Email');
-    console.log('12) List Available Tools');
-    console.log('13) List Supported Languages');
-    console.log('14) List Environment Variables');
-    console.log('15) Exit');
+    console.log('12) Check System Health');
+    console.log('13) List Available Tools');
+    console.log('14) List Supported Languages');
+    console.log('15) List Environment Variables');
+    console.log('16) Exit');
 
     const choice = (await ask('Choose an option: ')).trim();
 
@@ -137,15 +139,18 @@ async function showMenu(cliPort?: string): Promise<void> {
         console.error(err.message);
       }
     } else if (choice === '12') {
+      const msg = await executeCheckSystemHealthTool();
+      console.log(msg);
+    } else if (choice === '13') {
       const interpreter = new Interpreter();
       registerAllTools(interpreter);
       interpreter.tools.forEach(t =>
         console.log(`${t.function.name} - ${t.function.description}`)
       );
-    } else if (choice === '13') {
+    } else if (choice === '14') {
       const langs = await executeListLanguagesTool();
       console.log(langs);
-    } else if (choice === '14') {
+    } else if (choice === '15') {
       for (const key of RELEVANT_ENV_VARS) {
         if (process.env[key]) {
           console.log(`${key}=${process.env[key]}`);
@@ -153,7 +158,7 @@ async function showMenu(cliPort?: string): Promise<void> {
           console.log(key);
         }
       }
-    } else if (choice === '15') {
+    } else if (choice === '16') {
       rl.close();
       return;
     }
@@ -163,7 +168,7 @@ async function showMenu(cliPort?: string): Promise<void> {
 export async function run(): Promise<void> {
   const argv = minimist(process.argv.slice(2), {
     string: ['env', 'spotify', 'send-email', 'open-url', 'open-path', 'port', 'env-file'],
-    boolean: ['menu', 'help', 'web', 'gui', 'auto', 'list-tools', 'list-languages', 'version', 'list-env'],
+    boolean: ['menu', 'help', 'web', 'gui', 'auto', 'list-tools', 'list-languages', 'version', 'list-env', 'check-health'],
     alias: {
       e: 'env',
       h: 'help',
@@ -179,7 +184,8 @@ export async function run(): Promise<void> {
       p: 'port',
       f: 'env-file',
       v: 'version',
-      n: 'list-env'
+      n: 'list-env',
+      H: 'check-health'
     }
   });
 
@@ -212,6 +218,7 @@ Options:
   --list-tools, -l    List all available tools and exit
   --list-languages, -L List supported programming languages and exit
   --list-env, -n      List relevant environment variables and exit
+  --check-health, -H  Run system health checks and exit
   --version, -v       Show CLI version and exit
 
 Any other options are forwarded to the interpreter.`);
@@ -251,6 +258,7 @@ Any other options are forwarded to the interpreter.`);
   const listToolsEnv = process.env.LIST_TOOLS === "true";
   const listLanguagesEnv = process.env.LIST_LANGUAGES === "true";
   const listEnvEnv = process.env.LIST_ENV === "true";
+  const checkHealthEnv = process.env.CHECK_HEALTH === "true";
   if (!argv.version && printVersionEnv) {
     argv.version = true;
   }
@@ -291,6 +299,9 @@ Any other options are forwarded to the interpreter.`);
   }
   if (!argv["list-env"] && listEnvEnv) {
     argv["list-env"] = true;
+  }
+  if (!argv["check-health"] && checkHealthEnv) {
+    argv["check-health"] = true;
   }
 
   if (argv.auto || autoEnv) {
@@ -355,6 +366,11 @@ Any other options are forwarded to the interpreter.`);
         console.log(key);
       }
     }
+    return;
+  }
+  if (argv["check-health"]) {
+    const msg = await executeCheckSystemHealthTool();
+    console.log(msg);
     return;
   }
 

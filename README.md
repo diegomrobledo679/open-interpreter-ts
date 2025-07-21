@@ -136,6 +136,9 @@ There's also a **Send Email** menu option which uses the `sendEmail` tool. You
 may provide the recipient, subject, and message interactively or trigger it
 directly with the `--send-email` flag. The `EMAIL_TO`, `EMAIL_SUBJECT`, and
 `EMAIL_TEXT` variables can automate the process.
+There's also a **Check System Health** option that runs basic diagnostics via
+the `checkSystemHealth` tool. Trigger it with the `--check-health` flag or by
+setting `CHECK_HEALTH=true`.
 There's also a **Load Environment File** option to import variables from a
 `.env` file on demand.
 There's also **List Available Tools** to print all registered tool names with
@@ -200,6 +203,7 @@ The interpreter reads various settings from environment variables if correspondi
 - `EMAIL_TO` – Recipient address used when auto-sending email.
 - `EMAIL_SUBJECT` – Subject used when auto-sending email.
 - `EMAIL_TEXT` – Message body used when auto-sending email.
+- `CHECK_HEALTH` – Set to `true` to run system health checks on startup.
 These variables (EMAIL_HOST, EMAIL_USER, EMAIL_PASS) must be set for the email tool to work.
 - `LIST_TOOLS` – Set to `true` to print all available tools on startup.
 - `LIST_LANGUAGES` – Set to `true` to print supported languages on startup.
