@@ -30,7 +30,7 @@ const RELEVANT_ENV_VARS = [
     'SAFE_MODE', 'MAX_OUTPUT', 'DISPLAY_MODE', 'UI_NAME',
     'NO_MENU', 'START_WEB', 'START_GUI', 'AUTO_START', 'PORT',
     'SPOTIFY_URI', 'OPEN_URL', 'LIST_TOOLS',
-    'LIST_LANGUAGES', 'OPEN_PATH',
+    'LIST_LANGUAGES', 'OPEN_PATH', 'LIST_ENV',
     'EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_SECURE',
     'EMAIL_USER', 'EMAIL_PASS', 'EMAIL_FROM',
     'EMAIL_TO', 'EMAIL_SUBJECT', 'EMAIL_TEXT',
@@ -82,7 +82,8 @@ function showMenu(cliPort) {
             console.log('11) Send Email');
             console.log('12) List Available Tools');
             console.log('13) List Supported Languages');
-            console.log('14) Exit');
+            console.log('14) List Environment Variables');
+            console.log('15) Exit');
             const choice = (yield ask('Choose an option: ')).trim();
             if (choice === '1') {
                 rl.close();
@@ -183,6 +184,16 @@ function showMenu(cliPort) {
                 console.log(langs);
             }
             else if (choice === '14') {
+                for (const key of RELEVANT_ENV_VARS) {
+                    if (process.env[key]) {
+                        console.log(`${key}=${process.env[key]}`);
+                    }
+                    else {
+                        console.log(key);
+                    }
+                }
+            }
+            else if (choice === '15') {
                 rl.close();
                 return;
             }
@@ -193,7 +204,7 @@ export function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const argv = minimist(process.argv.slice(2), {
             string: ['env', 'spotify', 'send-email', 'open-url', 'open-path', 'port', 'env-file'],
-            boolean: ['menu', 'help', 'web', 'gui', 'auto', 'list-tools', 'list-languages', 'version'],
+            boolean: ['menu', 'help', 'web', 'gui', 'auto', 'list-tools', 'list-languages', 'version', 'list-env'],
             alias: {
                 e: 'env',
                 h: 'help',
@@ -208,7 +219,8 @@ export function run() {
                 L: 'list-languages',
                 p: 'port',
                 f: 'env-file',
-                v: 'version'
+                v: 'version',
+                n: 'list-env'
             }
         });
         const envFile = argv['env-file'] || process.env.ENV_FILE;
@@ -239,6 +251,7 @@ Options:
   --help, -h          Show this help message
   --list-tools, -l    List all available tools and exit
   --list-languages, -L List supported programming languages and exit
+  --list-env, -n      List relevant environment variables and exit
   --version, -v       Show CLI version and exit
 
 Any other options are forwarded to the interpreter.`);
@@ -272,6 +285,7 @@ Any other options are forwarded to the interpreter.`);
         const guiEnv = process.env.START_GUI === 'true';
         const listToolsEnv = process.env.LIST_TOOLS === "true";
         const listLanguagesEnv = process.env.LIST_LANGUAGES === "true";
+        const listEnvEnv = process.env.LIST_ENV === "true";
         if (!argv.version && printVersionEnv) {
             argv.version = true;
         }
@@ -307,6 +321,9 @@ Any other options are forwarded to the interpreter.`);
         }
         if (!argv["list-languages"] && listLanguagesEnv) {
             argv["list-languages"] = true;
+        }
+        if (!argv["list-env"] && listEnvEnv) {
+            argv["list-env"] = true;
         }
         if (argv.auto || autoEnv) {
             argv.web = true;
@@ -355,6 +372,17 @@ Any other options are forwarded to the interpreter.`);
         if (argv["list-languages"]) {
             const langs = yield executeListLanguagesTool();
             console.log(langs);
+            return;
+        }
+        if (argv["list-env"]) {
+            for (const key of RELEVANT_ENV_VARS) {
+                if (process.env[key]) {
+                    console.log(`${key}=${process.env[key]}`);
+                }
+                else {
+                    console.log(key);
+                }
+            }
             return;
         }
         yield main();

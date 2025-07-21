@@ -144,6 +144,7 @@ There's also **List Supported Languages** to see which programming languages the
 
 You can list all available tools with `--list-tools` or by setting `LIST_TOOLS=true`.
 You can list supported languages with `--list-languages` or `LIST_LANGUAGES=true`.
+You can list relevant environment variables with `--list-env` or `LIST_ENV=true`.
 You can pass interpreter options directly on the command line or via
 environment variables. Use `--env KEY=VALUE` to set a variable for
 the current run, or choose **Set Environment Variables** in the interactive
@@ -201,6 +202,7 @@ The interpreter reads various settings from environment variables if correspondi
 These variables (EMAIL_HOST, EMAIL_USER, EMAIL_PASS) must be set for the email tool to work.
 - `LIST_TOOLS` – Set to `true` to print all available tools on startup.
 - `LIST_LANGUAGES` – Set to `true` to print supported languages on startup.
+- `LIST_ENV` – Set to `true` to print all relevant environment variables on startup.
 - `ENV_FILE` – Path to a `.env` file loaded on startup or with `--env-file`.
 - `PRINT_VERSION` – Set to `true` to print the package version on startup.
 
