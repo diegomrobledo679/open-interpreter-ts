@@ -117,3 +117,39 @@ export function executeLaunchVirtualTerminalTool(args) {
         }
     });
 }
+export const playSpotifyTool = {
+    type: "function",
+    function: {
+        name: "playSpotify",
+        description: "Opens a Spotify URI or URL in the default application.",
+        parameters: {
+            type: "object",
+            properties: {
+                uri: {
+                    type: "string",
+                    description: "Spotify URI or URL to open",
+                },
+            },
+            required: ["uri"],
+        },
+    },
+};
+export function executePlaySpotifyTool(args) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const openCmd = os.platform() === 'win32'
+            ? `start "" "${args.uri}"`
+            : os.platform() === 'darwin'
+                ? `open "${args.uri}"`
+                : `xdg-open "${args.uri}"`;
+        return new Promise((resolve) => {
+            exec(openCmd, (error) => {
+                if (error) {
+                    resolve(`Failed to open Spotify URI: ${error.message}`);
+                }
+                else {
+                    resolve(`Opened Spotify URI ${args.uri}`);
+                }
+            });
+        });
+    });
+}
