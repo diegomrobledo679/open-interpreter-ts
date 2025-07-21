@@ -112,6 +112,11 @@ also be enabled through environment variables: set `START_WEB=true`,
 `START_GUI=true`, or `AUTO_START=true` to replicate the respective
 command-line options.
 
+The menu includes a **Play Spotify Track/Playlist** option that opens any
+provided URI using the new `playSpotify` tool. You can also trigger playback
+directly with the `--spotify` flag or by setting `SPOTIFY_URI` in the
+environment.
+
 You can pass interpreter options directly on the command line or via
 environment variables. Use `--env KEY=VALUE` to set a variable for
 the current run, or choose **Set Environment Variables** in the interactive
@@ -152,6 +157,7 @@ The interpreter reads various settings from environment variables if correspondi
 - `START_WEB` – Set to `true` to automatically launch the web interface.
 - `START_GUI` – Set to `true` to automatically open the graphical interface.
 - `AUTO_START` – Set to `true` to start the CLI, web interface, and GUI together.
+- `SPOTIFY_URI` – If set, automatically play this Spotify URI on startup or when using the menu option.
 
 Create a `.env` file with these values to avoid passing them as flags. You can
 also provide temporary overrides on the command line using `--env KEY=VALUE`.

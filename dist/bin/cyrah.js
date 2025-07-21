@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import dotenv from 'dotenv';
 import readline from 'readline';
 import minimist from 'minimist';
-import { executeLaunchUITool } from '../tools/SystemIntegrationTool.js';
+import { executeLaunchUITool, executePlaySpotifyTool } from '../tools/SystemIntegrationTool.js';
 import { main } from '../main.js';
 dotenv.config();
 const RELEVANT_ENV_VARS = [
@@ -58,7 +58,8 @@ function showMenu() {
             console.log('4) Launch UI');
             console.log('5) Start All (CLI, Web, UI)');
             console.log('6) Set Environment Variables');
-            console.log('7) Exit');
+            console.log('7) Play Spotify Track/Playlist');
+            console.log('8) Exit');
             const choice = (yield ask('Choose an option: ')).trim();
             if (choice === '1') {
                 rl.close();
@@ -92,6 +93,11 @@ function showMenu() {
                 yield manageEnvVariables(ask);
             }
             else if (choice === '7') {
+                const uri = yield ask('Enter Spotify URI or URL: ');
+                const msg = yield executePlaySpotifyTool({ uri });
+                console.log(msg);
+            }
+            else if (choice === '8') {
                 rl.close();
                 return;
             }
@@ -101,9 +107,9 @@ function showMenu() {
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const argv = minimist(process.argv.slice(2), {
-            string: ['env'],
+            string: ['env', 'spotify'],
             boolean: ['menu', 'help', 'web', 'noMenu', 'gui', 'auto'],
-            alias: { e: 'env', h: 'help', w: 'web', g: 'gui', a: 'auto' }
+            alias: { e: 'env', h: 'help', w: 'web', g: 'gui', a: 'auto', s: 'spotify' }
         });
         if (argv.help) {
             console.log(`Usage: cyrah [options]
@@ -114,6 +120,7 @@ Options:
   --gui,  -g          Open the graphical interface on start
   --no-menu           Skip automatic menu when no arguments are passed
   --auto, -a          Start CLI, web, and GUI automatically
+  --spotify, -s URI   Play a Spotify URI or URL
   --env,  -e KEY=VAL  Set environment variable (repeatable)
   --help, -h          Show this help message
 
@@ -129,9 +136,13 @@ Any other options are forwarded to the interpreter.`);
                 }
             }
         }
+        const spotifyEnv = process.env.SPOTIFY_URI;
         const autoEnv = process.env.AUTO_START === 'true';
         const webEnv = process.env.START_WEB === 'true';
         const guiEnv = process.env.START_GUI === 'true';
+        if (!argv.spotify && spotifyEnv) {
+            argv.spotify = spotifyEnv;
+        }
         if (autoEnv) {
             argv.auto = true;
         }
@@ -156,6 +167,10 @@ Any other options are forwarded to the interpreter.`);
         if (argv.web) {
             yield import('../server.js');
             console.log('Web interface started. Open http://localhost:3000 in your browser.');
+        }
+        if (argv.spotify) {
+            const msg = yield executePlaySpotifyTool({ uri: argv.spotify });
+            console.log(msg);
         }
         yield main();
     });

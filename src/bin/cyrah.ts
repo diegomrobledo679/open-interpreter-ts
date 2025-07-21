@@ -2,7 +2,7 @@
 import dotenv from 'dotenv';
 import readline from 'readline';
 import minimist from 'minimist';
-import { executeLaunchUITool } from '../tools/SystemIntegrationTool.js';
+import { executeLaunchUITool, executePlaySpotifyTool } from '../tools/SystemIntegrationTool.js';
 import { main } from '../main.js';
 
 dotenv.config();
@@ -51,7 +51,8 @@ async function showMenu(): Promise<void> {
     console.log('4) Launch UI');
     console.log('5) Start All (CLI, Web, UI)');
     console.log('6) Set Environment Variables');
-    console.log('7) Exit');
+    console.log('7) Play Spotify Track/Playlist');
+    console.log('8) Exit');
 
     const choice = (await ask('Choose an option: ')).trim();
 
@@ -81,6 +82,10 @@ async function showMenu(): Promise<void> {
     } else if (choice === '6') {
       await manageEnvVariables(ask);
     } else if (choice === '7') {
+      const uri = await ask('Enter Spotify URI or URL: ');
+      const msg = await executePlaySpotifyTool({ uri });
+      console.log(msg);
+    } else if (choice === '8') {
       rl.close();
       return;
     }
@@ -89,9 +94,9 @@ async function showMenu(): Promise<void> {
 
 async function run(): Promise<void> {
   const argv = minimist(process.argv.slice(2), {
-    string: ['env'],
+    string: ['env', 'spotify'],
     boolean: ['menu', 'help', 'web', 'noMenu', 'gui', 'auto'],
-    alias: { e: 'env', h: 'help', w: 'web', g: 'gui', a: 'auto' }
+    alias: { e: 'env', h: 'help', w: 'web', g: 'gui', a: 'auto', s: 'spotify' }
   });
 
   if (argv.help) {
@@ -103,6 +108,7 @@ Options:
   --gui,  -g          Open the graphical interface on start
   --no-menu           Skip automatic menu when no arguments are passed
   --auto, -a          Start CLI, web, and GUI automatically
+  --spotify, -s URI   Play a Spotify URI or URL
   --env,  -e KEY=VAL  Set environment variable (repeatable)
   --help, -h          Show this help message
 
@@ -120,9 +126,15 @@ Any other options are forwarded to the interpreter.`);
     }
   }
 
+  const spotifyEnv = process.env.SPOTIFY_URI;
+
   const autoEnv = process.env.AUTO_START === 'true';
   const webEnv = process.env.START_WEB === 'true';
   const guiEnv = process.env.START_GUI === 'true';
+
+  if (!argv.spotify && spotifyEnv) {
+    argv.spotify = spotifyEnv;
+  }
 
   if (autoEnv) {
     argv.auto = true;
@@ -153,6 +165,11 @@ Any other options are forwarded to the interpreter.`);
   if (argv.web) {
     await import('../server.js');
     console.log('Web interface started. Open http://localhost:3000 in your browser.');
+  }
+
+  if (argv.spotify) {
+    const msg = await executePlaySpotifyTool({ uri: argv.spotify });
+    console.log(msg);
   }
 
   await main();
