@@ -7,6 +7,11 @@ describe('Llm', () => {
     expect(interpreter.llm).toBeInstanceOf(Llm);
   });
 
+  it('initializes with g4f provider without API key', () => {
+    const interpreter = new Interpreter({ llmProvider: 'g4f' });
+    expect(interpreter.llm).toBeInstanceOf(Llm);
+  });
+
   it('throws when provider is openai and no API key provided', () => {
     const original = process.env.OPENAI_API_KEY;
     delete process.env.OPENAI_API_KEY;

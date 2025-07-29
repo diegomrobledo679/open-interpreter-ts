@@ -162,7 +162,7 @@ menu to review, update, or unset variables. You can also load many variables at 
 
 The interpreter reads various settings from environment variables if corresponding CLI options are omitted. Useful variables include:
 
-- `LLM_PROVIDER` – Provider name like `openai` or `ollama`.
+- `LLM_PROVIDER` – Provider name like `openai`, `ollama`, or `g4f`.
 - `LLM_MODEL` – Model identifier to use.
 - `LLM_API_KEY` – API key for the provider.
 - `LLM_BASE_URL` – Base URL for API requests.
@@ -173,6 +173,8 @@ The interpreter reads various settings from environment variables if correspondi
 - When using the `ollama` provider an API key is not required. If none is
   supplied a dummy value is used so the client library can operate against a
   local Ollama instance.
+- When using the `g4f` provider an API key is not required as the library works
+  without credentials.
 - `LLM_TEMPERATURE` – Sampling temperature for responses.
 - `LLM_MAX_TOKENS` – Maximum tokens to request from the model.
 - `AUTO_RUN` – Set to `true` or `false` to control automatic execution of code blocks.
