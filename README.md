@@ -170,6 +170,9 @@ The interpreter reads various settings from environment variables if correspondi
 - `OLLAMA_BASE_URL` – Override the default Ollama API URL when using the `ollama` provider.
 - `OPENAI_API_KEY` – API key specifically for OpenAI.
 - `OLLAMA_API_KEY` – API key specifically for Ollama if required.
+- When using the `ollama` provider an API key is not required. If none is
+  supplied a dummy value is used so the client library can operate against a
+  local Ollama instance.
 - `LLM_TEMPERATURE` – Sampling temperature for responses.
 - `LLM_MAX_TOKENS` – Maximum tokens to request from the model.
 - `AUTO_RUN` – Set to `true` or `false` to control automatic execution of code blocks.
