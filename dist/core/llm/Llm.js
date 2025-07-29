@@ -12,6 +12,7 @@ import { logger } from "../../utils/logger.js";
 import { assert } from "console";
 import { Role, MessageType } from "../types.js";
 import OpenAI from 'openai';
+import { G4F } from 'g4f';
 export class Llm {
     constructor(interpreter, options) {
         this.temperature = 0;
@@ -24,20 +25,35 @@ export class Llm {
         var _a, _b;
         this.llmProvider = options.llmProvider || process.env.LLM_PROVIDER || 'openai';
         this.model = options.llmModel || process.env.LLM_MODEL || Models.GPT_4O;
-        this.llmApiKey = options.llmApiKey || process.env.LLM_API_KEY || (options.llmProvider === 'ollama' ? process.env.OLLAMA_API_KEY : process.env.OPENAI_API_KEY);
+        this.llmApiKey =
+            options.llmApiKey ||
+                process.env.LLM_API_KEY ||
+                (this.llmProvider === 'ollama' ? process.env.OLLAMA_API_KEY : process.env.OPENAI_API_KEY);
         this.llmBaseUrl = options.llmBaseUrl || process.env.LLM_BASE_URL;
         this.temperature = (_a = options.llmTemperature) !== null && _a !== void 0 ? _a : (process.env.LLM_TEMPERATURE ? parseFloat(process.env.LLM_TEMPERATURE) : this.temperature);
         this.maxTokens = (_b = options.llmMaxTokens) !== null && _b !== void 0 ? _b : (process.env.LLM_MAX_TOKENS ? parseInt(process.env.LLM_MAX_TOKENS, 10) : this.maxTokens);
-        if (this.llmProvider === 'ollama') {
+        if (this.llmProvider === 'g4f') {
+            this.g4f = new G4F();
+        }
+        else if (this.llmProvider === 'ollama') {
             this.llmBaseUrl = this.llmBaseUrl || process.env.OLLAMA_BASE_URL || 'http://localhost:11434/v1';
+            if (!this.llmApiKey) {
+                // OpenAI client requires a non-empty apiKey, but Ollama does not use it
+                this.llmApiKey = 'none';
+            }
         }
         else if (this.llmProvider === 'openai') {
             this.llmBaseUrl = this.llmBaseUrl || process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
+            if (!this.llmApiKey) {
+                throw new Error('No API key provided for OpenAI. Set LLM_API_KEY or OPENAI_API_KEY.');
+            }
         }
-        this.openai = new OpenAI({
-            apiKey: this.llmApiKey,
-            baseURL: this.llmBaseUrl,
-        });
+        if (this.llmProvider !== 'g4f') {
+            this.openai = new OpenAI({
+                apiKey: this.llmApiKey,
+                baseURL: this.llmBaseUrl,
+            });
+        }
     }
     run(messages, tools) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -52,12 +68,17 @@ export class Llm {
             logger.info(`Running LLM with model: ${model}`);
             logger.debug(`Messages sent to LLM: ${JSON.stringify(messages)}`);
             const preparedMessages = messages.map(msg => (Object.assign({ role: msg.role.toLowerCase(), content: msg.content }, (msg.tool_calls && { tool_calls: msg.tool_calls }))));
+            if (this.llmProvider === 'g4f' && this.g4f) {
+                const g4fMessages = preparedMessages.map(m => ({ role: m.role, content: m.content }));
+                const content = yield this.g4f.chatCompletion(g4fMessages);
+                return { role: Role.Assistant, messageType: MessageType.Message, content };
+            }
             const maxRetries = 3;
             for (let i = 0; i < maxRetries; i++) {
                 try {
                     const response = yield this.openai.chat.completions.create({
                         model: model,
-                        messages: preparedMessages, // Cast to any to satisfy OpenAI type, as we handle roles dynamically
+                        messages: preparedMessages,
                         temperature: this.temperature,
                         max_tokens: this.maxTokens || undefined,
                         tools: tools,
