@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import * as fs from "fs";
 import * as path from "path";
+import { fileTypeFromFile } from "file-type";
 export const countLinesInFileTool = {
     type: "function",
     function: {
@@ -295,6 +296,17 @@ export const getFileContentTypeTool = {
 };
 export function executeGetFileContentTypeTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
-        return "The getFileContentTypeTool is currently disabled due to a problem with the node_modules directory.";
+        try {
+            const fileType = yield fileTypeFromFile(args.filePath);
+            if (fileType) {
+                return `Content type of ${args.filePath}: ${fileType.mime}`;
+            }
+            else {
+                return `Could not determine content type for ${args.filePath}.`;
+            }
+        }
+        catch (error) {
+            return `Error determining content type for ${args.filePath}: ${error.message}`;
+        }
     });
 }
