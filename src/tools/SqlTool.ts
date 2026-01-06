@@ -14,7 +14,7 @@ async function initializeDatabase() {
         db.run("INSERT INTO users VALUES (1, 'Alice', 'alice@example.com', 30), (2, 'Bob', 'bob@example.com', 24);");
         logger.info("In-memory SQL database initialized.");
     } catch (error) {
-        logger.error("Failed to initialize SQL.js database:", error);
+        logger.error(`Failed to initialize SQL.js database: ${String(error)}`);
         throw error;
     }
 }

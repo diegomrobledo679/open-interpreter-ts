@@ -238,7 +238,7 @@ export const listFileTypesTool: Tool = {
   },
 };
 
-import fileType from 'file-type';
+import { fileTypeFromBuffer } from 'file-type';
 
 export async function executeListFileTypesTool(args: { directoryPath: string }): Promise<string> {
   const fileTypes = new Set<string>();
@@ -291,7 +291,7 @@ export const getFileContentTypeTool: Tool = {
 export async function executeGetFileContentTypeTool(args: { filePath: string }): Promise<string> {
   try {
     const buffer = fs.readFileSync(args.filePath);
-    const type = await fileType.fromBuffer(buffer);
+    const type = await fileTypeFromBuffer(buffer);
     if (type) {
       return `File ${args.filePath} has content type: ${type.mime} (extension: ${type.ext})`;
     } else {

@@ -39,7 +39,7 @@ export class Computer {
             logger.warn(`Skill ${skillName} does not have a default export or it's not a function.`);
           }
         } catch (error) {
-          logger.error(`Failed to load skill ${skillName}:`, error);
+          logger.error(`Failed to load skill ${skillName}: ${String(error)}`);
         }
       }
     }
@@ -235,7 +235,7 @@ export class Computer {
                     logger.debug(`Cleaned up temporary file/directory: ${file}`);
                 }
             } catch (e) {
-                logger.error(`Failed to cleanup file ${file}:`, e);
+                logger.error(`Failed to cleanup file ${file}: ${String(e)}`);
             }
         });
     };
