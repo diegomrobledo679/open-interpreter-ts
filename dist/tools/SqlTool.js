@@ -23,7 +23,7 @@ function initializeDatabase() {
             logger.info("In-memory SQL database initialized.");
         }
         catch (error) {
-            logger.error("Failed to initialize SQL.js database:", error);
+            logger.error(`Failed to initialize SQL.js database: ${String(error)}`);
             throw error;
         }
     });

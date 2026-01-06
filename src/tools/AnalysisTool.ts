@@ -1,6 +1,7 @@
 import { Tool } from "../core/types.js";
 import * as fs from "fs";
 import * as path from "path";
+import { fileTypeFromFile } from "file-type";
 
 export const countLinesInFileTool: Tool = {
   type: "function",
@@ -238,7 +239,7 @@ export const listFileTypesTool: Tool = {
   },
 };
 
-import { fileTypeFromBuffer } from 'file-type';
+
 
 export async function executeListFileTypesTool(args: { directoryPath: string }): Promise<string> {
   const fileTypes = new Set<string>();
@@ -290,14 +291,13 @@ export const getFileContentTypeTool: Tool = {
 
 export async function executeGetFileContentTypeTool(args: { filePath: string }): Promise<string> {
   try {
-    const buffer = fs.readFileSync(args.filePath);
-    const type = await fileTypeFromBuffer(buffer);
-    if (type) {
-      return `File ${args.filePath} has content type: ${type.mime} (extension: ${type.ext})`;
+    const fileType = await fileTypeFromFile(args.filePath);
+    if (fileType) {
+      return `Content type of ${args.filePath}: ${fileType.mime}`;
     } else {
-      return `Could not determine content type for file ${args.filePath}. It might be a text file or an unknown binary format.`;
+      return `Could not determine content type for ${args.filePath}.`;
     }
   } catch (error: any) {
-    return `Error getting file content type: ${error.message}`;
+    return `Error determining content type for ${args.filePath}: ${error.message}`;
   }
 }

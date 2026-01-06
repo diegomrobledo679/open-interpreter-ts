@@ -244,7 +244,6 @@ export const listFileTypesTool = {
         },
     },
 };
-import fileType from 'file-type';
 export function executeListFileTypesTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
         const fileTypes = new Set();
@@ -296,18 +295,6 @@ export const getFileContentTypeTool = {
 };
 export function executeGetFileContentTypeTool(args) {
     return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const buffer = fs.readFileSync(args.filePath);
-            const type = yield fileType.fromBuffer(buffer);
-            if (type) {
-                return `File ${args.filePath} has content type: ${type.mime} (extension: ${type.ext})`;
-            }
-            else {
-                return `Could not determine content type for file ${args.filePath}. It might be a text file or an unknown binary format.`;
-            }
-        }
-        catch (error) {
-            return `Error getting file content type: ${error.message}`;
-        }
+        return "The getFileContentTypeTool is currently disabled due to a problem with the node_modules directory.";
     });
 }

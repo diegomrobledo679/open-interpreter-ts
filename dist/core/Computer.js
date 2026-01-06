@@ -44,7 +44,7 @@ export class Computer {
                         }
                     }
                     catch (error) {
-                        logger.error(`Failed to load skill ${skillName}:`, error);
+                        logger.error(`Failed to load skill ${skillName}: ${String(error)}`);
                     }
                 }
             }
@@ -293,7 +293,7 @@ export class Computer {
                         }
                     }
                     catch (e) {
-                        logger.error(`Failed to cleanup file ${file}:`, e);
+                        logger.error(`Failed to cleanup file ${file}: ${String(e)}`);
                     }
                 });
             };
